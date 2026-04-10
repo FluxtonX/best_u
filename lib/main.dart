@@ -1,3 +1,4 @@
+import 'package:best_u/view/auth_screens/welcome_screen.dart';
 import 'package:best_u/view/splash_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +11,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: SplashScreen(),
     );
