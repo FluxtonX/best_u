@@ -36,14 +36,10 @@ class WelcomeScreen extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.fitness_center_rounded,
-                        color: AppColors.white,
-                        size: 40,
+                      child: Image.asset(
+                        'assets/images/welcom-logo.png',
+                        width: 100,
+                        height: 100,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -104,11 +100,13 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     // Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.green.withOpacity(0.2)),
+                        border:
+                            Border.all(color: Colors.green.withOpacity(0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -138,7 +136,8 @@ class WelcomeScreen extends StatelessWidget {
                       text: 'Create Account',
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const SignUpScreen()),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -147,44 +146,58 @@ class WelcomeScreen extends StatelessWidget {
                       isPrimary: false,
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
                       ),
                     ),
                     const SizedBox(height: 32),
                     // Divider
                     Row(
                       children: [
-                        Expanded(child: Divider(color: AppColors.white.withOpacity(0.05))),
+                        Expanded(
+                          child: Divider(
+                            color: AppColors.white.withOpacity(0.08),
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'or continue with',
                             style: GoogleFonts.outfit(
-                              color: AppColors.white.withOpacity(0.3),
-                              fontSize: 12,
+                              color: AppColors.white.withOpacity(0.5),
+                              fontSize: 16,
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: AppColors.white.withOpacity(0.05))),
+                        Expanded(
+                          child: Divider(
+                            color: AppColors.white.withOpacity(0.08),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
                     SocialButton(
                       text: 'Continue with Apple',
-                      icon: const Icon(Icons.apple, color: AppColors.white, size: 24),
+                      icon: const Icon(Icons.apple,
+                          color: AppColors.white, size: 24),
                       onPressed: () {},
                     ),
                     const SizedBox(height: 16),
                     SocialButton(
                       text: 'Continue with Google',
-                      icon: const Icon(Icons.g_mobiledata, color: AppColors.white, size: 28),
+                      icon: Image.asset(
+                        'assets/images/google-logo.png',
+                        width: 24,
+                        height: 24,
+                      ),
                       onPressed: () {},
                     ),
                     const SizedBox(height: 32),
                     Text(
                       'By continuing, you agree to our Terms & Privacy Policy',
                       style: GoogleFonts.outfit(
-                        color: AppColors.white.withOpacity(0.3),
+                        color: AppColors.white.withOpacity(0.4),
                         fontSize: 11,
                       ),
                     ),

@@ -33,7 +33,7 @@ class ForgotScreen extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.lock_reset_rounded,
+                Icons.lock,
                 color: AppColors.primary,
                 size: 60,
               ),

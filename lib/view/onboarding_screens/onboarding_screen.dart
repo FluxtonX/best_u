@@ -4,7 +4,7 @@ import 'package:best_u/view/onboarding_screens/widgets/onboarding_button.dart';
 import 'package:best_u/view/onboarding_screens/widgets/onboarding_logo.dart';
 import 'package:best_u/view/onboarding_screens/widgets/onboarding_progress_header.dart';
 import 'package:best_u/view/onboarding_screens/widgets/option_card.dart';
-import 'package:best_u/view/subscription_screens/subscription_screen.dart';
+import 'package:best_u/view/onboarding_screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

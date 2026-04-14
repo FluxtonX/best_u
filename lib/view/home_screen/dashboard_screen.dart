@@ -1,5 +1,7 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -16,49 +18,27 @@ class DashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Dashboard',
-                        style: GoogleFonts.outfit(
-                          color: AppColors.white.withOpacity(0.5),
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Good morning,\nRahmat',
-                        style: GoogleFonts.outfit(
-                          color: AppColors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Ready to crush your workout?',
-                        style: GoogleFonts.outfit(
-                          color: AppColors.white.withOpacity(0.5),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.darkGrey,
-                      shape: BoxShape.circle,
-                      border:
-                          Border.all(color: AppColors.white.withOpacity(0.05)),
+                  Text(
+                    'Good morning, Rahmat',
+                    style: GoogleFonts.outfit(
+                      color: AppColors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
                     ),
-                    child: const Icon(Icons.notifications_none_rounded,
-                        color: AppColors.white, size: 24),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'ready to crush your workout?',
+                    style: GoogleFonts.outfit(
+                      color: AppColors.white.withOpacity(0.4),
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -69,7 +49,14 @@ class DashboardScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.darkGrey,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF0EA5E9).withOpacity(0.5),
+                      const Color(0xFF141414).withOpacity(0.5),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.white.withOpacity(0.05)),
                 ),
@@ -78,37 +65,30 @@ class DashboardScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
                                 'CURRENT WEEK',
                                 style: GoogleFonts.outfit(
                                   color: AppColors.primary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Week 2/8',
-                              style: GoogleFonts.outfit(
-                                color: AppColors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                              Text(
+                                'Week 2/8',
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        const Icon(Icons.chevron_right_rounded,
-                            color: AppColors.white, size: 24),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -177,44 +157,57 @@ class DashboardScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'DAY 2',
-                              style: GoogleFonts.outfit(
-                                color: AppColors.white.withOpacity(0.8),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DAY 2',
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Upper Body Strength',
-                              style: GoogleFonts.outfit(
-                                color: AppColors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
+                              const SizedBox(height: 4),
+                              Text(
+                                'Upper Body Strength',
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.white.withOpacity(0.2),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.fitness_center_rounded,
-                              color: AppColors.white, size: 24),
+                          child: SvgPicture.asset(
+                            'assets/icons/gain_strength.svg',
+                            width: 24,
+                            height: 24,
+                            colorFilter: const ColorFilter.mode(
+                                AppColors.white, BlendMode.srcIn),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        const Icon(Icons.timer_outlined,
-                            color: AppColors.white, size: 16),
+                        SvgPicture.asset(
+                          'assets/icons/gain_strength.svg',
+                          width: 16,
+                          height: 16,
+                          colorFilter: const ColorFilter.mode(
+                              AppColors.white, BlendMode.srcIn),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '6 exercises • 45 min',
@@ -228,7 +221,14 @@ class DashboardScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const WorkoutListScreen()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF00A2FF),
                           foregroundColor: AppColors.white,
@@ -282,6 +282,7 @@ class DashboardScreen extends StatelessWidget {
                 title: 'Weekly Streak',
                 value: '5 weeks',
                 icon: Icons.local_fire_department_rounded,
+                svgPath: 'assets/icons/streak-icon (1).svg',
                 iconColor: Colors.orange,
               ),
               const SizedBox(height: 12),
@@ -289,6 +290,7 @@ class DashboardScreen extends StatelessWidget {
                 title: 'Weight Progress',
                 value: '-2.5 kg',
                 icon: Icons.monitor_weight_outlined,
+                svgPath: 'assets/icons/lose_weight_icon.svg',
                 iconColor: Colors.green,
               ),
               const SizedBox(height: 40),
@@ -344,6 +346,7 @@ class DashboardScreen extends StatelessWidget {
     required String title,
     required String value,
     required IconData icon,
+    String? svgPath,
     required Color iconColor,
   }) {
     return Container(
@@ -360,7 +363,14 @@ class DashboardScreen extends StatelessWidget {
             color: iconColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: iconColor, size: 20),
+          child: svgPath != null
+              ? SvgPicture.asset(
+                  svgPath,
+                  width: 20,
+                  height: 20,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                )
+              : Icon(icon, color: iconColor, size: 20),
         ),
         const SizedBox(width: 16),
         Expanded(

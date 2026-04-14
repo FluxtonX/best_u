@@ -4,7 +4,7 @@ import 'package:best_u/view/auth_screens/sign_up_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
-import 'package:best_u/view/home_screen/main_home_screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -65,7 +65,8 @@ class LoginScreen extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ForgotScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const ForgotScreen()),
                   ),
                   child: Text(
                     'Forgot Password?',
@@ -97,7 +98,8 @@ class LoginScreen extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const SignUpScreen()),
                   ),
                   child: Text(
                     'Create Account',
@@ -113,7 +115,8 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 48),
             Row(
               children: [
-                Expanded(child: Divider(color: AppColors.white.withOpacity(0.05))),
+                Expanded(
+                    child: Divider(color: AppColors.white.withOpacity(0.05))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -124,7 +127,8 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Expanded(child: Divider(color: AppColors.white.withOpacity(0.05))),
+                Expanded(
+                    child: Divider(color: AppColors.white.withOpacity(0.05))),
               ],
             ),
             const SizedBox(height: 32),
@@ -136,7 +140,11 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 16),
             SocialButton(
               text: 'Sign in with Google',
-              icon: const Icon(Icons.g_mobiledata, color: AppColors.white, size: 28),
+              icon: Image.asset(
+                'assets/images/google-logo.png',
+                width: 24,
+                height: 24,
+              ),
               onPressed: () {},
             ),
           ],

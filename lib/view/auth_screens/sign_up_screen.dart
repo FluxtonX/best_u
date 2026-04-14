@@ -66,23 +66,30 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Password Requirements
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'PASSWORD REQUIREMENTS',
-                  style: GoogleFonts.outfit(
-                    color: AppColors.white.withOpacity(0.3),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PASSWORD REQUIREMENTS',
+                    style: GoogleFonts.outfit(
+                      color: AppColors.white.withOpacity(0.3),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                _buildRequirement('Minimum 8 characters', false),
-                _buildRequirement('One number', false),
-                _buildRequirement('One uppercase letter', false),
-              ],
+                  const SizedBox(height: 12),
+                  _buildRequirement('Minimum 8 characters', false),
+                  _buildRequirement('One number', false),
+                  _buildRequirement('One uppercase letter', false),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             const AuthTextField(
@@ -157,8 +164,11 @@ class SignUpScreen extends StatelessWidget {
             const SizedBox(height: 16),
             SocialButton(
               text: 'Continue with Google',
-              icon: const Icon(Icons.g_mobiledata,
-                  color: AppColors.white, size: 28),
+              icon: Image.asset(
+                'assets/images/google-logo.png',
+                width: 24,
+                height: 24,
+              ),
               onPressed: () {},
             ),
             const SizedBox(height: 40),

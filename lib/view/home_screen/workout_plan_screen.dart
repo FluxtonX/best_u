@@ -1,4 +1,5 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -109,19 +110,20 @@ class WorkoutPlanScreen extends StatelessWidget {
                 status: '3/3 workouts',
                 isCompleted: true,
                 days: [
-                  _buildDayItem('Day 1', 'Base', true),
-                  _buildDayItem('Day 2', 'Base', true),
-                  _buildDayItem('Day 3', 'Base', true),
+                  _buildDayItem(context, 'Day 1', 'Base', true),
+                  _buildDayItem(context, 'Day 2', 'Base', true),
+                  _buildDayItem(context, 'Day 3', 'Base', true),
                 ],
               ),
               _buildWeekItem(
                 weekNumber: 2,
                 status: '2/3 workouts',
                 isCurrent: true,
+                context: context,
                 days: [
-                  _buildDayItem('Day 1', 'Base', true),
-                  _buildDayItem('Day 2', 'Base', true),
-                  _buildDayItem('Day 3', 'Base', false, isCurrent: true),
+                  _buildDayItem(context, 'Day 1', 'Base', true),
+                  _buildDayItem(context, 'Day 2', 'Base', true),
+                  _buildDayItem(context, 'Day 3', 'Base', false, isCurrent: true),
                 ],
               ),
               _buildWeekItem(weekNumber: 3, status: '0/3 workouts', isLocked: true),
@@ -144,6 +146,7 @@ class WorkoutPlanScreen extends StatelessWidget {
     bool isCompleted = false,
     bool isCurrent = false,
     bool isLocked = false,
+    BuildContext? context,
     List<Widget>? days,
   }) {
     return Container(
@@ -217,57 +220,65 @@ class WorkoutPlanScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDayItem(String day, String type, bool isCompleted, {bool isCurrent = false}) {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isCurrent ? AppColors.primary.withOpacity(0.05) : AppColors.background.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isCurrent ? AppColors.primary.withOpacity(0.2) : AppColors.white.withOpacity(0.05),
+  Widget _buildDayItem(BuildContext context, String day, String type, bool isCompleted, {bool isCurrent = false}) {
+    return GestureDetector(
+      onTap: isCurrent ? () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const WorkoutListScreen()),
+        );
+      } : null,
+      child: Container(
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isCurrent ? AppColors.primary.withOpacity(0.05) : AppColors.background.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isCurrent ? AppColors.primary.withOpacity(0.2) : AppColors.white.withOpacity(0.05),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isCompleted ? Colors.green.withOpacity(0.1) : (isCurrent ? AppColors.primary.withOpacity(0.1) : AppColors.white.withOpacity(0.05)),
-              shape: BoxShape.circle,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isCompleted ? Colors.green.withOpacity(0.1) : (isCurrent ? AppColors.primary.withOpacity(0.1) : AppColors.white.withOpacity(0.05)),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isCompleted ? Icons.check : (isCurrent ? Icons.play_arrow_rounded : Icons.calendar_today_rounded),
+                color: isCompleted ? Colors.green : (isCurrent ? AppColors.primary : AppColors.white.withOpacity(0.3)),
+                size: 14,
+              ),
             ),
-            child: Icon(
-              isCompleted ? Icons.check : (isCurrent ? Icons.play_arrow_rounded : Icons.calendar_today_rounded),
-              color: isCompleted ? Colors.green : (isCurrent ? AppColors.primary : AppColors.white.withOpacity(0.3)),
-              size: 14,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  day,
-                  style: GoogleFonts.outfit(
-                    color: AppColors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    day,
+                    style: GoogleFonts.outfit(
+                      color: AppColors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Text(
-                  type,
-                  style: GoogleFonts.outfit(
-                    color: AppColors.white.withOpacity(0.4),
-                    fontSize: 12,
+                  Text(
+                    type,
+                    style: GoogleFonts.outfit(
+                      color: AppColors.white.withOpacity(0.4),
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (isCurrent)
-            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.primary, size: 14),
-        ],
+            if (isCurrent)
+              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.primary, size: 14),
+          ],
+        ),
       ),
     );
   }
