@@ -118,7 +118,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 48),
             AuthButton(
-              text: _isLoading ? 'Creating Account...' : 'Create Account',
+              text: 'Create Account',
+              isLoading: _isLoading,
               onPressed: () {
                 if (!_isLoading) {
                   _createAccount();

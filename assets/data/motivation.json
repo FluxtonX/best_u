@@ -1,0 +1,54 @@
+{
+  "motivations": [
+    {
+      "id": 1,
+      "quote": "The only bad workout is the one that didn't happen.",
+      "author": "Stay focused!"
+    },
+    {
+      "id": 2,
+      "quote": "Push yourself because no one else is going to do it for you.",
+      "author": "Keep going!"
+    },
+    {
+      "id": 3,
+      "quote": "No pain, no gain.",
+      "author": "Stay strong!"
+    },
+    {
+      "id": 4,
+      "quote": "Your body can stand almost anything. It’s your mind you have to convince.",
+      "author": "Train your mind."
+    },
+    {
+      "id": 5,
+      "quote": "Sweat is fat crying.",
+      "author": "Burn it!"
+    },
+    {
+      "id": 6,
+      "quote": "Success starts with self-discipline.",
+      "author": "Be consistent."
+    },
+    {
+      "id": 7,
+      "quote": "The pain you feel today will be the strength you feel tomorrow.",
+      "author": "Trust the process."
+    },
+    {
+      "id": 8,
+      "quote": "Don’t stop when you’re tired. Stop when you’re done.",
+      "author": "Finish strong."
+    },
+    {
+      "id": 9,
+      "quote": "Small progress is still progress.",
+      "author": "One step daily."
+    },
+    {
+      "id": 10,
+      "quote": "You don’t have to be extreme, just consistent.",
+      "author": "Consistency wins."
+    }
+  ]
+}

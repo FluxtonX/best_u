@@ -1,4 +1,5 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/forgot_screen.dart';
 import 'package:best_u/view/auth_screens/sign_up_screen.dart';
@@ -45,14 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Login Successful"),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // Check Onboarding Status
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
-        Navigator.pushReplacementNamed(context, '/home');
+        if (!mounted) return;
+
+        if (doc.exists && doc.data()?['onboardingCompleted'] == true) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          Navigator.pushReplacementNamed(context, '/registration');
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -123,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                 ),
-                 TextButton(
+                TextButton(
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -143,7 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 32),
             AuthButton(
-              text: _isLoading ? 'Signing In...' : 'Sign In',
+              text: 'Sign In',
+              isLoading: _isLoading,
               onPressed: () {
                 if (!_isLoading) {
                   _signIn();

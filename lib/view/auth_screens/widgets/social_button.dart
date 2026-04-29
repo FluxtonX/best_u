@@ -36,12 +36,15 @@ class SocialButton extends StatelessWidget {
           children: [
             icon,
             const SizedBox(width: 12),
-            Text(
-              text,
-              style: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: 'Outfit', 
+                  color: AppColors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

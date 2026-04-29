@@ -2,50 +2,112 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
 // import 'package:google_fonts/google_fonts.dart';
 
-class OnboardingButton extends StatelessWidget {
+class OnboardingButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isEnabled;
+  final bool isLoading;
 
   const OnboardingButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.isEnabled = true,
+    this.isLoading = false,
   });
 
   @override
+  State<OnboardingButton> createState() => _OnboardingButtonState();
+}
+
+class _OnboardingButtonState extends State<OnboardingButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    if (widget.isEnabled) _controller.forward();
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (widget.isEnabled) {
+      _controller.reverse();
+      widget.onPressed();
+    }
+  }
+
+  void _handleTapCancel() {
+    if (widget.isEnabled) _controller.reverse();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: isEnabled ? onPressed : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withOpacity(0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTapDown: widget.isLoading ? null : _handleTapDown,
+      onTapUp: widget.isLoading ? null : _handleTapUp,
+      onTapCancel: widget.isLoading ? null : _handleTapCancel,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: widget.isLoading ? 56 : MediaQuery.of(context).size.width - 48,
+            height: 56,
+            decoration: BoxDecoration(
+              color: widget.isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(widget.isLoading ? 28 : 12),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: widget.isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                      ),
+                    )
+                  : Row(
+                      key: const ValueKey('button_content'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.text,
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.white.withOpacity(widget.isEnabled ? 1.0 : 0.5),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right,
+                          color: AppColors.white.withOpacity(widget.isEnabled ? 1.0 : 0.5),
+                        ),
+                      ],
+                    ),
+            ),
           ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white.withOpacity(isEnabled ? 1.0 : 0.5),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.white.withOpacity(isEnabled ? 1.0 : 0.5),
-            ),
-          ],
         ),
       ),
     );

@@ -1,16 +1,62 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
-class WeightUpdateModal extends StatelessWidget {
-  const WeightUpdateModal({super.key});
+class WeightUpdateModal extends StatefulWidget {
+  final String currentWeight;
+  const WeightUpdateModal({super.key, required this.currentWeight});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, String currentWeight) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.8),
-      builder: (context) => const WeightUpdateModal(),
+      builder: (context) => WeightUpdateModal(currentWeight: currentWeight),
     );
+  }
+
+  @override
+  State<WeightUpdateModal> createState() => _WeightUpdateModalState();
+}
+
+class _WeightUpdateModalState extends State<WeightUpdateModal> {
+  late TextEditingController _weightController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _weightController = TextEditingController(text: widget.currentWeight);
+  }
+
+  @override
+  void dispose() {
+    _weightController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateWeight() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'weight': _weightController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -84,8 +130,8 @@ class WeightUpdateModal extends StatelessWidget {
                 border: Border.all(color: AppColors.white.withOpacity(0.1)),
               ),
               child: TextField(
-                style: TextStyle(fontFamily: 'Outfit', color: AppColors.white, fontSize: 18),
-                controller: TextEditingController(text: '65'),
+                style: const TextStyle(fontFamily: 'Outfit', color: AppColors.white, fontSize: 18),
+                controller: _weightController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
@@ -99,7 +145,7 @@ class WeightUpdateModal extends StatelessWidget {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isLoading ? null : _updateWeight,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
@@ -107,14 +153,24 @@ class WeightUpdateModal extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  'Update Weight',
-                  style: TextStyle(fontFamily: 'Outfit', 
-                    color: AppColors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Update Weight',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ],

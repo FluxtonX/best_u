@@ -1,10 +1,11 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_button.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_logo.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_progress_header.dart';
 import 'package:best_u/view/registration_screen/widgets/option_card.dart';
-import 'package:best_u/view/registration_screen/subscription_screen.dart';
 import 'package:flutter/material.dart';
 // import 'package:google_fonts/google_fonts.dart';
 
@@ -23,7 +24,83 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedGoal;
   String? _selectedExperience;
 
+  // Controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveOnboardingData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': _nameController.text.trim(),
+        'age': _ageController.text.trim(),
+        'weight': _weightController.text.trim(),
+        'height': _heightController.text.trim(),
+        'goal': _selectedGoal,
+        'experienceLevel': _selectedExperience,
+        'onboardingCompleted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (!mounted) return;
+
+      // Navigate to Home or Subscription (as per original flow, but user asked for Home)
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving data: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
   void _nextStep() {
+    if (_currentStep == 1) {
+      if (_nameController.text.trim().isEmpty ||
+          _ageController.text.trim().isEmpty ||
+          _weightController.text.trim().isEmpty ||
+          _heightController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all personal information')),
+        );
+        return;
+      }
+    } else if (_currentStep == 2) {
+      if (_selectedGoal == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select your fitness goal')),
+        );
+        return;
+      }
+    } else if (_currentStep == 3) {
+      if (_selectedExperience == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select your experience level')),
+        );
+        return;
+      }
+    }
+
     if (_currentStep < 3) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -33,10 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _currentStep++;
       });
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-      );
+      _saveOnboardingData();
     }
   }
 
@@ -68,7 +142,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               OnboardingButton(
                 text: 'Continue',
-                onPressed: _nextStep,
+                isLoading: _isLoading,
+                onPressed: _isLoading ? () {} : _nextStep,
               ),
               const SizedBox(height: 20),
             ],
@@ -103,34 +178,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          const CustomTextField(
+          CustomTextField(
             label: 'Name',
             hintText: 'Enter your name',
+            controller: _nameController,
           ),
           const SizedBox(height: 24),
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: CustomTextField(
                   label: 'Age',
                   hintText: 'Age',
+                  controller: _ageController,
                   keyboardType: TextInputType.number,
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: CustomTextField(
                   label: 'Weight (kg)',
                   hintText: 'Weight',
+                  controller: _weightController,
                   keyboardType: TextInputType.number,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          const CustomTextField(
+          CustomTextField(
             label: 'Height (cm)',
             hintText: 'Height',
+            controller: _heightController,
             keyboardType: TextInputType.number,
           ),
         ],

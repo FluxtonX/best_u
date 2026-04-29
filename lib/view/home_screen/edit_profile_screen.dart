@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
-import 'package:best_u/view/registration_screen/widgets/option_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,11 +16,122 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+  
   String _selectedGoal = 'Gain Strength';
   String _selectedExperience = 'Intermediate';
+  String? _imagePath;
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+    _loadLocalImage();
+  }
+
+  Future<void> _loadLocalImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _imagePath = prefs.getString('profile_image_path');
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _imagePath = image.path;
+        });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profile_image_path', image.path);
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          _nameController.text = data['name'] ?? '';
+          _ageController.text = data['age']?.toString() ?? '';
+          _heightController.text = data['height']?.toString() ?? '';
+          _weightController.text = data['weight']?.toString() ?? '';
+          _selectedGoal = data['goal'] ?? 'Gain Strength';
+          _selectedExperience = data['experienceLevel'] ?? 'Intermediate';
+          _isFetching = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching user data: $e");
+      setState(() => _isFetching = false);
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'name': _nameController.text.trim(),
+        'age': _ageController.text.trim(),
+        'height': _heightController.text.trim(),
+        'weight': _weightController.text.trim(),
+        'goal': _selectedGoal,
+        'experienceLevel': _selectedExperience,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile: $e'), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -45,28 +159,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: [
             // Profile Photo Edit
             Center(
-              child: Stack(
-                children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.darkGrey,
-                    child: Icon(Icons.person_outline_rounded,
-                        color: AppColors.white, size: 50),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.camera_alt_rounded,
-                          color: AppColors.white, size: 16),
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.darkGrey,
+                      backgroundImage: _imagePath != null ? FileImage(File(_imagePath!)) : null,
+                      child: _imagePath == null
+                          ? const Icon(Icons.person_outline_rounded,
+                              color: AppColors.white, size: 50)
+                          : null,
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded,
+                            color: AppColors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -83,13 +203,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 40),
 
             _buildSectionHeader('PERSONAL INFORMATION'),
-            const AuthTextField(
+            AuthTextField(
               label: 'Full Name',
               hintText: 'Enter your name',
               prefixIcon: Icons.person_outline_rounded,
+              controller: _nameController,
             ),
             const SizedBox(height: 20),
-            const Row(
+            Row(
               children: [
                 Expanded(
                   child: AuthTextField(
@@ -97,25 +218,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     hintText: 'Age',
                     prefixIcon: Icons.cake_outlined,
                     keyboardType: TextInputType.number,
+                    controller: _ageController,
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: AuthTextField(
                     label: 'Height (cm)',
                     hintText: 'Height',
                     prefixIcon: Icons.height_rounded,
                     keyboardType: TextInputType.number,
+                    controller: _heightController,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            const AuthTextField(
+            AuthTextField(
               label: 'Current Weight (kg)',
               hintText: 'Weight',
               prefixIcon: Icons.monitor_weight_outlined,
               keyboardType: TextInputType.number,
+              controller: _weightController,
             ),
 
             const SizedBox(height: 32),
@@ -150,7 +274,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 48),
             AuthButton(
               text: 'Save Changes',
-              onPressed: () => Navigator.pop(context),
+              isLoading: _isLoading,
+              onPressed: _saveChanges,
             ),
             const SizedBox(height: 40),
           ],
