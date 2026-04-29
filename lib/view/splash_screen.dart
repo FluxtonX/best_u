@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/auth_screens/welcome_screen.dart';
-import 'package:best_u/view/onboarding_screens/onboarding_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,10 +17,15 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-      );
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      }
     });
   }
 
@@ -85,14 +89,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
                 // Title "Best-U"
                 RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.outfit(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
                     children: [
-                      const TextSpan(
+                      TextSpan(
                         text: 'Best-',
                         style: TextStyle(color: AppColors.white),
                       ),
@@ -120,7 +125,8 @@ class _SplashScreenState extends State<SplashScreen> {
                     const SizedBox(width: 10),
                     Text(
                       'TRANSFORM YOUR BODY',
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
                         color: AppColors.white.withOpacity(0.9),
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -157,7 +163,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 // Footer Text
                 Text(
                   '8 Week Transformation Program',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
                     color: AppColors.white.withOpacity(0.4),
                     fontSize: 12,
                     fontWeight: FontWeight.w400,

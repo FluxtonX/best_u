@@ -2,7 +2,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -23,7 +23,7 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Good morning, Rahmat',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white,
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
@@ -35,7 +35,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     'ready to crush your workout?',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white.withOpacity(0.4),
                       fontSize: 13,
                     ),
@@ -49,13 +49,14 @@ class DashboardScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF0EA5E9).withOpacity(0.5),
-                      const Color(0xFF141414).withOpacity(0.5),
+                      Color(0xFF0EA5E9),
+                      Color(0xFF141414),
                     ],
+                    stops: [0.0, 1.0],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.white.withOpacity(0.05)),
@@ -71,7 +72,7 @@ class DashboardScreen extends StatelessWidget {
                             children: [
                               Text(
                                 'CURRENT WEEK',
-                                style: GoogleFonts.outfit(
+                                style: TextStyle(fontFamily: 'Outfit', 
                                   color: AppColors.primary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -80,7 +81,7 @@ class DashboardScreen extends StatelessWidget {
                               ),
                               Text(
                                 'Week 2/8',
-                                style: GoogleFonts.outfit(
+                                style: TextStyle(fontFamily: 'Outfit', 
                                   color: AppColors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -108,7 +109,7 @@ class DashboardScreen extends StatelessWidget {
                       children: [
                         Text(
                           '6 weeks remaining',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                             color: AppColors.white.withOpacity(0.4),
                             fontSize: 12,
                           ),
@@ -123,7 +124,7 @@ class DashboardScreen extends StatelessWidget {
               // Today's Workout
               Text(
                 "Today's Workout",
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -163,7 +164,7 @@ class DashboardScreen extends StatelessWidget {
                             children: [
                               Text(
                                 'DAY 2',
-                                style: GoogleFonts.outfit(
+                                style: TextStyle(fontFamily: 'Outfit', 
                                   color: AppColors.primary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -172,7 +173,7 @@ class DashboardScreen extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 'Upper Body Strength',
-                                style: GoogleFonts.outfit(
+                                style: TextStyle(fontFamily: 'Outfit', 
                                   color: AppColors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -211,7 +212,7 @@ class DashboardScreen extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           '6 exercises • 45 min',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                               color: AppColors.white, fontSize: 13),
                         ),
                       ],
@@ -242,7 +243,7 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             Text(
                               'START WORKOUT',
-                              style: GoogleFonts.outfit(
+                              style: TextStyle(fontFamily: 'Outfit', 
                                 fontWeight: FontWeight.w800,
                                 fontSize: 14,
                                 letterSpacing: 0.5,
@@ -263,7 +264,7 @@ class DashboardScreen extends StatelessWidget {
               // This Week Stats
               Text(
                 "This Week",
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -314,7 +315,7 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Text(
                       '"The only bad workout is the one that\ndidn\'t happen."',
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: AppColors.white,
                         fontSize: 16,
                         fontStyle: FontStyle.italic,
@@ -325,7 +326,7 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text(
                       '— Stay focused!',
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: AppColors.primary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -379,7 +380,7 @@ class DashboardScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.4),
                   fontSize: 12,
                 ),
@@ -387,7 +388,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutInputBlock extends StatelessWidget {
   final String label;
@@ -30,7 +30,7 @@ class WorkoutInputBlock extends StatelessWidget {
             children: [
               Text(
                 label.toUpperCase(),
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.4),
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -40,7 +40,7 @@ class WorkoutInputBlock extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,

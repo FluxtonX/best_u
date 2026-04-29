@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class PrimaryWorkoutButton extends StatelessWidget {
   final String title;
@@ -36,7 +36,7 @@ class PrimaryWorkoutButton extends StatelessWidget {
           children: [
             Text(
               title.toUpperCase(),
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
                 letterSpacing: 0.5,

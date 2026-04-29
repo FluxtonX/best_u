@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingLogo extends StatelessWidget {
   const OnboardingLogo({super.key});
@@ -12,7 +12,7 @@ class OnboardingLogo extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               fontSize: 32,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
@@ -32,7 +32,7 @@ class OnboardingLogo extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '8 Week Transformation Program',
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: AppColors.white.withOpacity(0.5),
             fontSize: 12,
             fontWeight: FontWeight.w400,

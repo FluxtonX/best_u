@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class AuthTextField extends StatefulWidget {
   final String label;
@@ -34,7 +34,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
       children: [
         Text(
           widget.label,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: AppColors.white.withOpacity(0.9),
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -55,13 +55,13 @@ class _AuthTextFieldState extends State<AuthTextField> {
             controller: widget.controller,
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white,
               fontSize: 14,
             ),
             decoration: InputDecoration(
               hintText: widget.hintText,
-              hintStyle: GoogleFonts.outfit(
+              hintStyle: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.3),
                 fontSize: 14,
               ),

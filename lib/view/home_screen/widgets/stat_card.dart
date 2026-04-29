@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
@@ -43,7 +43,7 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               value,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -52,7 +52,7 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.4),
                 fontSize: 12,
                 fontWeight: FontWeight.w400,

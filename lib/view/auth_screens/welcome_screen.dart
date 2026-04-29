@@ -4,7 +4,7 @@ import 'package:best_u/view/auth_screens/sign_up_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// // import 'package:google_fonts/google_fonts.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -45,7 +45,8 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     RichText(
                       text: TextSpan(
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -71,7 +72,8 @@ class WelcomeScreen extends StatelessWidget {
                     RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
                           fontSize: 40,
                           height: 1.1,
                           fontWeight: FontWeight.w700,
@@ -91,7 +93,8 @@ class WelcomeScreen extends StatelessWidget {
                     Text(
                       'Follow an 8-week blueprint to lose\nweight and increase strength.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
                         color: AppColors.white.withOpacity(0.6),
                         fontSize: 16,
                         height: 1.5,
@@ -108,21 +111,22 @@ class WelcomeScreen extends StatelessWidget {
                         border:
                             Border.all(color: Colors.green.withOpacity(0.2)),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.bolt, color: Colors.green, size: 16),
-                          const SizedBox(width: 4),
+                          Icon(Icons.bolt, color: Colors.green, size: 16),
+                          SizedBox(width: 4),
                           Text(
                             'Transform in 8 weeks',
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
                               color: Colors.green,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.bolt, color: Colors.green, size: 16),
+                          SizedBox(width: 4),
+                          Icon(Icons.bolt, color: Colors.green, size: 16),
                         ],
                       ),
                     ),
@@ -163,7 +167,8 @@ class WelcomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'or continue with',
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
                               color: AppColors.white.withOpacity(0.5),
                               fontSize: 16,
                             ),
@@ -196,7 +201,8 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 32),
                     Text(
                       'By continuing, you agree to our Terms & Privacy Policy',
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
                         color: AppColors.white.withOpacity(0.4),
                         fontSize: 11,
                       ),

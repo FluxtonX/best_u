@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -25,7 +25,7 @@ class CustomTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: AppColors.white.withOpacity(0.9),
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -45,13 +45,13 @@ class CustomTextField extends StatelessWidget {
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white,
               fontSize: 14,
             ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: GoogleFonts.outfit(
+              hintStyle: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.3),
                 fontSize: 14,
               ),

@@ -1,4 +1,5 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/forgot_screen.dart';
 import 'package:best_u/view/auth_screens/sign_up_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
@@ -6,12 +7,68 @@ import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _signIn() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please fill in all fields"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login Successful"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -29,9 +86,10 @@ class LoginScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 60),
-            Text(
+            const Text(
               'Welcome Back',
-              style: GoogleFonts.outfit(
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white,
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
@@ -40,13 +98,15 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Sign in to continue your journey',
-              style: GoogleFonts.outfit(
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white.withOpacity(0.5),
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 60),
-            const AuthTextField(
+            AuthTextField(
+              controller: emailController,
               label: 'Email Address',
               hintText: 'your@email.com',
               prefixIcon: Icons.mail_outline,
@@ -56,21 +116,23 @@ class LoginScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const AuthTextField(
+                AuthTextField(
+                  controller: passwordController,
                   label: 'Password',
                   hintText: 'Enter your password',
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                 ),
-                TextButton(
+                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const ForgotScreen()),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Forgot Password?',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.primary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -81,8 +143,12 @@ class LoginScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             AuthButton(
-              text: 'Sign In',
-              onPressed: () {},
+              text: _isLoading ? 'Signing In...' : 'Sign In',
+              onPressed: () {
+                if (!_isLoading) {
+                  _signIn();
+                }
+              },
             ),
             const SizedBox(height: 24),
             Row(
@@ -90,7 +156,8 @@ class LoginScreen extends StatelessWidget {
               children: [
                 Text(
                   "Don't have an account? ",
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
                     color: AppColors.white.withOpacity(0.5),
                     fontSize: 14,
                   ),
@@ -101,9 +168,10 @@ class LoginScreen extends StatelessWidget {
                     MaterialPageRoute(
                         builder: (context) => const SignUpScreen()),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Create Account',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -121,7 +189,8 @@ class LoginScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'or',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white.withOpacity(0.3),
                       fontSize: 12,
                     ),

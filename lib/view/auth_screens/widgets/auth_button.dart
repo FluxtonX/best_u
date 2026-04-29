@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class AuthButton extends StatelessWidget {
   final String text;
@@ -31,7 +31,7 @@ class AuthButton extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: AppColors.white,
             fontSize: 16,
             fontWeight: FontWeight.w700,

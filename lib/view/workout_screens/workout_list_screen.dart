@@ -2,7 +2,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/workout_screens/exercise_session_screen.dart';
 import 'package:best_u/view/workout_screens/widgets/primary_workout_button.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutListScreen extends StatelessWidget {
   const WorkoutListScreen({super.key});
@@ -20,7 +20,7 @@ class WorkoutListScreen extends StatelessWidget {
         ),
         title: Text(
           'Upper Body',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700),
+          style: TextStyle(fontFamily: 'Outfit', color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: Column(
@@ -56,7 +56,7 @@ class WorkoutListScreen extends StatelessWidget {
                           children: [
                             Text(
                               'Exercise name here',
-                              style: GoogleFonts.outfit(
+                              style: TextStyle(fontFamily: 'Outfit', 
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
@@ -64,7 +64,7 @@ class WorkoutListScreen extends StatelessWidget {
                             ),
                             Text(
                               '3 sets • 12 reps',
-                              style: GoogleFonts.outfit(
+                              style: TextStyle(fontFamily: 'Outfit', 
                                 color: Colors.white.withOpacity(0.4),
                                 fontSize: 13,
                               ),

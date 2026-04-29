@@ -2,7 +2,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/workout_screens/achievement_screen.dart';
 import 'package:best_u/view/workout_screens/workout_complete_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class ExerciseSessionScreen extends StatefulWidget {
   const ExerciseSessionScreen({super.key});
@@ -81,7 +81,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                       ),
                       Text(
                         'Exercise ${_currentExerciseIndex + 1} of 6',
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(fontFamily: 'Outfit', 
                           color: AppColors.primary,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -132,7 +132,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                           const SizedBox(height: 12),
                           Text(
                             "Exercise demonstration",
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(fontFamily: 'Outfit', 
                               color: Colors.white.withOpacity(0.3),
                               fontSize: 14,
                             ),
@@ -145,7 +145,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                     // Title and Sets/Reps
                     Text(
                       exercise['name'],
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: Colors.white,
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
@@ -157,7 +157,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                         children: [
                           TextSpan(
                             text: "${exercise['sets']} ",
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(fontFamily: 'Outfit', 
                               color: AppColors.primary,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
@@ -165,7 +165,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                           ),
                           TextSpan(
                             text: "sets × reps",
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(fontFamily: 'Outfit', 
                               color: Colors.white.withOpacity(0.4),
                               fontSize: 14,
                             ),
@@ -188,7 +188,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                     // Log Section Header
                     Text(
                       "Log Your Result",
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: Colors.white.withOpacity(0.5),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -227,7 +227,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                   ),
                   child: Text(
                     "COMPLETE EXERCISE",
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
@@ -258,7 +258,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: Colors.white.withOpacity(0.3),
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -268,7 +268,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
             const SizedBox(height: 4),
             Text(
               value,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: isTarget ? AppColors.primary : Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -287,7 +287,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: Colors.white.withOpacity(0.4),
               fontSize: 12,
             ),
@@ -302,7 +302,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
             child: TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),

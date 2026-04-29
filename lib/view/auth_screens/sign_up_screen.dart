@@ -1,16 +1,27 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/login_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
-import 'package:best_u/view/onboarding_screens/onboarding_screen.dart';
+import 'package:best_u/view/registration_screen/onboarding_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -28,9 +39,10 @@ class SignUpScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text(
+            const Text(
               'Create Account',
-              style: GoogleFonts.outfit(
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white,
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
@@ -39,26 +51,30 @@ class SignUpScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Join Best-U and start your transformation',
-              style: GoogleFonts.outfit(
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white.withOpacity(0.5),
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 40),
-            const AuthTextField(
+            AuthTextField(
+              controller: nameController,
               label: 'Full Name',
               hintText: 'Enter your full name',
               prefixIcon: Icons.person_outline,
             ),
             const SizedBox(height: 24),
-            const AuthTextField(
+            AuthTextField(
+              controller: emailController,
               label: 'Email Address',
               hintText: 'your@email.com',
               prefixIcon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 24),
-            const AuthTextField(
+            AuthTextField(
+              controller: passwordController,
               label: 'Password',
               hintText: 'Create a strong password',
               prefixIcon: Icons.lock_outline,
@@ -77,7 +93,8 @@ class SignUpScreen extends StatelessWidget {
                 children: [
                   Text(
                     'PASSWORD REQUIREMENTS',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white.withOpacity(0.3),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -92,7 +109,8 @@ class SignUpScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const AuthTextField(
+            AuthTextField(
+              controller: confirmPasswordController,
               label: 'Confirm Password',
               hintText: 'Re-enter your password',
               prefixIcon: Icons.lock_outline,
@@ -100,12 +118,11 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             AuthButton(
-              text: 'Create Account',
+              text: _isLoading ? 'Creating Account...' : 'Create Account',
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const OnboardingScreen()));
+                if (!_isLoading) {
+                  _createAccount();
+                }
               },
             ),
             const SizedBox(height: 24),
@@ -114,7 +131,8 @@ class SignUpScreen extends StatelessWidget {
               children: [
                 Text(
                   'Already have an account? ',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
                     color: AppColors.white.withOpacity(0.5),
                     fontSize: 14,
                   ),
@@ -125,9 +143,10 @@ class SignUpScreen extends StatelessWidget {
                     MaterialPageRoute(
                         builder: (context) => const LoginScreen()),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Sign In',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -145,7 +164,8 @@ class SignUpScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'or',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white.withOpacity(0.3),
                       fontSize: 12,
                     ),
@@ -178,6 +198,68 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _createAccount() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please fill in all fields"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Passwords do not match"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.signUp(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Account Created Successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const OnboardingScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildRequirement(String text, bool isMet) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -191,7 +273,8 @@ class SignUpScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             text,
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: isMet ? Colors.green : AppColors.white.withOpacity(0.3),
               fontSize: 12,
             ),

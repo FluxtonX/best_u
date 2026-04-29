@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class WeightUpdateModal extends StatelessWidget {
   const WeightUpdateModal({super.key});
@@ -35,7 +35,7 @@ class WeightUpdateModal extends StatelessWidget {
                 const SizedBox(width: 24), // Spacer for centering title
                 Text(
                   'Update Weight',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -55,7 +55,7 @@ class WeightUpdateModal extends StatelessWidget {
             Text(
               'Keep your weight updated to track\nprogress accurately.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.5),
                 fontSize: 14,
                 height: 1.5,
@@ -68,7 +68,7 @@ class WeightUpdateModal extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Current Weight (kg)',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -84,7 +84,7 @@ class WeightUpdateModal extends StatelessWidget {
                 border: Border.all(color: AppColors.white.withOpacity(0.1)),
               ),
               child: TextField(
-                style: GoogleFonts.outfit(color: AppColors.white, fontSize: 18),
+                style: TextStyle(fontFamily: 'Outfit', color: AppColors.white, fontSize: 18),
                 controller: TextEditingController(text: '65'),
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
@@ -109,7 +109,7 @@ class WeightUpdateModal extends StatelessWidget {
                 ),
                 child: Text(
                   'Update Weight',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,

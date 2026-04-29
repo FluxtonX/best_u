@@ -3,7 +3,7 @@ import 'package:best_u/view/auth_screens/reset_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class ForgotScreen extends StatelessWidget {
   const ForgotScreen({super.key});
@@ -42,7 +42,7 @@ class ForgotScreen extends StatelessWidget {
             Text(
               'Forgot Your Password?',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -52,7 +52,7 @@ class ForgotScreen extends StatelessWidget {
             Text(
               'Enter your email address and we will\nsend a password reset link.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.5),
                 fontSize: 15,
                 height: 1.5,
@@ -79,7 +79,7 @@ class ForgotScreen extends StatelessWidget {
               children: [
                 Text(
                   'Remember your password? ',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white.withOpacity(0.5),
                     fontSize: 14,
                   ),
@@ -88,7 +88,7 @@ class ForgotScreen extends StatelessWidget {
                   onTap: () => Navigator.pop(context),
                   child: Text(
                     'Sign In',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

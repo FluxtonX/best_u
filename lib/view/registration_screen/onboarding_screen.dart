@@ -1,12 +1,12 @@
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:best_u/view/onboarding_screens/widgets/custom_text_field.dart';
-import 'package:best_u/view/onboarding_screens/widgets/onboarding_button.dart';
-import 'package:best_u/view/onboarding_screens/widgets/onboarding_logo.dart';
-import 'package:best_u/view/onboarding_screens/widgets/onboarding_progress_header.dart';
-import 'package:best_u/view/onboarding_screens/widgets/option_card.dart';
-import 'package:best_u/view/onboarding_screens/subscription_screen.dart';
+import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
+import 'package:best_u/view/registration_screen/widgets/onboarding_button.dart';
+import 'package:best_u/view/registration_screen/widgets/onboarding_logo.dart';
+import 'package:best_u/view/registration_screen/widgets/onboarding_progress_header.dart';
+import 'package:best_u/view/registration_screen/widgets/option_card.dart';
+import 'package:best_u/view/registration_screen/subscription_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -86,7 +86,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             "Let's get started",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -95,7 +96,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           Text(
             "Tell us about yourself",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white.withOpacity(0.5),
               fontSize: 14,
             ),
@@ -167,7 +169,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             "What's your goal?",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -176,7 +179,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           Text(
             "Choose your primary fitness objective",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white.withOpacity(0.5),
               fontSize: 14,
             ),
@@ -223,7 +227,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             "Experience level",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -232,7 +237,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           Text(
             "Help us tailor your program",
-            style: GoogleFonts.outfit(
+            style: TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white.withOpacity(0.5),
               fontSize: 14,
             ),

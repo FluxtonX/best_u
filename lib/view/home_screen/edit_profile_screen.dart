@@ -1,9 +1,9 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
-import 'package:best_u/view/onboarding_screens/widgets/option_card.dart';
+import 'package:best_u/view/registration_screen/widgets/option_card.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -27,9 +27,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           icon: const Icon(Icons.chevron_left_rounded, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Edit Profile',
-          style: GoogleFonts.outfit(
+          style: TextStyle(
+            fontFamily: 'Outfit',
             color: AppColors.white,
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -46,10 +47,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Center(
               child: Stack(
                 children: [
-                   const CircleAvatar(
+                  const CircleAvatar(
                     radius: 50,
                     backgroundColor: AppColors.darkGrey,
-                    child: Icon(Icons.person_outline_rounded, color: AppColors.white, size: 50),
+                    child: Icon(Icons.person_outline_rounded,
+                        color: AppColors.white, size: 50),
                   ),
                   Positioned(
                     bottom: 0,
@@ -60,7 +62,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt_rounded, color: AppColors.white, size: 16),
+                      child: const Icon(Icons.camera_alt_rounded,
+                          color: AppColors.white, size: 16),
                     ),
                   ),
                 ],
@@ -70,14 +73,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Center(
               child: Text(
                 'Tap to change photo',
-                style: GoogleFonts.outfit(
+                style: TextStyle(
+                  fontFamily: 'Outfit',
                   color: AppColors.white.withOpacity(0.4),
                   fontSize: 12,
                 ),
               ),
             ),
             const SizedBox(height: 40),
-            
+
             _buildSectionHeader('PERSONAL INFORMATION'),
             const AuthTextField(
               label: 'Full Name',
@@ -113,7 +117,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               prefixIcon: Icons.monitor_weight_outlined,
               keyboardType: TextInputType.number,
             ),
-            
+
             const SizedBox(height: 32),
             _buildSectionHeader('FITNESS GOAL'),
             GridView.count(
@@ -130,7 +134,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 _buildGoalCard('Improve Endurance'),
               ],
             ),
-            
+
             const SizedBox(height: 32),
             _buildSectionHeader('EXPERIENCE LEVEL'),
             Row(
@@ -142,7 +146,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 _buildExpCard('Advanced'),
               ],
             ),
-            
+
             const SizedBox(height: 48),
             AuthButton(
               text: 'Save Changes',
@@ -160,7 +164,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.outfit(
+        style: TextStyle(
+          fontFamily: 'Outfit',
           color: AppColors.white.withOpacity(0.3),
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -177,16 +182,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.darkGrey,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : AppColors.darkGrey,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.05),
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.white.withOpacity(0.05),
           ),
         ),
         child: Text(
           title,
-          style: GoogleFonts.outfit(
-            color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.6),
+          style: TextStyle(
+            fontFamily: 'Outfit',
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.white.withOpacity(0.6),
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -204,16 +216,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.darkGrey,
+            color: isSelected
+                ? AppColors.primary.withOpacity(0.1)
+                : AppColors.darkGrey,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.05),
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.white.withOpacity(0.05),
             ),
           ),
           child: Text(
             title,
-            style: GoogleFonts.outfit(
-              color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.6),
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.white.withOpacity(0.6),
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),

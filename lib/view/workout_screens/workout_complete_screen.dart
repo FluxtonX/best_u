@@ -1,7 +1,7 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/workout_screens/widgets/primary_workout_button.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutCompleteScreen extends StatelessWidget {
   const WorkoutCompleteScreen({super.key});
@@ -20,7 +20,7 @@ class WorkoutCompleteScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 'Workout Complete!',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -29,7 +29,7 @@ class WorkoutCompleteScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'Great job! You finished today\'s session.',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: Colors.white.withOpacity(0.6),
                   fontSize: 16,
                 ),
@@ -80,7 +80,7 @@ class WorkoutCompleteScreen extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -88,7 +88,7 @@ class WorkoutCompleteScreen extends StatelessWidget {
         ),
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: Colors.white.withOpacity(0.4),
             fontSize: 12,
           ),

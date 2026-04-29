@@ -1,7 +1,7 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutPlanScreen extends StatelessWidget {
   const WorkoutPlanScreen({super.key});
@@ -19,7 +19,7 @@ class WorkoutPlanScreen extends StatelessWidget {
               // Header
               Text(
                 'Workout Plan',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.5),
                   fontSize: 14,
                 ),
@@ -27,7 +27,7 @@ class WorkoutPlanScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 '8 Week Program',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -37,7 +37,7 @@ class WorkoutPlanScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'Your transformation journey',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.4),
                   fontSize: 14,
                 ),
@@ -60,7 +60,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                       children: [
                         Text(
                           'OVERALL PROGRESS',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                             color: AppColors.white.withOpacity(0.5),
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
@@ -69,7 +69,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                         ),
                         Text(
                           '21%',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                             color: AppColors.primary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -92,7 +92,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                       children: [
                         Text(
                           '5 of 24 workouts completed',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                             color: AppColors.white.withOpacity(0.4),
                             fontSize: 12,
                           ),
@@ -179,7 +179,7 @@ class WorkoutPlanScreen extends StatelessWidget {
           ),
           title: Text(
             'Week $weekNumber',
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white,
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -187,7 +187,7 @@ class WorkoutPlanScreen extends StatelessWidget {
           ),
           subtitle: Text(
             status,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white.withOpacity(0.4),
               fontSize: 13,
             ),
@@ -201,7 +201,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'CURRENT',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.primary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -259,7 +259,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                 children: [
                   Text(
                     day,
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -267,7 +267,7 @@ class WorkoutPlanScreen extends StatelessWidget {
                   ),
                   Text(
                     type,
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white.withOpacity(0.4),
                       fontSize: 12,
                     ),

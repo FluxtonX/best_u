@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingProgressHeader extends StatelessWidget {
   final int currentStep;
@@ -24,7 +24,7 @@ class OnboardingProgressHeader extends StatelessWidget {
           children: [
             Text(
               'Step $currentStep of $totalSteps',
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -32,7 +32,7 @@ class OnboardingProgressHeader extends StatelessWidget {
             ),
             Text(
               '$percentage%',
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

@@ -1,7 +1,7 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -19,7 +19,7 @@ class ProgressScreen extends StatelessWidget {
               // Header
               Text(
                 'Progress',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -29,7 +29,7 @@ class ProgressScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'track your transformation',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.4),
                   fontSize: 14,
                 ),
@@ -171,7 +171,7 @@ class ProgressScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Text(
                           "Personal Best Records",
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(fontFamily: 'Outfit', 
                             color: AppColors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -234,7 +234,7 @@ class ProgressScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white.withOpacity(0.4),
                     fontSize: 13,
                   ),
@@ -243,7 +243,7 @@ class ProgressScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -269,7 +269,7 @@ class ProgressScreen extends StatelessWidget {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color:
                 isSelected ? AppColors.white : AppColors.white.withOpacity(0.4),
             fontSize: 13,
@@ -302,7 +302,7 @@ class ProgressScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -313,7 +313,7 @@ class ProgressScreen extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle,
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: subtitleColor ?? AppColors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -342,7 +342,7 @@ class ProgressScreen extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: TextStyle(fontFamily: 'Outfit', 
             color: AppColors.white.withOpacity(0.3),
             fontSize: 10,
           ),
@@ -365,7 +365,7 @@ class ProgressScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -374,7 +374,7 @@ class ProgressScreen extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     date,
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white.withOpacity(0.3),
                       fontSize: 11,
                     ),
@@ -383,7 +383,7 @@ class ProgressScreen extends StatelessWidget {
               ),
               Text(
                 value,
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.primary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -440,7 +440,7 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               value,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -450,7 +450,7 @@ class SummaryCard extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.4),
                 fontSize: 10,
               ),

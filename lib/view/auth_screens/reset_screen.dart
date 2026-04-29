@@ -2,7 +2,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class ResetScreen extends StatelessWidget {
   const ResetScreen({super.key});
@@ -41,7 +41,7 @@ class ResetScreen extends StatelessWidget {
             Text(
               'Reset Password',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -51,7 +51,7 @@ class ResetScreen extends StatelessWidget {
             Text(
               'Create a new secure password for your account.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.5),
                 fontSize: 15,
               ),
@@ -70,7 +70,7 @@ class ResetScreen extends StatelessWidget {
               children: [
                 Text(
                   'PASSWORD REQUIREMENTS',
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white.withOpacity(0.3),
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -118,7 +118,7 @@ class ResetScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             text,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: isMet ? Colors.green : AppColors.white.withOpacity(0.3),
               fontSize: 12,
             ),

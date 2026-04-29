@@ -2,7 +2,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class SubscriptionScreen extends StatelessWidget {
   const SubscriptionScreen({super.key});
@@ -40,7 +40,7 @@ class SubscriptionScreen extends StatelessWidget {
               // Header Titles
               Text(
                 'Best-U Premium',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -49,7 +49,7 @@ class SubscriptionScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '8 Week Transformation Program',
-                style: GoogleFonts.outfit(
+                style: TextStyle(fontFamily: 'Outfit', 
                   color: AppColors.white.withOpacity(0.5),
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
@@ -70,7 +70,7 @@ class SubscriptionScreen extends StatelessWidget {
                   children: [
                     Text(
                       "What's Included",
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: AppColors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -108,7 +108,7 @@ class SubscriptionScreen extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: '\$9.99',
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(fontFamily: 'Outfit', 
                               color: AppColors.primary,
                               fontSize: 48,
                               fontWeight: FontWeight.w800,
@@ -116,7 +116,7 @@ class SubscriptionScreen extends StatelessWidget {
                           ),
                           TextSpan(
                             text: '/week',
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(fontFamily: 'Outfit', 
                               color: AppColors.white.withOpacity(0.5),
                               fontSize: 18,
                               fontWeight: FontWeight.w400,
@@ -128,7 +128,7 @@ class SubscriptionScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Cancel anytime, no commitment',
-                      style: GoogleFonts.outfit(
+                      style: TextStyle(fontFamily: 'Outfit', 
                         color: AppColors.white.withOpacity(0.5),
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
@@ -162,7 +162,7 @@ class SubscriptionScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'Start Weekly Plan',
-                    style: GoogleFonts.outfit(
+                    style: TextStyle(fontFamily: 'Outfit', 
                       color: AppColors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -190,7 +190,7 @@ class SubscriptionScreen extends StatelessWidget {
                 child: Text(
                   'By subscribing, you agree to our Terms of Service\nand Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  style: TextStyle(fontFamily: 'Outfit', 
                     color: AppColors.white.withOpacity(0.4),
                     fontSize: 12,
                     height: 1.5,
@@ -227,7 +227,7 @@ class SubscriptionScreen extends StatelessWidget {
           Expanded(
             child: Text(
               feature,
-              style: GoogleFonts.outfit(
+              style: TextStyle(fontFamily: 'Outfit', 
                 color: AppColors.white.withOpacity(0.9),
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -257,7 +257,7 @@ class SubscriptionScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             text,
-            style: GoogleFonts.outfit(
+            style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
