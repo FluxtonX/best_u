@@ -67,14 +67,23 @@ class _AuthButtonState extends State<AuthButton> with SingleTickerProviderStateM
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            width: widget.isLoading ? 56 : MediaQuery.of(context).size.width - 48,
+            width: widget.isLoading ? 56 : double.infinity,
             height: 56,
             decoration: BoxDecoration(
-              color: widget.isPrimary ? AppColors.primary : Colors.transparent,
+              color: widget.isPrimary ? AppColors.primary : Colors.black,
               borderRadius: BorderRadius.circular(widget.isLoading ? 28 : 12),
               border: widget.isPrimary
                   ? null
-                  : Border.all(color: AppColors.white.withOpacity(0.1)),
+                  : Border.all(color: AppColors.white.withOpacity(0.2)),
+              boxShadow: widget.isPrimary && !widget.isLoading
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      )
+                    ]
+                  : [],
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
@@ -90,11 +99,12 @@ class _AuthButtonState extends State<AuthButton> with SingleTickerProviderStateM
                   : Text(
                       widget.text,
                       key: const ValueKey('button_text'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Outfit',
-                        color: AppColors.white,
+                        color: widget.isPrimary ? Colors.black : AppColors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
             ),

@@ -69,11 +69,20 @@ class _OnboardingButtonState extends State<OnboardingButton> with SingleTickerPr
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            width: widget.isLoading ? 56 : MediaQuery.of(context).size.width - 48,
+            width: widget.isLoading ? 56 : double.infinity,
             height: 56,
             decoration: BoxDecoration(
               color: widget.isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.3),
               borderRadius: BorderRadius.circular(widget.isLoading ? 28 : 12),
+              boxShadow: widget.isEnabled && !widget.isLoading
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : [],
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
@@ -83,7 +92,7 @@ class _OnboardingButtonState extends State<OnboardingButton> with SingleTickerPr
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
                       ),
                     )
                   : Row(
@@ -94,15 +103,16 @@ class _OnboardingButtonState extends State<OnboardingButton> with SingleTickerPr
                           widget.text,
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(widget.isEnabled ? 1.0 : 0.5),
+                            color: Colors.black,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.chevron_right,
-                          color: AppColors.white.withOpacity(widget.isEnabled ? 1.0 : 0.5),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.black,
+                          size: 20,
                         ),
                       ],
                     ),

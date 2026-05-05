@@ -15,46 +15,57 @@ class ForgotScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.white.withOpacity(0.05),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.chevron_left, color: AppColors.white, size: 28),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
-            const SizedBox(height: 60),
+            const SizedBox(height: 40),
             // Lock Icon
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
               ),
               child: const Icon(
-                Icons.lock,
+                Icons.lock_outline_rounded,
                 color: AppColors.primary,
-                size: 60,
+                size: 64,
               ),
             ),
-            const SizedBox(height: 48),
-            Text(
-              'Forgot Your Password?',
+            const SizedBox(height: 40),
+            const Text(
+              'Forgot Password?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Outfit', 
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Enter your email address and we will\nsend a password reset link.',
+              'Enter your email address and we\'ll send a password reset link.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Outfit', 
+              style: TextStyle(
+                fontFamily: 'Outfit',
                 color: AppColors.white.withOpacity(0.5),
-                fontSize: 15,
+                fontSize: 16,
                 height: 1.5,
               ),
             ),
@@ -62,7 +73,7 @@ class ForgotScreen extends StatelessWidget {
             const AuthTextField(
               label: 'Email Address',
               hintText: 'your@email.com',
-              prefixIcon: Icons.mail_outline,
+              prefixIcon: Icons.alternate_email_rounded,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 40),
@@ -73,25 +84,27 @@ class ForgotScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => const ResetScreen()),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Remember your password? ',
-                  style: TextStyle(fontFamily: 'Outfit', 
+                  'Remember Password? ',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
                     color: AppColors.white.withOpacity(0.5),
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Text(
+                  child: const Text(
                     'Sign In',
-                    style: TextStyle(fontFamily: 'Outfit', 
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

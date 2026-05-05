@@ -67,9 +67,9 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF121212),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.white.withOpacity(0.05)),
+          color: const Color(0xFF151515),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -78,68 +78,77 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(width: 24), // Spacer for centering title
-                Text(
+                const SizedBox(width: 24),
+                const Text(
                   'Update Weight',
-                  style: TextStyle(fontFamily: 'Outfit', 
-                    color: AppColors.white,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
                     fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Icon(
+                  child: const Icon(
                     Icons.close_rounded,
-                    color: AppColors.white.withOpacity(0.5),
+                    color: Colors.white38,
                     size: 24,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Keep your weight updated to track\nprogress accurately.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white.withOpacity(0.5),
-                fontSize: 14,
-                height: 1.5,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Input Section
-            Align(
+            const Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Current Weight (kg)',
-                style: TextStyle(fontFamily: 'Outfit', 
-                  color: AppColors.white,
-                  fontSize: 15,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: Colors.white,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.white.withOpacity(0.1)),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withOpacity(0.5)),
               ),
               child: TextField(
-                style: const TextStyle(fontFamily: 'Outfit', color: AppColors.white, fontSize: 18),
+                style: const TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700),
                 controller: _weightController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Action Button
             SizedBox(
               width: double.infinity,
@@ -149,7 +158,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 0,
                 ),
@@ -158,7 +167,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                          color: AppColors.white,
+                          color: Color(0xFF151515),
                           strokeWidth: 2,
                         ),
                       )
@@ -166,9 +175,9 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                         'Update Weight',
                         style: TextStyle(
                           fontFamily: 'Outfit',
-                          color: AppColors.white,
+                          color: Color(0xFF151515),
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
               ),

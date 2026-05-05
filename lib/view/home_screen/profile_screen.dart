@@ -61,9 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final String name = data['name'] ?? 'User';
         final String goal = data['goal'] ?? 'No goal set';
         final String experience = data['experienceLevel'] ?? 'Beginner';
-        final String age = data['age']?.toString() ?? 'N/A';
-        final String weight = data['weight']?.toString() ?? 'N/A';
-        final String height = data['height']?.toString() ?? 'N/A';
+        final String age = data['age']?.toString() ?? '24';
+        final String weight = data['weight']?.toString() ?? '65';
+        final String height = data['height']?.toString() ?? '170';
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -74,12 +74,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Text(
+                  const Text(
                     'Profile',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.white.withOpacity(0.5),
-                      fontSize: 14,
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -87,60 +89,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Manage your account settings',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
+                      color: AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 32),
 
-                  // Profile Card
+                  // User Info Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.darkGrey,
-                      borderRadius: BorderRadius.circular(24),
-                      border:
-                          Border.all(color: AppColors.white.withOpacity(0.05)),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFC6934A).withOpacity(0.15),
+                          const Color(0xFF151515),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: const Color(0xFFC6934A).withOpacity(0.1),
+                      ),
                     ),
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: AppColors.primary,
-                          backgroundImage: _imagePath != null ? FileImage(File(_imagePath!)) : null,
-                          child: _imagePath == null
-                              ? const Icon(Icons.person_outline_rounded,
-                                  color: AppColors.white, size: 40)
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          '$experience • $goal',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.4),
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _ProfileStat(label: 'Age', value: age),
-                            _ProfileStat(label: 'Weight', value: '$weight kg'),
-                            _ProfileStat(label: 'Height', value: '$height cm'),
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: AppColors.primary, width: 2),
+                                color: const Color(0xFF151515),
+                              ),
+                              child: ClipOval(
+                                child: _imagePath != null
+                                    ? Image.file(File(_imagePath!),
+                                        fit: BoxFit.cover)
+                                    : const Icon(Icons.person_outline_rounded,
+                                        color: AppColors.primary, size: 40),
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontFamily: 'Outfit',
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$experience • $goal',
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      color: AppColors.primary.withOpacity(0.8),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildStatItem('Age', age),
+                            _buildVerticalDivider(),
+                            _buildStatItem('Weight', '$weight kg'),
+                            _buildVerticalDivider(),
+                            _buildStatItem('Height', '$height cm'),
                           ],
                         ),
                       ],
@@ -148,9 +179,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Settings Groups
-                  _buildSectionHeader('PROFILE'),
-                  _buildMenuItem(
+                  // PROFILE Section
+                  _buildSectionLabel('PROFILE'),
+                  _buildMenuCard(
                     icon: Icons.person_outline_rounded,
                     title: 'Edit Profile',
                     onTap: () async {
@@ -159,69 +190,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(
                             builder: (context) => const EditProfileScreen()),
                       );
-                      _loadLocalImage(); // Refresh image after returning
+                      _loadLocalImage();
                     },
                   ),
-                  _buildMenuItem(
+                  _buildMenuCard(
                     icon: Icons.monitor_weight_outlined,
                     title: 'Update Weight',
                     trailing: Text(
                       '$weight kg',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.4),
+                        color: AppColors.primary,
                         fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     onTap: () => WeightUpdateModal.show(context, weight),
                   ),
 
                   const SizedBox(height: 32),
-                  _buildSectionHeader('APP SETTINGS'),
-                  _buildSwitchItem(
+                  // APP SETTINGS Section
+                  _buildSectionLabel('APP SETTINGS'),
+                  _buildSwitchCard(
                     icon: Icons.notifications_none_rounded,
                     title: 'Notifications',
                     value: true,
                     onChanged: (v) {},
                   ),
-                  _buildSwitchItem(
+                  _buildSwitchCard(
                     icon: Icons.volume_up_outlined,
                     title: 'Sound Effects',
+                    subtitle: 'Celebration sounds',
                     value: true,
                     onChanged: (v) {},
                   ),
 
                   const SizedBox(height: 32),
-                  _buildSectionHeader('SUBSCRIPTION'),
-                  _buildMenuItem(
+                  // SUBSCRIPTION Section
+                  _buildSectionLabel('SUBSCRIPTION'),
+                  _buildMenuCard(
                     icon: Icons.workspace_premium_outlined,
                     title: 'Manage Subscription',
                     subtitle: 'Premium Plan • \$9.99/week',
                     onTap: () {},
                   ),
 
-                  const SizedBox(height: 48),
-                  // Logout Button
+                  const SizedBox(height: 40),
+                  // Log Out Button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: TextButton(
+                    child: OutlinedButton(
                       onPressed: () {
                         _authService.logout();
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-                      child: const Text(
-                        'Log Out',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Colors.redAccent,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: AppColors.primary.withOpacity(0.5)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout_rounded,
+                              color: AppColors.primary, size: 20),
+                          SizedBox(width: 12),
+                          Text(
+                            'Log Out',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: AppColors.primary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 24),
                   Center(
                     child: Column(
                       children: [
@@ -229,15 +280,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Best-U Version 1.0.0',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.2),
+                            color: Colors.white.withOpacity(0.2),
                             fontSize: 11,
                           ),
                         ),
                         Text(
-                          '© 2024 Best-U Fitness',
+                          '© 2026 Best-U Fitness',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.2),
+                            color: Colors.white.withOpacity(0.2),
                             fontSize: 11,
                           ),
                         ),
@@ -254,23 +305,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Text(
-        title,
-        style: TextStyle(
+        label,
+        style: const TextStyle(
           fontFamily: 'Outfit',
-          color: AppColors.white.withOpacity(0.3),
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1,
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuCard({
     required IconData icon,
     required String title,
     String? subtitle,
@@ -280,79 +331,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withOpacity(0.05)),
+        color: const Color(0xFF151515),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.white, size: 20),
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        leading: Icon(icon, color: AppColors.primary, size: 22),
         title: Text(
           title,
           style: const TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.4),
+                  color: Colors.white38,
                   fontSize: 12,
                 ),
               )
             : null,
         trailing: trailing ??
-            Icon(Icons.chevron_right_rounded,
-                color: AppColors.white.withOpacity(0.2)),
+            const Icon(Icons.chevron_right_rounded,
+                color: Colors.white24, size: 24),
       ),
     );
   }
 
-  Widget _buildSwitchItem({
+  Widget _buildSwitchCard({
     required IconData icon,
     required String title,
+    String? subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withOpacity(0.05)),
+        color: const Color(0xFF151515),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.white, size: 20),
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        leading: Icon(icon, color: AppColors.primary, size: 22),
         title: Text(
           title,
           style: const TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle,
+                style: const TextStyle(
+                  fontFamily: 'Outfit',
+                  color: Color(0xFFC6934A),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : null,
         trailing: CupertinoSwitch(
           activeColor: AppColors.primary,
           value: value,
@@ -361,37 +408,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-}
 
-class _ProfileStat extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _ProfileStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildStatItem(String label, String value) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          value,
+          label,
           style: const TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            color: Colors.white38,
+            fontSize: 12,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          label,
-          style: TextStyle(
+          value,
+          style: const TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white.withOpacity(0.4),
-            fontSize: 12,
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      width: 1,
+      height: 30,
+      color: Colors.white.withOpacity(0.05),
     );
   }
 }

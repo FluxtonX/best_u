@@ -4,7 +4,6 @@ import 'package:best_u/view/auth_screens/welcome_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-
   /// SCREEN FADE
   late final AnimationController _screenFadeController;
   late final Animation<double> _screenFade;
@@ -57,15 +55,15 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
 
     /// Screen fade
-    _screenFadeController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _screenFadeController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
     _screenFade = Tween(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: _screenFadeController, curve: Curves.easeOut));
     _screenFadeController.forward();
 
     /// Breathing glow
-    _glowController =
-    AnimationController(vsync: this, duration: const Duration(milliseconds: 3000))
+    _glowController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3000))
       ..repeat(reverse: true);
 
     _glowScale = Tween(begin: 0.85, end: 1.15).animate(
@@ -74,53 +72,66 @@ class _SplashScreenState extends State<SplashScreen>
         CurvedAnimation(parent: _glowController, curve: Curves.easeInOut));
 
     /// Burst glow
-    _burstController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _burstController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
     _burstScale = Tween(begin: 0.2, end: 1.8).animate(
         CurvedAnimation(parent: _burstController, curve: Curves.easeOutExpo));
     _burstOpacity = Tween(begin: 0.6, end: 0.0).animate(
         CurvedAnimation(parent: _burstController, curve: Curves.easeOut));
-    Future.delayed(const Duration(milliseconds: 200), () => _burstController.forward());
+    Future.delayed(
+        const Duration(milliseconds: 200), () => _burstController.forward());
 
     /// Content entrance timeline
-    _contentController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+    _contentController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1600));
 
-    _logoScale = Tween(begin: 0.2, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.0, 0.45, curve: Curves.elasticOut)));
-    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.0, 0.25, curve: Curves.easeOut)));
+    _logoScale = Tween(begin: 0.2, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.0, 0.45, curve: Curves.elasticOut)));
+    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.0, 0.25, curve: Curves.easeOut)));
     _logoSlide = Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.0, 0.45, curve: Curves.easeOut)));
-    _logoRotation = Tween(begin: -0.25, end: 0.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
+        CurvedAnimation(
+            parent: _contentController,
+            curve: const Interval(0.0, 0.45, curve: Curves.easeOut)));
+    _logoRotation = Tween(begin: -0.25, end: 0.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
 
-    _titleOpacity = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
+    _titleOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
     _titleSlide = Tween(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
+        CurvedAnimation(
+            parent: _contentController,
+            curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
 
-    _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.55, 0.75, curve: Curves.easeOut)));
+    _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.55, 0.75, curve: Curves.easeOut)));
 
-    _dotsOpacity = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.7, 0.9, curve: Curves.easeOut)));
+    _dotsOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.7, 0.9, curve: Curves.easeOut)));
 
-    _footerOpacity = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _contentController, curve: const Interval(0.82, 1.0, curve: Curves.easeOut)));
+    _footerOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _contentController,
+        curve: const Interval(0.82, 1.0, curve: Curves.easeOut)));
 
-    Future.delayed(const Duration(milliseconds: 120), () => _contentController.forward());
+    Future.delayed(
+        const Duration(milliseconds: 120), () => _contentController.forward());
 
     /// Continuous pulse
-    _pulseController =
-    AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+    _pulseController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1800))
       ..repeat(reverse: true);
     _logoPulse = Tween(begin: 1.0, end: 1.06).animate(
         CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
 
     /// Dot shimmer
-    _dotController =
-    AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
+    _dotController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200))
       ..repeat(reverse: true);
     _dotShimmer = Tween(begin: 0.7, end: 1.0).animate(
         CurvedAnimation(parent: _dotController, curve: Curves.easeInOut));
@@ -187,7 +198,10 @@ class _SplashScreenState extends State<SplashScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
-                          colors: [AppColors.primary.withOpacity(0.25), Colors.transparent],
+                          colors: [
+                            AppColors.primary.withOpacity(0.25),
+                            Colors.transparent
+                          ],
                         ),
                       ),
                     ),
@@ -210,7 +224,10 @@ class _SplashScreenState extends State<SplashScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
-                          colors: [AppColors.primary.withOpacity(0.12), Colors.transparent],
+                          colors: [
+                            AppColors.primary.withOpacity(0.12),
+                            Colors.transparent
+                          ],
                         ),
                       ),
                     ),
@@ -227,7 +244,8 @@ class _SplashScreenState extends State<SplashScreen>
 
                   /// LOGO
                   AnimatedBuilder(
-                    animation: Listenable.merge([_contentController, _pulseController]),
+                    animation: Listenable.merge(
+                        [_contentController, _pulseController]),
                     builder: (_, __) => FadeTransition(
                       opacity: _logoOpacity,
                       child: SlideTransition(
@@ -247,16 +265,19 @@ class _SplashScreenState extends State<SplashScreen>
 
                   FadeTransition(
                     opacity: _titleOpacity,
-                    child: SlideTransition(position: _titleSlide, child: _buildTitle()),
+                    child: SlideTransition(
+                        position: _titleSlide, child: _buildTitle()),
                   ),
 
                   const SizedBox(height: 12),
-                  FadeTransition(opacity: _taglineOpacity, child: _buildTagline()),
+                  FadeTransition(
+                      opacity: _taglineOpacity, child: _buildTagline()),
 
                   const Spacer(flex: 4),
                   FadeTransition(opacity: _dotsOpacity, child: _buildDots()),
                   const SizedBox(height: 40),
-                  FadeTransition(opacity: _footerOpacity, child: _buildFooter()),
+                  FadeTransition(
+                      opacity: _footerOpacity, child: _buildFooter()),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -268,82 +289,85 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildLogo() => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: AppColors.primary,
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.primary.withOpacity(0.3),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-      ],
-    ),
-    child: SvgPicture.asset(
-      'assets/icons/gain_strength.svg',
-      colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
-      width: 40,
-      height: 40,
-    ),
-  );
+        child: Image.asset(
+          'assets/images/app-logo.png',
+          width: 40,
+          height: 40,
+          fit: BoxFit.contain,
+        ),
+      );
 
   Widget _buildTitle() => const Text.rich(
-    TextSpan(
-      style: TextStyle(fontFamily: 'Outfit', fontSize: 40, fontWeight: FontWeight.w800),
-      children: [
-        TextSpan(text: 'Best-', style: TextStyle(color: AppColors.white)),
-        TextSpan(text: 'U', style: TextStyle(color: AppColors.primary)),
-      ],
-    ),
-  );
+        TextSpan(
+          style: TextStyle(
+              fontFamily: 'Outfit', fontSize: 40, fontWeight: FontWeight.w800),
+          children: [
+            TextSpan(text: 'Best-', style: TextStyle(color: AppColors.white)),
+            TextSpan(text: 'U', style: TextStyle(color: AppColors.primary)),
+          ],
+        ),
+      );
 
   Widget _buildTagline() => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Text('✦', style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
-      const SizedBox(width: 10),
-      Text('TRANSFORM YOUR BODY',
-          style: TextStyle(
-              fontFamily: 'Outfit',
-              color: AppColors.white.withOpacity(0.9),
-              fontSize: 11,
-              letterSpacing: 2)),
-      const SizedBox(width: 10),
-      Text('✦', style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
-    ],
-  );
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('✦',
+              style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
+          const SizedBox(width: 10),
+          Text('TRANSFORM YOUR BODY',
+              style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.9),
+                  fontSize: 11,
+                  letterSpacing: 2)),
+          const SizedBox(width: 10),
+          Text('✦',
+              style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
+        ],
+      );
 
   Widget _buildDots() => AnimatedBuilder(
-    animation: _dotController,
-    builder: (_, __) => Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _dot(false),
-        const SizedBox(width: 10),
-        _dot(true, _dotShimmer.value),
-        const SizedBox(width: 10),
-        _dot(false),
-      ],
-    ),
-  );
+        animation: _dotController,
+        builder: (_, __) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _dot(false),
+            const SizedBox(width: 10),
+            _dot(true, _dotShimmer.value),
+            const SizedBox(width: 10),
+            _dot(false),
+          ],
+        ),
+      );
 
   Widget _dot(bool active, [double shimmer = 1]) => Container(
-    width: 6,
-    height: 6,
-    decoration: BoxDecoration(
-      color: active
-          ? AppColors.primary.withOpacity(shimmer)
-          : AppColors.white.withOpacity(0.1),
-      shape: BoxShape.circle,
-    ),
-  );
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.primary.withOpacity(shimmer)
+              : AppColors.white.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+      );
 
   Widget _buildFooter() => Text(
-    '8 Week Transformation Program',
-    style: TextStyle(
-        fontFamily: 'Outfit',
-        color: AppColors.white.withOpacity(0.4),
-        fontSize: 12),
-  );
+        '8 Week Transformation Program',
+        style: TextStyle(
+            fontFamily: 'Outfit',
+            color: AppColors.white.withOpacity(0.4),
+            fontSize: 12),
+      );
 }

@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/registration_screen/subscription_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_button.dart';
-import 'package:best_u/view/registration_screen/widgets/onboarding_logo.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_progress_header.dart';
 import 'package:best_u/view/registration_screen/widgets/option_card.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Selection States
   String? _selectedGoal;
-  String? _selectedExperience;
 
   // Controllers
   final TextEditingController _nameController = TextEditingController();
@@ -54,15 +54,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         'weight': _weightController.text.trim(),
         'height': _heightController.text.trim(),
         'goal': _selectedGoal,
-        'experienceLevel': _selectedExperience,
         'onboardingCompleted': true,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
       if (!mounted) return;
 
-      // Navigate to Home or Subscription (as per original flow, but user asked for Home)
-      Navigator.pushReplacementNamed(context, '/home');
+      // Navigate to Subscription Screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +83,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _weightController.text.trim().isEmpty ||
           _heightController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill in all personal information')),
+          const SnackBar(
+              content: Text('Please fill in all personal information')),
         );
         return;
       }
@@ -92,16 +95,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
         return;
       }
-    } else if (_currentStep == 3) {
-      if (_selectedExperience == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select your experience level')),
-        );
-        return;
-      }
     }
 
-    if (_currentStep < 3) {
+    if (_currentStep < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -118,37 +114,80 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              OnboardingProgressHeader(currentStep: _currentStep),
-              const SizedBox(height: 40),
-              const OnboardingLogo(),
-              const SizedBox(height: 48),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildStep1(),
-                    _buildStep2(),
-                    _buildStep3(),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  OnboardingProgressHeader(
+                    currentStep: _currentStep,
+                    totalSteps: 2,
+                  ),
+                  const SizedBox(height: 32),
+                  // Logo / Title Section
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Best-',
+                              style: TextStyle(color: AppColors.white),
+                            ),
+                            TextSpan(
+                              text: 'U',
+                              style: TextStyle(color: AppColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '8 Week Transformation Program',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildStep1(),
+                        _buildStep2(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OnboardingButton(
+                    text: _currentStep == 2 ? 'Complete Profile' : 'Continue',
+                    isLoading: _isLoading,
+                    onPressed: _isLoading ? () {} : _nextStep,
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              OnboardingButton(
-                text: 'Continue',
-                isLoading: _isLoading,
-                onPressed: _isLoading ? () {} : _nextStep,
-              ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -159,22 +198,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             "Let's get started",
             style: TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             "Tell us about yourself",
             style: TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.white.withOpacity(0.5),
               fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 32),
@@ -223,22 +264,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       {
         'title': 'Lose Weight',
         'icon': null,
-        'svg': 'assets/icons/lose_weight_icon.svg'
+        'svg': 'assets/icons/lose_weight_icon.svg',
       },
       {
         'title': 'Gain Strength',
         'icon': null,
-        'svg': 'assets/icons/gain_strength.svg'
+        'svg': 'assets/icons/gain_strength.svg',
       },
       {
-        'title': 'Build Muscle',
+        'title': 'Lose Weight & Gain Strength',
         'icon': null,
-        'svg': 'assets/icons/build muscle icon.svg'
-      },
-      {
-        'title': 'Improve Endurance',
-        'icon': null,
-        'svg': 'assets/icons/build muscle icon.svg'
+        'svg': 'assets/icons/build muscle icon.svg',
       },
     ];
 
@@ -246,22 +282,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             "What's your goal?",
             style: TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             "Choose your primary fitness objective",
             style: TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.white.withOpacity(0.5),
               fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 32),
@@ -273,65 +311,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   svgPath: goal['svg'],
                   isSelected: _selectedGoal == goal['title'],
                   onTap: () => setState(() => _selectedGoal = goal['title']),
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
-  // STEP 3: Experience Selection
-  Widget _buildStep3() {
-    final List<Map<String, dynamic>> levels = [
-      {
-        'title': 'Beginner',
-        'description': 'New to fitness',
-        'icon': null,
-      },
-      {
-        'title': 'Intermediate',
-        'description': '6+ months experience',
-        'icon': null,
-      },
-      {
-        'title': 'Advanced',
-        'description': '2+ years experience',
-        'icon': null,
-      },
-    ];
-
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Experience level",
-            style: TextStyle(
-              fontFamily: 'Outfit',
-              color: AppColors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Help us tailor your program",
-            style: TextStyle(
-              fontFamily: 'Outfit',
-              color: AppColors.white.withOpacity(0.5),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ...levels.map((level) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: OptionCard(
-                  title: level['title'],
-                  description: level['description'],
-                  icon: level['icon'],
-                  isSelected: _selectedExperience == level['title'],
-                  onTap: () =>
-                      setState(() => _selectedExperience = level['title']),
                 ),
               )),
         ],

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:best_u/view/auth_screens/auth_services.dart';
@@ -75,156 +76,190 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.white.withOpacity(0.05),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.chevron_left, color: AppColors.white, size: 28),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 60),
-            const Text(
-              'Welcome Back',
-              style: TextStyle(
-                fontFamily: 'Outfit',
-                color: AppColors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Sign in to continue your journey',
-              style: TextStyle(
-                fontFamily: 'Outfit',
-                color: AppColors.white.withOpacity(0.5),
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 60),
-            AuthTextField(
-              controller: emailController,
-              label: 'Email Address',
-              hintText: 'your@email.com',
-              prefixIcon: Icons.mail_outline,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 24),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                AuthTextField(
-                  controller: passwordController,
-                  label: 'Password',
-                  hintText: 'Enter your password',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ForgotScreen()),
-                  ),
-                  child: const Text(
-                    'Forgot Password?',
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40),
+                  const Text(
+                    'Welcome Back',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.white,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            AuthButton(
-              text: 'Sign In',
-              isLoading: _isLoading,
-              onPressed: () {
-                if (!_isLoading) {
-                  _signIn();
-                }
-              },
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Don't have an account? ",
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
-                    fontSize: 14,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SignUpScreen()),
-                  ),
-                  child: const Text(
-                    'Create Account',
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sign in to continue your journey',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.white.withOpacity(0.5),
+                      fontSize: 16,
+                      height: 1.5,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 48),
-            Row(
-              children: [
-                Expanded(
-                    child: Divider(color: AppColors.white.withOpacity(0.05))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'or',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: AppColors.white.withOpacity(0.3),
-                      fontSize: 12,
-                    ),
+                  const SizedBox(height: 50),
+                  AuthTextField(
+                    controller: emailController,
+                    label: 'Email Address',
+                    hintText: 'your@email.com',
+                    prefixIcon: Icons.alternate_email_rounded,
+                    keyboardType: TextInputType.emailAddress,
                   ),
-                ),
-                Expanded(
-                    child: Divider(color: AppColors.white.withOpacity(0.05))),
-              ],
-            ),
-            const SizedBox(height: 32),
-            SocialButton(
-              text: 'Sign in with Apple',
-              icon: const Icon(Icons.apple, color: AppColors.white, size: 24),
-              onPressed: () {},
-            ),
-            const SizedBox(height: 16),
-            SocialButton(
-              text: 'Sign in with Google',
-              icon: Image.asset(
-                'assets/images/google-logo.png',
-                width: 24,
-                height: 24,
+                  const SizedBox(height: 24),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      AuthTextField(
+                        controller: passwordController,
+                        label: 'Password',
+                        hintText: 'Enter your password',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        isPassword: true,
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ForgotScreen()),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  AuthButton(
+                    text: 'Sign In',
+                    isLoading: _isLoading,
+                    onPressed: () {
+                      if (!_isLoading) {
+                        _signIn();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.5),
+                          fontSize: 15,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SignUpScreen()),
+                        ),
+                        child: const Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Divider(color: AppColors.white.withOpacity(0.1))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.white.withOpacity(0.3),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                          child: Divider(color: AppColors.white.withOpacity(0.1))),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SocialButton(
+                          text: 'Apple',
+                          icon: const Icon(Icons.apple, color: AppColors.white, size: 24),
+                          onPressed: () {},
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SocialButton(
+                          text: 'Google',
+                          icon: Image.asset(
+                            'assets/images/google-logo.png',
+                            width: 22,
+                            height: 22,
+                          ),
+                          onPressed: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              onPressed: () {},
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

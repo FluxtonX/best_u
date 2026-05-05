@@ -24,31 +24,47 @@ class OnboardingProgressHeader extends StatelessWidget {
           children: [
             Text(
               'Step $currentStep of $totalSteps',
-              style: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white.withOpacity(0.6),
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.primary.withOpacity(0.5),
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
             Text(
               '$percentage%',
-              style: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.primary,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.primary.withOpacity(0.5),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppColors.white.withOpacity(0.1),
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            minHeight: 4,
-          ),
+        const SizedBox(height: 8),
+        Stack(
+          children: [
+            Container(
+              height: 4,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            FractionallySizedBox(
+              widthFactor: progress,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

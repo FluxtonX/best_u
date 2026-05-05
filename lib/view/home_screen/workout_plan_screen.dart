@@ -17,41 +17,35 @@ class WorkoutPlanScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
+              const Text(
+                '8 Week Program',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(height: 6),
               Text(
-                'Workout Plan',
-                style: TextStyle(fontFamily: 'Outfit', 
+                'Your transformation journey',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
                   color: AppColors.white.withOpacity(0.5),
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '8 Week Program',
-                style: TextStyle(fontFamily: 'Outfit', 
-                  color: AppColors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your transformation journey',
-                style: TextStyle(fontFamily: 'Outfit', 
-                  color: AppColors.white.withOpacity(0.4),
-                  fontSize: 14,
-                ),
-              ),
               const SizedBox(height: 32),
-              
+
               // Overall Progress Card
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.darkGrey,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.white.withOpacity(0.05)),
+                  color: const Color(0xFF151515),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
                 child: Column(
                   children: [
@@ -60,30 +54,33 @@ class WorkoutPlanScreen extends StatelessWidget {
                       children: [
                         Text(
                           'OVERALL PROGRESS',
-                          style: TextStyle(fontFamily: 'Outfit', 
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
                             color: AppColors.white.withOpacity(0.5),
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
                           ),
                         ),
-                        Text(
+                        const Text(
                           '21%',
-                          style: TextStyle(fontFamily: 'Outfit', 
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
                             color: AppColors.primary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: 0.21,
-                        backgroundColor: AppColors.white.withOpacity(0.05),
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        backgroundColor: Colors.white.withOpacity(0.05),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.primary),
                         minHeight: 8,
                       ),
                     ),
@@ -92,9 +89,10 @@ class WorkoutPlanScreen extends StatelessWidget {
                       children: [
                         Text(
                           '5 of 24 workouts completed',
-                          style: TextStyle(fontFamily: 'Outfit', 
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
                             color: AppColors.white.withOpacity(0.4),
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -103,36 +101,38 @@ class WorkoutPlanScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Weeks List
               _buildWeekItem(
                 weekNumber: 1,
                 status: '3/3 workouts',
                 isCompleted: true,
-                days: [
-                  _buildDayItem(context, 'Day 1', 'Base', true),
-                  _buildDayItem(context, 'Day 2', 'Base', true),
-                  _buildDayItem(context, 'Day 3', 'Base', true),
-                ],
               ),
               _buildWeekItem(
                 weekNumber: 2,
                 status: '2/3 workouts',
                 isCurrent: true,
-                context: context,
+                isExpanded: true,
                 days: [
                   _buildDayItem(context, 'Day 1', 'Base', true),
                   _buildDayItem(context, 'Day 2', 'Base', true),
-                  _buildDayItem(context, 'Day 3', 'Base', false, isCurrent: true),
+                  _buildDayItem(context, 'Day 3', 'Base', false,
+                      isCurrent: true),
                 ],
               ),
-              _buildWeekItem(weekNumber: 3, status: '0/3 workouts', isLocked: true),
-              _buildWeekItem(weekNumber: 4, status: '0/3 workouts', isLocked: true),
-              _buildWeekItem(weekNumber: 5, status: '0/3 workouts', isLocked: true),
-              _buildWeekItem(weekNumber: 6, status: '0/3 workouts', isLocked: true),
-              _buildWeekItem(weekNumber: 7, status: '0/3 workouts', isLocked: true),
-              _buildWeekItem(weekNumber: 8, status: '0/3 workouts', isLocked: true),
-              const SizedBox(height: 20),
+              _buildWeekItem(
+                  weekNumber: 3, status: '0/3 workouts', isLocked: true),
+              _buildWeekItem(
+                  weekNumber: 4, status: '0/3 workouts', isLocked: true),
+              _buildWeekItem(
+                  weekNumber: 5, status: '0/3 workouts', isLocked: true),
+              _buildWeekItem(
+                  weekNumber: 6, status: '0/3 workouts', isLocked: true),
+              _buildWeekItem(
+                  weekNumber: 7, status: '0/3 workouts', isLocked: true),
+              _buildWeekItem(
+                  weekNumber: 8, status: '0/3 workouts', isLocked: true),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -146,110 +146,140 @@ class WorkoutPlanScreen extends StatelessWidget {
     bool isCompleted = false,
     bool isCurrent = false,
     bool isLocked = false,
-    BuildContext? context,
+    bool isExpanded = false,
     List<Widget>? days,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.darkGrey,
+        color: const Color(0xFF151515),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isCurrent ? AppColors.primary.withOpacity(0.3) : AppColors.white.withOpacity(0.05),
-          width: isCurrent ? 1.5 : 1,
+          color: isCurrent
+              ? AppColors.primary.withOpacity(0.2)
+              : Colors.white.withOpacity(0.05),
+          width: 1,
         ),
       ),
-      child: Theme(
-        data: ThemeData(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: isCurrent,
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? Colors.green.withOpacity(0.1)
-                  : (isCurrent ? AppColors.primary.withOpacity(0.1) : AppColors.white.withOpacity(0.05)),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isCompleted ? Icons.check : (isLocked ? Icons.lock_outline_rounded : Icons.calendar_today_rounded),
-              color: isCompleted ? Colors.green : (isCurrent ? AppColors.primary : AppColors.white.withOpacity(0.3)),
-              size: 20,
-            ),
+      child: ExpansionTile(
+        initiallyExpanded: isExpanded,
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
+        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? Colors.green.withOpacity(0.1)
+                : Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
           ),
-          title: Text(
-            'Week $weekNumber',
-            style: TextStyle(fontFamily: 'Outfit', 
-              color: AppColors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+          child: Icon(
+            isCompleted
+                ? Icons.check_rounded
+                : (isLocked
+                    ? Icons.lock_outline_rounded
+                    : Icons.calendar_today_rounded),
+            color: isCompleted
+                ? Colors.green
+                : (isCurrent
+                    ? AppColors.primary
+                    : AppColors.white.withOpacity(0.3)),
+            size: 18,
           ),
-          subtitle: Text(
-            status,
-            style: TextStyle(fontFamily: 'Outfit', 
-              color: AppColors.white.withOpacity(0.4),
-              fontSize: 13,
-            ),
+        ),
+        title: Text(
+          'Week $weekNumber',
+          style: const TextStyle(
+            fontFamily: 'Outfit',
+            color: AppColors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
-          trailing: isCurrent 
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        ),
+        subtitle: Row(
+          children: [
+            Text(
+              status,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withOpacity(0.4),
+                fontSize: 13,
+              ),
+            ),
+            if (isCurrent) ...[
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
+                child: const Text(
                   'CURRENT',
-                  style: TextStyle(fontFamily: 'Outfit', 
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
                     color: AppColors.primary,
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              )
-            : Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.white.withOpacity(0.3)),
-          children: days != null ? [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(children: days),
-            )
-          ] : [],
+              ),
+            ],
+          ],
         ),
+        trailing: Icon(
+          isLocked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
+          color: Colors.white.withOpacity(0.2),
+          size: 20,
+        ),
+        children: days != null
+            ? [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(children: days),
+                )
+              ]
+            : [],
       ),
     );
   }
 
-  Widget _buildDayItem(BuildContext context, String day, String type, bool isCompleted, {bool isCurrent = false}) {
+  Widget _buildDayItem(
+      BuildContext context, String day, String type, bool isCompleted,
+      {bool isCurrent = false}) {
     return GestureDetector(
-      onTap: isCurrent ? () {
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const WorkoutListScreen()),
         );
-      } : null,
+      },
       child: Container(
         margin: const EdgeInsets.only(top: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isCurrent ? AppColors.primary.withOpacity(0.05) : AppColors.background.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.black.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isCurrent ? AppColors.primary.withOpacity(0.2) : AppColors.white.withOpacity(0.05),
+            color: isCurrent
+                ? AppColors.primary.withOpacity(0.3)
+                : Colors.white.withOpacity(0.03),
           ),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: isCompleted ? Colors.green.withOpacity(0.1) : (isCurrent ? AppColors.primary.withOpacity(0.1) : AppColors.white.withOpacity(0.05)),
+                color: isCompleted
+                    ? Colors.green.withOpacity(0.15)
+                    : Colors.white.withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isCompleted ? Icons.check : (isCurrent ? Icons.play_arrow_rounded : Icons.calendar_today_rounded),
-                color: isCompleted ? Colors.green : (isCurrent ? AppColors.primary : AppColors.white.withOpacity(0.3)),
-                size: 14,
+                isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded,
+                color: isCompleted ? Colors.green : AppColors.primary,
+                size: 16,
               ),
             ),
             const SizedBox(width: 16),
@@ -259,15 +289,17 @@ class WorkoutPlanScreen extends StatelessWidget {
                 children: [
                   Text(
                     day,
-                    style: TextStyle(fontFamily: 'Outfit', 
+                    style: const TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white,
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     type,
-                    style: TextStyle(fontFamily: 'Outfit', 
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white.withOpacity(0.4),
                       fontSize: 12,
                     ),
@@ -276,7 +308,8 @@ class WorkoutPlanScreen extends StatelessWidget {
               ),
             ),
             if (isCurrent)
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.primary, size: 14),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.primary, size: 20),
           ],
         ),
       ),

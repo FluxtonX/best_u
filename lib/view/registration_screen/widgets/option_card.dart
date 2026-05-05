@@ -25,15 +25,16 @@ class OptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.transparent : AppColors.darkGrey,
+          color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.05),
-            width: 1.5,
+            width: 1,
           ),
         ),
         child: Row(
@@ -43,13 +44,13 @@ class OptionCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : AppColors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: svgPath != null
                     ? SvgPicture.asset(
                         svgPath!,
                         colorFilter: ColorFilter.mode(
-                          isSelected ? AppColors.white : AppColors.white.withOpacity(0.5),
+                          isSelected ? Colors.black : AppColors.primary,
                           BlendMode.srcIn,
                         ),
                         width: 24,
@@ -57,11 +58,11 @@ class OptionCard extends StatelessWidget {
                       )
                     : Icon(
                         icon,
-                        color: isSelected ? AppColors.white : AppColors.white.withOpacity(0.5),
+                        color: isSelected ? Colors.black : AppColors.primary,
                         size: 24,
                       ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 20),
             ],
             Expanded(
               child: Column(
@@ -69,32 +70,27 @@ class OptionCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(fontFamily: 'Outfit', 
+                    style: const TextStyle(
+                      fontFamily: 'Outfit',
                       color: AppColors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (description != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       description!,
-                      style: TextStyle(fontFamily: 'Outfit', 
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
                         color: AppColors.white.withOpacity(0.4),
                         fontSize: 12,
-                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: AppColors.primary,
-                size: 20,
-              ),
           ],
         ),
       ),

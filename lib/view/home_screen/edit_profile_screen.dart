@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
-import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _ageController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
-  
+
   String _selectedGoal = 'Gain Strength';
   String _selectedExperience = 'Intermediate';
   String? _imagePath;
@@ -72,7 +70,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (user == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data()!;
         setState(() {
@@ -98,7 +99,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
         'name': _nameController.text.trim(),
         'age': _ageController.text.trim(),
         'height': _heightController.text.trim(),
@@ -110,13 +114,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile: $e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+            content: Text('Error updating profile: $e'),
+            backgroundColor: Colors.redAccent),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -128,7 +136,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_isFetching) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body:
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
@@ -163,14 +172,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onTap: _pickImage,
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: AppColors.darkGrey,
-                      backgroundImage: _imagePath != null ? FileImage(File(_imagePath!)) : null,
-                      child: _imagePath == null
-                          ? const Icon(Icons.person_outline_rounded,
-                              color: AppColors.white, size: 50)
-                          : null,
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF151515),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.05), width: 1),
+                      ),
+                      child: ClipOval(
+                        child: _imagePath != null
+                            ? Image.file(File(_imagePath!), fit: BoxFit.cover)
+                            : const Icon(Icons.person_outline_rounded,
+                                color: Colors.white24, size: 50),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -182,7 +198,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.camera_alt_rounded,
-                            color: AppColors.white, size: 16),
+                            color: Color(0xFF151515), size: 16),
                       ),
                     ),
                   ],
@@ -195,38 +211,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 'Tap to change photo',
                 style: TextStyle(
                   fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.4),
+                  color: AppColors.primary.withOpacity(0.8),
                   fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             const SizedBox(height: 40),
 
             _buildSectionHeader('PERSONAL INFORMATION'),
-            AuthTextField(
+            _buildInputField(
               label: 'Full Name',
-              hintText: 'Enter your name',
-              prefixIcon: Icons.person_outline_rounded,
               controller: _nameController,
             ),
             const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
-                  child: AuthTextField(
+                  child: _buildInputField(
                     label: 'Age',
-                    hintText: 'Age',
-                    prefixIcon: Icons.cake_outlined,
                     keyboardType: TextInputType.number,
                     controller: _ageController,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: AuthTextField(
+                  child: _buildInputField(
                     label: 'Height (cm)',
-                    hintText: 'Height',
-                    prefixIcon: Icons.height_rounded,
                     keyboardType: TextInputType.number,
                     controller: _heightController,
                   ),
@@ -234,10 +245,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            AuthTextField(
+            _buildInputField(
               label: 'Current Weight (kg)',
-              hintText: 'Weight',
-              prefixIcon: Icons.monitor_weight_outlined,
               keyboardType: TextInputType.number,
               controller: _weightController,
             ),
@@ -272,10 +281,72 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
 
             const SizedBox(height: 48),
-            AuthButton(
-              text: 'Save Changes',
-              isLoading: _isLoading,
-              onPressed: _saveChanges,
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 56,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: AppColors.primary.withOpacity(0.3)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 1,
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFF151515), strokeWidth: 2))
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.save_as_rounded,
+                                    color: Color(0xFF151515), size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Save Changes',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: Color(0xFF151515),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 40),
           ],
@@ -289,14 +360,56 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Outfit',
-          color: AppColors.white.withOpacity(0.3),
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
           letterSpacing: 1,
         ),
       ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Outfit',
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF151515),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+                color: AppColors.primary,
+                fontFamily: 'Outfit',
+                fontWeight: FontWeight.w600),
+            decoration: const InputDecoration(
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -307,25 +420,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
-              : AppColors.darkGrey,
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF151515),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : AppColors.white.withOpacity(0.05),
+            color:
+                isSelected ? AppColors.primary : Colors.white.withOpacity(0.05),
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Text(
           title,
           style: TextStyle(
             fontFamily: 'Outfit',
-            color: isSelected
-                ? AppColors.primary
-                : AppColors.white.withOpacity(0.6),
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? Colors.white : Colors.white38,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
       ),
@@ -338,28 +447,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: GestureDetector(
         onTap: () => setState(() => _selectedExperience = title),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withOpacity(0.1)
-                : AppColors.darkGrey,
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFF151515),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : AppColors.white.withOpacity(0.05),
+                  : Colors.white.withOpacity(0.05),
+              width: isSelected ? 1.5 : 1,
             ),
           ),
           child: Text(
             title,
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.white.withOpacity(0.6),
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              color: isSelected ? Colors.white : Colors.white38,
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ),

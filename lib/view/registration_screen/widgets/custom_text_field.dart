@@ -25,37 +25,41 @@ class CustomTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontFamily: 'Outfit', 
-            color: AppColors.white.withOpacity(0.9),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          style: TextStyle(
+            fontFamily: 'Outfit',
+            color: AppColors.white.withOpacity(0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Container(
-          height: 56,
+          height: 48,
           decoration: BoxDecoration(
-            color: AppColors.darkGrey,
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withOpacity(0.05),
               width: 1,
             ),
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
-            style: TextStyle(fontFamily: 'Outfit', 
+            style: const TextStyle(
+              fontFamily: 'Outfit',
               color: AppColors.white,
               fontSize: 14,
             ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white.withOpacity(0.3),
+              hintStyle: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withOpacity(0.2),
                 fontSize: 14,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
             ),
           ),

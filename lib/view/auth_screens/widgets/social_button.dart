@@ -23,13 +23,13 @@ class SocialButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: AppColors.white.withOpacity(0.05),
+            color: AppColors.white.withOpacity(0.1),
             width: 1,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.black.withOpacity(0.3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -38,12 +38,14 @@ class SocialButton extends StatelessWidget {
             const SizedBox(width: 12),
             Flexible(
               child: Text(
-                text,
+                'Sign in with $text',
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontFamily: 'Outfit', 
+                style: const TextStyle(
+                  fontFamily: 'Outfit',
                   color: AppColors.white,
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
