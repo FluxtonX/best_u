@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:ui';
+
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/services/api_service.dart';
 import 'package:best_u/view/auth_screens/welcome_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,165 +18,154 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  /// SCREEN FADE
-  late final AnimationController _screenFadeController;
-  late final Animation<double> _screenFade;
-
-  /// BREATHING BACKGROUND GLOW
-  late final AnimationController _glowController;
-  late final Animation<double> _glowScale;
-  late final Animation<double> _glowOpacity;
-
-  /// BURST INTRO GLOW
-  late final AnimationController _burstController;
-  late final Animation<double> _burstScale;
-  late final Animation<double> _burstOpacity;
-
-  /// CONTENT ENTRANCE SEQUENCE
-  late final AnimationController _contentController;
-
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoOpacity;
-  late final Animation<Offset> _logoSlide;
-  late final Animation<double> _logoRotation;
-
-  late final Animation<double> _titleOpacity;
-  late final Animation<Offset> _titleSlide;
-  late final Animation<double> _taglineOpacity;
-  late final Animation<double> _dotsOpacity;
-  late final Animation<double> _footerOpacity;
-
-  /// CONTINUOUS PULSE
+  late final AnimationController _screenController;
+  late final AnimationController _logoController;
   late final AnimationController _pulseController;
-  late final Animation<double> _logoPulse;
-
-  /// DOT SHIMMER
   late final AnimationController _dotController;
-  late final Animation<double> _dotShimmer;
+  late final Animation<double> _screenOpacity;
+  late final Animation<double> _logoOpacity;
+  late final Animation<double> _logoScale;
+  late final Animation<Offset> _logoSlide;
+  late final Animation<double> _taglineOpacity;
+  late final Animation<Offset> _taglineSlide;
+  late final Animation<double> _footerOpacity;
+  late final Animation<double> _logoPulse;
+  late VideoPlayerController _videoController;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
 
-    /// Screen fade
-    _screenFadeController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900));
-    _screenFade = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _screenFadeController, curve: Curves.easeOut));
-    _screenFadeController.forward();
+    _videoController =
+        VideoPlayerController.asset('assets/video/excercise-video.mp4')
+          ..initialize().then((_) {
+            if (!mounted) return;
+            _videoController
+              ..setVolume(0)
+              ..setLooping(true)
+              ..play();
+            setState(() {});
+          });
 
-    /// Breathing glow
-    _glowController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3000))
-      ..repeat(reverse: true);
+    _screenController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _screenOpacity = CurvedAnimation(
+      parent: _screenController,
+      curve: Curves.easeOut,
+    );
 
-    _glowScale = Tween(begin: 0.85, end: 1.15).animate(
-        CurvedAnimation(parent: _glowController, curve: Curves.easeInOut));
-    _glowOpacity = Tween(begin: 0.5, end: 1.0).animate(
-        CurvedAnimation(parent: _glowController, curve: Curves.easeInOut));
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.0, 0.34, curve: Curves.easeOut),
+      ),
+    );
+    _logoScale = Tween(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.0, 0.56, curve: Curves.easeOutBack),
+      ),
+    );
+    _logoSlide = Tween(
+      begin: const Offset(0, 0.18),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.0, 0.56, curve: Curves.easeOutCubic),
+      ),
+    );
+    _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.38, 0.72, curve: Curves.easeOut),
+      ),
+    );
+    _taglineSlide = Tween(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.38, 0.78, curve: Curves.easeOutCubic),
+      ),
+    );
+    _footerOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.72, 1.0, curve: Curves.easeOut),
+      ),
+    );
 
-    /// Burst glow
-    _burstController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900));
-    _burstScale = Tween(begin: 0.2, end: 1.8).animate(
-        CurvedAnimation(parent: _burstController, curve: Curves.easeOutExpo));
-    _burstOpacity = Tween(begin: 0.6, end: 0.0).animate(
-        CurvedAnimation(parent: _burstController, curve: Curves.easeOut));
-    Future.delayed(
-        const Duration(milliseconds: 200), () => _burstController.forward());
-
-    /// Content entrance timeline
-    _contentController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1600));
-
-    _logoScale = Tween(begin: 0.2, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.0, 0.45, curve: Curves.elasticOut)));
-    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.0, 0.25, curve: Curves.easeOut)));
-    _logoSlide = Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(
-        CurvedAnimation(
-            parent: _contentController,
-            curve: const Interval(0.0, 0.45, curve: Curves.easeOut)));
-    _logoRotation = Tween(begin: -0.25, end: 0.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
-
-    _titleOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
-    _titleSlide = Tween(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-        CurvedAnimation(
-            parent: _contentController,
-            curve: const Interval(0.35, 0.65, curve: Curves.easeOut)));
-
-    _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.55, 0.75, curve: Curves.easeOut)));
-
-    _dotsOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.7, 0.9, curve: Curves.easeOut)));
-
-    _footerOpacity = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.82, 1.0, curve: Curves.easeOut)));
-
-    Future.delayed(
-        const Duration(milliseconds: 120), () => _contentController.forward());
-
-    /// Continuous pulse
     _pulseController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1800))
-      ..repeat(reverse: true);
-    _logoPulse = Tween(begin: 1.0, end: 1.06).animate(
-        CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+    _logoPulse = Tween(begin: 1.0, end: 1.035).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    /// Dot shimmer
     _dotController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
-    _dotShimmer = Tween(begin: 0.7, end: 1.0).animate(
-        CurvedAnimation(parent: _dotController, curve: Curves.easeInOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 1050),
+    )..repeat();
 
-    /// NAVIGATION (UNCHANGED)
-    Timer(const Duration(seconds: 3), () async {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        try {
-          final doc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+    _screenController.forward();
+    Future.delayed(const Duration(milliseconds: 160), () {
+      if (mounted) _logoController.forward();
+    });
 
-          if (doc.exists && doc.data()?['onboardingCompleted'] == true) {
+    _navigationTimer = Timer(const Duration(seconds: 3), _routeAfterSplash);
+  }
+
+  Future<void> _routeAfterSplash() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final apiService = ApiService();
+        final response = await apiService.getProfile();
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body)['data'];
+          if (data != null && data['onboardingCompleted'] == true) {
             if (!mounted) return;
             Navigator.pushReplacementNamed(context, '/home');
           } else {
             if (!mounted) return;
             Navigator.pushReplacementNamed(context, '/registration');
           }
-        } catch (_) {
+        } else {
+          if (!mounted) return;
           Navigator.pushReplacementNamed(context, '/registration');
         }
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-        );
+      } catch (_) {
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/registration');
       }
-    });
+    } else {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      );
+    }
   }
 
   @override
   void dispose() {
-    _screenFadeController.dispose();
-    _glowController.dispose();
-    _burstController.dispose();
-    _contentController.dispose();
+    _navigationTimer?.cancel();
+    _screenController.dispose();
+    _logoController.dispose();
     _pulseController.dispose();
     _dotController.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -181,105 +174,57 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: FadeTransition(
-        opacity: _screenFade,
+        opacity: _screenOpacity,
         child: Stack(
           children: [
-            /// Burst glow
-            Center(
-              child: AnimatedBuilder(
-                animation: _burstController,
-                builder: (_, __) => Transform.scale(
-                  scale: _burstScale.value,
-                  child: Opacity(
-                    opacity: _burstOpacity.value,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppColors.primary.withOpacity(0.25),
-                            Colors.transparent
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            /// Breathing glow
-            Center(
-              child: AnimatedBuilder(
-                animation: _glowController,
-                builder: (_, __) => Transform.scale(
-                  scale: _glowScale.value,
-                  child: Opacity(
-                    opacity: _glowOpacity.value,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppColors.primary.withOpacity(0.12),
-                            Colors.transparent
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            /// MAIN CONTENT
+            _buildVideoBackground(),
+            _buildOverlay(),
             SafeArea(
-              child: Column(
-                children: [
-                  const Spacer(flex: 5),
-
-                  /// LOGO
-                  AnimatedBuilder(
-                    animation: Listenable.merge(
-                        [_contentController, _pulseController]),
-                    builder: (_, __) => FadeTransition(
-                      opacity: _logoOpacity,
-                      child: SlideTransition(
-                        position: _logoSlide,
-                        child: Transform.rotate(
-                          angle: _logoRotation.value,
-                          child: Transform.scale(
-                            scale: _logoScale.value * _logoPulse.value,
-                            child: _buildLogo(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 19),
+                    AnimatedBuilder(
+                      animation: Listenable.merge(
+                        [_logoController, _pulseController],
+                      ),
+                      builder: (context, child) {
+                        return FadeTransition(
+                          opacity: _logoOpacity,
+                          child: SlideTransition(
+                            position: _logoSlide,
+                            child: Transform.scale(
+                              scale: _logoScale.value * _logoPulse.value,
+                              child: child,
+                            ),
                           ),
-                        ),
+                        );
+                      },
+                      child: _buildLogoCard(),
+                    ),
+                    const SizedBox(height: 18),
+                    FadeTransition(
+                      opacity: _taglineOpacity,
+                      child: SlideTransition(
+                        position: _taglineSlide,
+                        child: _buildTagline(),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  FadeTransition(
-                    opacity: _titleOpacity,
-                    child: SlideTransition(
-                        position: _titleSlide, child: _buildTitle()),
-                  ),
-
-                  const SizedBox(height: 12),
-                  FadeTransition(
-                      opacity: _taglineOpacity, child: _buildTagline()),
-
-                  const Spacer(flex: 4),
-                  FadeTransition(opacity: _dotsOpacity, child: _buildDots()),
-                  const SizedBox(height: 40),
-                  FadeTransition(
-                      opacity: _footerOpacity, child: _buildFooter()),
-                  const SizedBox(height: 20),
-                ],
+                    const Spacer(flex: 25),
+                    FadeTransition(
+                      opacity: _footerOpacity,
+                      child: Column(
+                        children: [
+                          _buildDots(),
+                          const SizedBox(height: 18),
+                          _buildFooter(),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                  ],
+                ),
               ),
             ),
           ],
@@ -288,86 +233,148 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildLogo() => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+  Widget _buildVideoBackground() {
+    if (!_videoController.value.isInitialized) {
+      return const Positioned.fill(child: ColoredBox(color: Colors.black));
+    }
+
+    return Positioned.fill(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _videoController.value.size.width,
+          height: _videoController.value.size.height,
+          child: VideoPlayer(_videoController),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlay() {
+    return Positioned.fill(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.2),
+                Colors.black.withValues(alpha: 0.45),
+                Colors.black.withValues(alpha: 0.82),
+              ],
             ),
-          ],
+          ),
         ),
-        child: Image.asset(
-          'assets/images/app-logo.png',
-          width: 40,
-          height: 40,
-          fit: BoxFit.contain,
-        ),
-      );
+      ),
+    );
+  }
 
-  Widget _buildTitle() => const Text.rich(
-        TextSpan(
+  Widget _buildLogoCard() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final glow = 0.12 + (_pulseController.value * 0.1);
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.38),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: glow),
+                blurRadius: 14,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: Image.asset(
+        'assets/images/welcom-logo.png',
+        width: 146,
+        height: 141,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildTagline() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.bolt_rounded, color: AppColors.primary, size: 13),
+        const SizedBox(width: 5),
+        Text(
+          'Transform Your Body',
           style: TextStyle(
-              fontFamily: 'Outfit', fontSize: 40, fontWeight: FontWeight.w800),
-          children: [
-            TextSpan(text: 'Best-', style: TextStyle(color: AppColors.white)),
-            TextSpan(text: 'U', style: TextStyle(color: AppColors.primary)),
-          ],
+            fontFamily: 'Outfit',
+            color: AppColors.primary.withValues(alpha: 0.78),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-      );
+        const SizedBox(width: 5),
+        const Icon(Icons.bolt_rounded, color: AppColors.primary, size: 13),
+      ],
+    );
+  }
 
-  Widget _buildTagline() => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('✦',
-              style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
-          const SizedBox(width: 10),
-          Text('TRANSFORM YOUR BODY',
-              style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.9),
-                  fontSize: 11,
-                  letterSpacing: 2)),
-          const SizedBox(width: 10),
-          Text('✦',
-              style: TextStyle(color: AppColors.primary.withOpacity(0.8))),
-        ],
-      );
-
-  Widget _buildDots() => AnimatedBuilder(
-        animation: _dotController,
-        builder: (_, __) => Row(
+  Widget _buildDots() {
+    return AnimatedBuilder(
+      animation: _dotController,
+      builder: (context, child) {
+        return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _dot(false),
-            const SizedBox(width: 10),
-            _dot(true, _dotShimmer.value),
-            const SizedBox(width: 10),
-            _dot(false),
+            _dot(0),
+            const SizedBox(width: 8),
+            _dot(1),
+            const SizedBox(width: 8),
+            _dot(2),
           ],
-        ),
-      );
+        );
+      },
+    );
+  }
 
-  Widget _dot(bool active, [double shimmer = 1]) => Container(
-        width: 6,
-        height: 6,
-        decoration: BoxDecoration(
-          color: active
-              ? AppColors.primary.withOpacity(shimmer)
-              : AppColors.white.withOpacity(0.1),
-          shape: BoxShape.circle,
-        ),
-      );
+  Widget _dot(int index) {
+    final phase = (_dotController.value + index / 3) % 1.0;
+    final active = phase < 0.34;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: active ? 7 : 5,
+      height: active ? 7 : 5,
+      decoration: BoxDecoration(
+        color: active
+            ? AppColors.primary
+            : AppColors.primary.withValues(alpha: 0.24),
+        shape: BoxShape.circle,
+        boxShadow: active
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.42),
+                  blurRadius: 8,
+                ),
+              ]
+            : null,
+      ),
+    );
+  }
 
-  Widget _buildFooter() => Text(
-        '8 Week Transformation Program',
-        style: TextStyle(
-            fontFamily: 'Outfit',
-            color: AppColors.white.withOpacity(0.4),
-            fontSize: 12),
-      );
+  Widget _buildFooter() {
+    return Text(
+      '8 Week Transformation Program',
+      style: TextStyle(
+        fontFamily: 'Outfit',
+        color: AppColors.primary.withValues(alpha: 0.86),
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
 }

@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:best_u/services/api_service.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,25 +68,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _fetchUserData() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (doc.exists) {
-        final data = doc.data()!;
+      final apiService = ApiService();
+      final response = await apiService.getProfile();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['data'];
         setState(() {
           _nameController.text = data['name'] ?? '';
           _ageController.text = data['age']?.toString() ?? '';
-          _heightController.text = data['height']?.toString() ?? '';
+          _heightController.text = data['bmi']?.toString() ?? '';
           _weightController.text = data['weight']?.toString() ?? '';
           _selectedGoal = data['goal'] ?? 'Gain Strength';
-          _selectedExperience = data['experienceLevel'] ?? 'Intermediate';
+          _selectedExperience = data['fitnessLevel'] ?? 'Intermediate';
           _isFetching = false;
         });
+      } else {
+        setState(() => _isFetching = false);
       }
     } catch (e) {
       debugPrint("Error fetching user data: $e");
@@ -93,39 +92,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
+      final apiService = ApiService();
+      final response = await apiService.updateProfile({
         'name': _nameController.text.trim(),
-        'age': _ageController.text.trim(),
-        'height': _heightController.text.trim(),
-        'weight': _weightController.text.trim(),
+        'age': int.tryParse(_ageController.text.trim()) ?? 0,
+        'bmi': double.tryParse(_heightController.text.trim()),
+        'weight': double.tryParse(_weightController.text.trim()) ?? 0.0,
         'goal': _selectedGoal,
-        'experienceLevel': _selectedExperience,
-        'updatedAt': FieldValue.serverTimestamp(),
+        'fitnessLevel': _selectedExperience,
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Profile updated successfully'),
-            backgroundColor: Colors.green),
-      );
-      Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        AppSnackBar.show(context, 'Profile updated successfully',
+            type: AppSnackType.success);
+        Navigator.pop(context);
+      } else {
+        AppSnackBar.show(context, 'Error updating profile: ${response.body}',
+            type: AppSnackType.error);
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error updating profile: $e'),
-            backgroundColor: Colors.redAccent),
-      );
+      AppSnackBar.show(context, 'Error updating profile: $e',
+          type: AppSnackType.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -168,7 +161,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: [
             // Profile Photo Edit
             Center(
-              child: GestureDetector(
+              child: AppBounceAnimation(
                 onTap: _pickImage,
                 child: Stack(
                   children: [
@@ -237,7 +230,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildInputField(
-                    label: 'Height (cm)',
+                    label: 'BMI (If known)',
                     keyboardType: TextInputType.number,
                     controller: _heightController,
                   ),
@@ -263,8 +256,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 _buildGoalCard('Lose Weight'),
                 _buildGoalCard('Gain Strength'),
-                _buildGoalCard('Build Muscle'),
-                _buildGoalCard('Improve Endurance'),
+                _buildGoalCard('Combo'),
               ],
             ),
 
@@ -284,24 +276,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Row(
               children: [
                 Expanded(
-                  child: SizedBox(
-                    height: 56,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
+                  child: AppBounceAnimation(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
                             color: AppColors.primary.withOpacity(0.3)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
                       ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      child: const Center(
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -309,40 +301,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveChanges,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                  child: AppBounceAnimation(
+                    onTap: _isLoading ? null : _saveChanges,
+                    isDisabled: _isLoading,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  color: Color(0xFF151515), strokeWidth: 2))
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.save_as_rounded,
-                                    color: Color(0xFF151515), size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Save Changes',
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: Color(0xFF151515),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
+                      child: Center(
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                    color: Color(0xFF151515), strokeWidth: 2.5))
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.save_as_rounded,
+                                      color: Color(0xFF151515), size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      color: Color(0xFF151515),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                      ),
                     ),
                   ),
                 ),
@@ -415,8 +414,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildGoalCard(String title) {
     final isSelected = _selectedGoal == title;
-    return GestureDetector(
+    return AppBounceAnimation(
       onTap: () => setState(() => _selectedGoal = title),
+      scaleFactor: 0.96,
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -444,8 +444,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildExpCard(String title) {
     final isSelected = _selectedExperience == title;
     return Expanded(
-      child: GestureDetector(
+      child: AppBounceAnimation(
         onTap: () => setState(() => _selectedExperience = title),
+        scaleFactor: 0.96,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           alignment: Alignment.center,

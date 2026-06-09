@@ -1,57 +1,152 @@
+import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/local_workout_plan_service.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/exercise_session_screen.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
-class WorkoutListScreen extends StatelessWidget {
-  const WorkoutListScreen({super.key});
+class WorkoutListScreen extends StatefulWidget {
+  final String? workoutId;
+  const WorkoutListScreen({super.key, this.workoutId});
+
+  @override
+  State<WorkoutListScreen> createState() => _WorkoutListScreenState();
+}
+
+class _WorkoutListScreenState extends State<WorkoutListScreen> {
+  Map<String, dynamic>? _workout;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWorkoutDetails();
+  }
+
+  Future<void> _fetchWorkoutDetails() async {
+    if (widget.workoutId != null && widget.workoutId!.startsWith('local_')) {
+      final localWorkout =
+          await LocalWorkoutPlanService().loadWorkout(widget.workoutId!);
+      if (localWorkout != null && mounted) {
+        setState(() {
+          _workout = localWorkout;
+          _isLoading = false;
+        });
+        return;
+      }
+    }
+
+    // Check if it needs to fetch persisted workout data.
+    if (widget.workoutId != null && widget.workoutId != 'demo_id') {
+      try {
+        final apiService = ApiService();
+        final response = await apiService.getWorkoutDetails(widget.workoutId!);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['success'] == true) {
+            final workout = Map<String, dynamic>.from(data['data']);
+            workout['exercises'] = _withLocalExerciseVideos(
+              workout['exercises'] as List? ?? [],
+            );
+            setState(() {
+              _workout = workout;
+              _isLoading = false;
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint("Error fetching workout: $e");
+      }
+    }
+
+    final fallbackWorkout =
+        await LocalWorkoutPlanService().loadWorkout('local_w1_d1');
+    if (fallbackWorkout != null && mounted) {
+      setState(() {
+        _workout = fallbackWorkout;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // DISCONNECTED FROM BACKEND FOR PERFECT UI TESTING OR DEMO
+    setState(() {
+      _workout = {
+        'title': 'Chest / Bicep',
+        'name': 'Chest / Bicep',
+        'estimatedDurationMinutes': 29,
+        'durationMinutes': 29,
+        'day': 1,
+        'totalSets': 6,
+        'exercises': [
+          {
+            'name': 'Press Up',
+            'sets': 2,
+            'reps': '1-10, 1-6',
+            'type': 'Chest',
+            'previousReps': 1,
+            'targetReps': 10,
+            'hasWeightTarget': false,
+          },
+          {
+            'name': 'Bicep Curl',
+            'sets': 2,
+            'reps': '10, 3-6',
+            'type': 'Arms',
+            'previousWeight': 6.0,
+            'targetWeight': 18.0,
+            'targetReps': 10,
+            'hasWeightTarget': true,
+          },
+          {
+            'name': 'Sit Ups',
+            'sets': 2,
+            'reps': '1-10, 1-6',
+            'type': 'Core',
+            'previousReps': 1,
+            'targetReps': 10,
+            'hasWeightTarget': false,
+          },
+        ]
+      };
+      _workout!['exercises'] = _withLocalExerciseVideos(
+        _workout!['exercises'] as List? ?? [],
+      );
+      _isLoading = false;
+    });
+  }
+
+  List<Map<String, dynamic>> _withLocalExerciseVideos(List<dynamic> exercises) {
+    final localPlanService = LocalWorkoutPlanService();
+    return exercises
+        .whereType<Map>()
+        .map((exercise) => localPlanService.attachLocalVideo(
+              Map<String, dynamic>.from(exercise),
+            ))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> exercises = [
-      {
-        'name': 'Bench Press',
-        'sets': '3 x 10',
-        'target': 'Chest',
-        'previous': '60 kg',
-        'target_weight': '65 kg'
-      },
-      {
-        'name': 'Barbell Row',
-        'sets': '3 x 12',
-        'target': 'Back',
-        'previous': '50 kg',
-        'target_weight': '55 kg'
-      },
-      {
-        'name': 'Overhead Press',
-        'sets': '3 x 8',
-        'target': 'Shoulders',
-        'previous': '40 kg',
-        'target_weight': '42.5 kg'
-      },
-      {
-        'name': 'Pull-ups',
-        'sets': '3 x 8',
-        'target': 'Back',
-        'previous': '',
-        'target_weight': ''
-      },
-      {
-        'name': 'Dumbbell Curls',
-        'sets': '3 x 12',
-        'target': 'Arms',
-        'previous': '15 kg',
-        'target_weight': '17.5 kg'
-      },
-      {
-        'name': 'Tricep Dips',
-        'sets': '3 x 8',
-        'target': 'Arms',
-        'previous': '',
-        'target_weight': ''
-      },
-    ];
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    final List<dynamic> exercises = _workout?['exercises'] ?? [];
+    final String workoutName =
+        _workout?['name'] ?? _workout?['title'] ?? 'Workout';
+    final String dayInfo =
+        _workout?['day'] != null ? 'DAY ${_workout!['day']}' : 'TODAY';
+    final int durationMinutes = _workout?['durationMinutes'] ??
+        _workout?['estimatedDurationMinutes'] ??
+        0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -66,18 +161,18 @@ class WorkoutListScreen extends StatelessWidget {
         ),
         title: Column(
           children: [
-            const Text(
-              'DAY 2',
-              style: TextStyle(
+            Text(
+              dayInfo,
+              style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const Text(
-              'Upper Body Strength',
-              style: TextStyle(
+            Text(
+              workoutName,
+              style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: Colors.white,
                 fontSize: 18,
@@ -106,11 +201,12 @@ class WorkoutListScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildSummaryStat('6', 'Exercises'),
+                        _buildSummaryStat('${exercises.length}', 'Exercises'),
                         _buildVerticalDivider(),
-                        _buildSummaryStat('29', 'Minutes'),
+                        _buildSummaryStat('$durationMinutes', 'Minutes'),
                         _buildVerticalDivider(),
-                        _buildSummaryStat('18', 'Total Sets'),
+                        _buildSummaryStat(
+                            '${_getTotalSets(exercises)}', 'Total Sets'),
                       ],
                     ),
                   ),
@@ -127,12 +223,12 @@ class WorkoutListScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           children: [
-                            const Icon(Icons.stars_rounded,
+                            Icon(Icons.stars_rounded,
                                 color: AppColors.primary, size: 20),
-                            const SizedBox(width: 10),
-                            const Text(
+                            SizedBox(width: 10),
+                            Text(
                               "Today's Focus",
                               style: TextStyle(
                                 fontFamily: 'Outfit',
@@ -145,10 +241,11 @@ class WorkoutListScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Focus on controlled movements and proper form. Rest between sets as needed. Try to match or exceed your previous performance.",
+                          _workout?['description'] ??
+                              "Focus on controlled movements and proper form. Rest between sets as needed. Try to match or exceed your previous performance.",
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 13,
                             height: 1.5,
                           ),
@@ -172,15 +269,15 @@ class WorkoutListScreen extends StatelessWidget {
                   // Exercise List
                   ...exercises.asMap().entries.map((entry) {
                     final int idx = entry.key;
-                    final Map<String, dynamic> exercise = entry.value;
+                    final dynamic exercise = entry.value;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: const Color(0xFF151515),
                         borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.03)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.03)),
                       ),
                       child: Row(
                         children: [
@@ -188,7 +285,7 @@ class WorkoutListScreen extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
@@ -218,51 +315,18 @@ class WorkoutListScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.fitness_center_rounded,
-                                        size: 14, color: AppColors.primary),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${exercise['sets']}  ${exercise['target']}',
-                                      style: TextStyle(
-                                        fontFamily: 'Outfit',
-                                        color: Colors.white.withOpacity(0.4),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (exercise['previous'] != '') ...[
+                                _buildSetPreview(exercise),
+                                if (exercise['previousWeight'] != null) ...[
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
                                       Text(
-                                        'Previous: ${exercise['previous']}',
+                                        'Previous: ${exercise['previousWeight']} kg',
                                         style: TextStyle(
                                           fontFamily: 'Outfit',
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.3),
                                           fontSize: 11,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary
-                                              .withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          'Target: ${exercise['target_weight']}',
-                                          style: const TextStyle(
-                                            fontFamily: 'Outfit',
-                                            color: AppColors.primary,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                          ),
                                         ),
                                       ),
                                     ],
@@ -282,23 +346,30 @@ class WorkoutListScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ExerciseSessionScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
+            child: AppBounceAnimation(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ExerciseSessionScreen(
+                            exercises: exercises,
+                            workoutId: widget.workoutId ?? 'mock_workout_id',
+                          )),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -325,6 +396,109 @@ class WorkoutListScreen extends StatelessWidget {
     );
   }
 
+  int _getTotalSets(List<dynamic> exercises) {
+    int total = 0;
+    for (var e in exercises) {
+      total += (e['sets'] as int? ?? 0);
+    }
+    return total;
+  }
+
+  String _exercisePrescription(dynamic exercise) {
+    final sets = exercise['sets'] as int? ?? 0;
+    final reps = exercise['reps']?.toString();
+    if (reps != null && reps.isNotEmpty && reps != 'See instructions') {
+      return '$sets sets x $reps';
+    }
+
+    final duration = exercise['durationSeconds']?.toString();
+    if (duration != null && duration.isNotEmpty) {
+      return '$sets sets x $duration sec';
+    }
+
+    return '$sets sets';
+  }
+
+  List<Map<String, dynamic>> _setDetails(dynamic exercise) {
+    final details = exercise is Map ? exercise['setDetails'] : null;
+    if (details is List && details.isNotEmpty) {
+      return details
+          .whereType<Map>()
+          .map((set) => Map<String, dynamic>.from(set))
+          .toList();
+    }
+
+    final instructions = exercise is Map ? exercise['setInstructions'] : null;
+    if (instructions is List && instructions.isNotEmpty) {
+      return instructions.asMap().entries.map((entry) {
+        return {
+          'set': entry.key + 1,
+          'instruction': entry.value?.toString() ?? '',
+        };
+      }).toList();
+    }
+
+    return [
+      {
+        'set': 1,
+        'instruction': _exercisePrescription(exercise),
+      }
+    ];
+  }
+
+  Widget _buildSetPreview(dynamic exercise) {
+    final sets = _setDetails(exercise);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: sets.map((set) {
+        final setNumber = set['set']?.toString() ?? '';
+        final instruction = set['instruction']?.toString() ?? '';
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F0F0F),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Set $setNumber',
+                style: const TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150),
+                child: Text(
+                  instruction,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white.withValues(alpha: 0.62),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildSummaryStat(String value, String label) {
     return Column(
       children: [
@@ -342,7 +516,7 @@ class WorkoutListScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Outfit',
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 12,
           ),
         ),
@@ -354,7 +528,7 @@ class WorkoutListScreen extends StatelessWidget {
     return Container(
       width: 1,
       height: 30,
-      color: Colors.white.withOpacity(0.05),
+      color: Colors.white.withValues(alpha: 0.05),
     );
   }
 }

@@ -41,8 +41,12 @@ dependencies:
   google_fonts: ^6.3.0
   firebase_auth: 6.4.0 
   firebase_core: ^4.7.0
+  app_links: ^6.4.1
   image_picker: ^1.2.2
   shared_preferences: ^2.5.5
+  flutter_animate: ^4.5.2
+
+  path_provider: ^2.1.5
 
 
 
@@ -55,7 +59,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/app-logo.png"
+  image_path: "assets/images/welcom-logo.png"
   min_sdk_android: 21
 
 # For information on the generic Dart part of this file, see the
@@ -75,6 +79,7 @@ flutter:
     - assets/images/
     - assets/data/
     - assets/video/
+    - assets/video/exercises/
 
   fonts:
     - family: Outfit

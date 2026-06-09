@@ -27,63 +27,101 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _screens[_currentIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: AppColors.white.withOpacity(0.05),
-              width: 1,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 78,
+          decoration: BoxDecoration(
+            color: const Color(0xFF121212),
+            border: Border(
+              top: BorderSide(
+                color: AppColors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
             ),
+          ),
+          child: Row(
+            children: [
+              _BottomNavItem(
+                icon: Icons.home_outlined,
+                label: 'Home',
+                isSelected: _currentIndex == 0,
+                onTap: () => setState(() => _currentIndex = 0),
+              ),
+              _BottomNavItem(
+                icon: Icons.calendar_month_outlined,
+                label: 'Program',
+                isSelected: _currentIndex == 1,
+                onTap: () => setState(() => _currentIndex = 1),
+              ),
+              _BottomNavItem(
+                icon: Icons.trending_up_rounded,
+                label: 'Progress',
+                isSelected: _currentIndex == 2,
+                onTap: () => setState(() => _currentIndex = 2),
+              ),
+              _BottomNavItem(
+                icon: Icons.person_outline_rounded,
+                label: 'Profile',
+                isSelected: _currentIndex == 3,
+                onTap: () => setState(() => _currentIndex = 3),
+              ),
+            ],
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.background,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.white.withOpacity(0.3),
-          selectedLabelStyle: const TextStyle(
-            fontFamily: 'Outfit',
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25);
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        splashColor: const Color(0xFFF2B84B).withValues(alpha: 0.06),
+        highlightColor: const Color(0xFFF2B84B).withValues(alpha: 0.03),
+        child: SizedBox(
+          height: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: label == 'Progress' ? 24 : 25,
+                weight: 400,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: color,
+                  fontSize: 11,
+                  height: 1,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Outfit',
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.home_filled, size: 24),
-              ),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.calendar_today_rounded, size: 22),
-              ),
-              label: 'Program',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.bar_chart_rounded, size: 26),
-              ),
-              label: 'Progress',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.person_outline_rounded, size: 24),
-              ),
-              label: 'Profile',
-            ),
-          ],
         ),
       ),
     );

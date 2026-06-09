@@ -1,6 +1,6 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
 class PrimaryWorkoutButton extends StatelessWidget {
   final String title;
@@ -18,25 +18,31 @@ class PrimaryWorkoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color ?? AppColors.primary,
-          foregroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          elevation: 0,
+    final bgColor = color ?? AppColors.primary;
+    return AppBounceAnimation(
+      onTap: onPressed,
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: bgColor.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               title.toUpperCase(),
-              style: TextStyle(fontFamily: 'Outfit', 
+              style: const TextStyle(
+                fontFamily: 'Outfit',
+                color: Colors.black,
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
                 letterSpacing: 0.5,
@@ -44,7 +50,7 @@ class PrimaryWorkoutButton extends StatelessWidget {
             ),
             if (icon != null) ...[
               const SizedBox(width: 8),
-              Icon(icon, size: 18),
+              Icon(icon, size: 18, color: Colors.black),
             ],
           ],
         ),

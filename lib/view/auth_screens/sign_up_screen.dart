@@ -6,8 +6,9 @@ import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
 import 'package:best_u/view/registration_screen/onboarding_screen.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,7 +18,6 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
@@ -73,13 +73,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  AuthTextField(
-                    controller: nameController,
-                    label: 'Full Name',
-                    hintText: 'Enter your full name',
-                    prefixIcon: Icons.person_outline_rounded,
-                  ),
-                  const SizedBox(height: 24),
                   AuthTextField(
                     controller: emailController,
                     label: 'Email Address',
@@ -156,7 +149,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           fontSize: 15,
                         ),
                       ),
-                      GestureDetector(
+                      AppBounceAnimation(
                         onTap: () => Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
@@ -232,22 +225,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _createAccount() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill in all fields"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.show(context, 'Please fill in all fields',
+          type: AppSnackType.warning);
       return;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Passwords do not match"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      AppSnackBar.show(context, 'Passwords do not match',
+          type: AppSnackType.error);
       return;
     }
 
@@ -262,13 +247,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Account Created Successfully"),
-            backgroundColor: Colors.green,
-          ),
-        );
-
+        AppSnackBar.show(context, 'Account Created Successfully!',
+            type: AppSnackType.success);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -278,16 +258,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      
+      String errorMessage = e.toString();
+      if (errorMessage.contains('network-request-failed')) {
+        errorMessage = "Network Error: Please disable Firebase reCAPTCHA in Console for testing.";
+      }
+      
+      AppSnackBar.show(context, errorMessage, type: AppSnackType.error);
     } finally {
       if (!mounted) return;
-
       setState(() => _isLoading = false);
     }
   }

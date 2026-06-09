@@ -1,12 +1,61 @@
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:best_u/view/auth_screens/reset_screen.dart';
+import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
-class ForgotScreen extends StatelessWidget {
+class ForgotScreen extends StatefulWidget {
   const ForgotScreen({super.key});
+
+  @override
+  State<ForgotScreen> createState() => _ForgotScreenState();
+}
+
+class _ForgotScreenState extends State<ForgotScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+  bool _emailSent = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendResetLink() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      AppSnackBar.show(
+        context,
+        'Please enter a valid email address.',
+        type: AppSnackType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.sendPasswordResetLink(email);
+      if (!mounted) return;
+      setState(() => _emailSent = true);
+      AppSnackBar.show(
+        context,
+        'Password reset link sent. Please check your email.',
+        type: AppSnackType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.show(context, e.toString(), type: AppSnackType.error);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +68,14 @@ class ForgotScreen extends StatelessWidget {
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.white.withOpacity(0.05),
+            color: AppColors.white.withValues(alpha: 0.05),
           ),
           child: IconButton(
-            icon: const Icon(Icons.chevron_left, color: AppColors.white, size: 28),
+            icon: const Icon(
+              Icons.chevron_left,
+              color: AppColors.white,
+              size: 28,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -32,25 +85,29 @@ class ForgotScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 40),
-            // Lock Icon
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-              child: const Icon(
-                Icons.lock_outline_rounded,
+              child: Icon(
+                _emailSent
+                    ? Icons.mark_email_read_rounded
+                    : Icons.lock_outline_rounded,
                 color: AppColors.primary,
                 size: 64,
               ),
             ),
             const SizedBox(height: 40),
-            const Text(
-              'Forgot Password?',
+            Text(
+              _emailSent ? 'Check Your Email' : 'Forgot Password?',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: AppColors.white,
                 fontSize: 32,
@@ -60,17 +117,20 @@ class ForgotScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Enter your email address and we\'ll send a password reset link.',
+              _emailSent
+                  ? 'Open the Firebase reset link from your email. You can set a new password only after that link is verified.'
+                  : 'Enter your email address and we will send a Firebase password reset link.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.white.withOpacity(0.5),
+                color: AppColors.white.withValues(alpha: 0.5),
                 fontSize: 16,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 60),
-            const AuthTextField(
+            AuthTextField(
+              controller: _emailController,
               label: 'Email Address',
               hintText: 'your@email.com',
               prefixIcon: Icons.alternate_email_rounded,
@@ -78,11 +138,9 @@ class ForgotScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             AuthButton(
-              text: 'Send Reset Link',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ResetScreen()),
-              ),
+              text: _emailSent ? 'Resend Reset Link' : 'Send Reset Link',
+              isLoading: _isLoading,
+              onPressed: _sendResetLink,
             ),
             const SizedBox(height: 32),
             Row(
@@ -92,11 +150,11 @@ class ForgotScreen extends StatelessWidget {
                   'Remember Password? ',
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
+                    color: AppColors.white.withValues(alpha: 0.5),
                     fontSize: 15,
                   ),
                 ),
-                GestureDetector(
+                AppBounceAnimation(
                   onTap: () => Navigator.pop(context),
                   child: const Text(
                     'Sign In',

@@ -1,8 +1,8 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
-class OnboardingButton extends StatefulWidget {
+class OnboardingButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isEnabled;
@@ -17,108 +17,75 @@ class OnboardingButton extends StatefulWidget {
   });
 
   @override
-  State<OnboardingButton> createState() => _OnboardingButtonState();
-}
-
-class _OnboardingButtonState extends State<OnboardingButton> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleTapDown(TapDownDetails details) {
-    if (widget.isEnabled) _controller.forward();
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    if (widget.isEnabled) {
-      _controller.reverse();
-      widget.onPressed();
-    }
-  }
-
-  void _handleTapCancel() {
-    if (widget.isEnabled) _controller.reverse();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: widget.isLoading ? null : _handleTapDown,
-      onTapUp: widget.isLoading ? null : _handleTapUp,
-      onTapCancel: widget.isLoading ? null : _handleTapCancel,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            width: widget.isLoading ? 56 : double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              color: widget.isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(widget.isLoading ? 28 : 12),
-              boxShadow: widget.isEnabled && !widget.isLoading
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
-                  : [],
-            ),
-            child: AnimatedSwitcher(
+    return AppBounceAnimation(
+      onTap: (!isEnabled || isLoading) ? null : onPressed,
+      isDisabled: !isEnabled || isLoading,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          
+          return Center(
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              child: widget.isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                      ),
-                    )
-                  : Row(
-                      key: const ValueKey('button_content'),
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.text,
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+              curve: Curves.easeOutCubic,
+              width: isLoading ? 56 : maxWidth,
+              height: 56,
+              decoration: BoxDecoration(
+                // ignore: deprecated_member_use
+                color: isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(isLoading ? 28 : 14),
+                boxShadow: isEnabled && !isLoading
+                    ? [
+                        BoxShadow(
+                          // ignore: deprecated_member_use
+                          color: AppColors.primary.withOpacity(0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
+                        )
+                      ]
+                    : [],
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                        ),
+                      )
+                    : Row(
+                        key: const ValueKey('onboarding_btn'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              text,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Outfit',
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.black,
-                          size: 20,
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

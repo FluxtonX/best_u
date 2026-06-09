@@ -1,15 +1,16 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:best_u/services/api_service.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/forgot_screen.dart';
 import 'package:best_u/view/auth_screens/sign_up_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_text_field.dart';
 import 'package:best_u/view/auth_screens/widgets/social_button.dart';
-
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,12 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signIn() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill in all fields"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.show(context, 'Please fill in all fields',
+          type: AppSnackType.warning);
       return;
     }
 
@@ -47,29 +44,28 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        // Check Onboarding Status
-        final doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
+        // Check onboarding status from Firebase profile data.
+        final apiService = ApiService();
+        final response = await apiService.getProfile();
+        
         if (!mounted) return;
 
-        if (doc.exists && doc.data()?['onboardingCompleted'] == true) {
-          Navigator.pushReplacementNamed(context, '/home');
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body)['data'];
+          if (data != null && data['onboardingCompleted'] == true) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/registration');
+          }
         } else {
+          // If profile doesn't exist yet, go to onboarding.
           Navigator.pushReplacementNamed(context, '/registration');
         }
       }
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      AppSnackBar.show(context, e.toString(), type: AppSnackType.error);
     } finally {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -145,16 +141,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         isPassword: true,
                       ),
                       const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => Navigator.push(
+                      AppBounceAnimation(
+                        onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => const ForgotScreen()),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: const Text(
                           'Forgot Password?',
@@ -190,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 15,
                         ),
                       ),
-                      GestureDetector(
+                      AppBounceAnimation(
                         onTap: () => Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

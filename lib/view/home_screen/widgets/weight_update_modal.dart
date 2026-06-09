@@ -1,14 +1,15 @@
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:best_u/services/api_service.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 
 class WeightUpdateModal extends StatefulWidget {
   final String currentWeight;
   const WeightUpdateModal({super.key, required this.currentWeight});
 
-  static void show(BuildContext context, String currentWeight) {
-    showDialog(
+  static Future<void> show(BuildContext context, String currentWeight) {
+    return showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.8),
       builder: (context) => WeightUpdateModal(currentWeight: currentWeight),
@@ -36,24 +37,28 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
   }
 
   Future<void> _updateWeight() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'weight': _weightController.text.trim(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      final apiService = ApiService();
+      final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
+      
+      final results = await Future.wait([
+        apiService.updateProfile({'weight': weight}),
+        apiService.logWeight(weight, DateTime.now().toIso8601String()),
+      ]);
 
       if (!mounted) return;
-      Navigator.pop(context);
+
+      if (results[0].statusCode == 200) {
+        Navigator.pop(context);
+      } else {
+        AppSnackBar.show(context, 'Error updating weight: ${results[0].body}',
+            type: AppSnackType.error);
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppSnackBar.show(context, 'Error: $e', type: AppSnackType.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -88,8 +93,9 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                GestureDetector(
+                AppBounceAnimation(
                   onTap: () => Navigator.pop(context),
+                  scaleFactor: 0.88,
                   child: const Icon(
                     Icons.close_rounded,
                     color: Colors.white38,
@@ -150,36 +156,53 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
             const SizedBox(height: 32),
 
             // Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _updateWeight,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF151515),
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Update Weight',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Color(0xFF151515),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
+            AppBounceAnimation(
+              onTap: _isLoading ? null : _updateWeight,
+              isDisabled: _isLoading,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      width: _isLoading ? 56 : constraints.maxWidth,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(_isLoading ? 28 : 16),
+                        boxShadow: [
+                          BoxShadow(
+                            // ignore: deprecated_member_use
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFF151515),
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Update Weight',
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: Color(0xFF151515),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

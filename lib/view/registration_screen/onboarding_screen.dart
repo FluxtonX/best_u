@@ -1,14 +1,13 @@
-import 'dart:ui';
+import 'package:best_u/services/api_service.dart';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/registration_screen/subscription_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_button.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_progress_header.dart';
 import 'package:best_u/view/registration_screen/widgets/option_card.dart';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -48,15 +47,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      final apiService = ApiService();
+      final response = await apiService.onboarding({
         'name': _nameController.text.trim(),
-        'age': _ageController.text.trim(),
-        'weight': _weightController.text.trim(),
-        'height': _heightController.text.trim(),
-        'goal': _selectedGoal,
-        'onboardingCompleted': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+        'currentWeight': double.tryParse(_weightController.text.trim()) ?? 0.0,
+        'targetWeight':
+            (double.tryParse(_weightController.text.trim()) ?? 0.0) -
+                5, // Placeholder
+        'fitnessLevel': 'Beginner', // Placeholder
+        'goals': [_selectedGoal ?? 'Weight Loss'],
+        'age': int.tryParse(_ageController.text.trim()) ?? 0,
+        'bmi': double.tryParse(_heightController.text.trim()),
+      });
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw 'Failed to save onboarding data. Status: ${response.statusCode}';
+      }
 
       if (!mounted) return;
 
@@ -67,9 +73,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving data: $e')),
-      );
+      AppSnackBar.show(context, 'Error saving data: $e',
+          type: AppSnackType.error);
     } finally {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -80,19 +85,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentStep == 1) {
       if (_nameController.text.trim().isEmpty ||
           _ageController.text.trim().isEmpty ||
-          _weightController.text.trim().isEmpty ||
-          _heightController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Please fill in all personal information')),
-        );
+          _weightController.text.trim().isEmpty) {
+        AppSnackBar.show(context, 'Please fill in all personal information',
+            type: AppSnackType.warning);
         return;
       }
     } else if (_currentStep == 2) {
       if (_selectedGoal == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select your fitness goal')),
-        );
+        AppSnackBar.show(context, 'Please select your fitness goal',
+            type: AppSnackType.warning);
         return;
       }
     }
@@ -248,8 +249,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 24),
           CustomTextField(
-            label: 'Height (cm)',
-            hintText: 'Height',
+            label: 'BMI (If known)',
+            hintText: 'BMI',
             controller: _heightController,
             keyboardType: TextInputType.number,
           ),
@@ -272,7 +273,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         'svg': 'assets/icons/gain_strength.svg',
       },
       {
-        'title': 'Lose Weight & Gain Strength',
+        'title': 'Combo',
         'icon': null,
         'svg': 'assets/icons/build muscle icon.svg',
       },
