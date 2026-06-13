@@ -146,7 +146,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                     fontSize: 18,
                     fontWeight: FontWeight.w700),
                 controller: _weightController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 16),

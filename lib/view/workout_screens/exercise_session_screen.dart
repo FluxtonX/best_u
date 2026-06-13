@@ -707,15 +707,27 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
                       if (hasWeightInput)
                         Row(
                           children: [
-                            _buildInputBox("Weight (kg)", _weightController),
+                            _buildInputBox(
+                              "Weight (kg)",
+                              _weightController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            ),
                             const SizedBox(width: 10),
-                            _buildInputBox("Reps Completed", _repsController),
+                            _buildInputBox(
+                              "Reps Completed",
+                              _repsController,
+                              keyboardType: TextInputType.number,
+                            ),
                           ],
                         )
                       else
                         Row(
                           children: [
-                            _buildInputBox("Reps Completed", _repsController),
+                            _buildInputBox(
+                              "Reps Completed",
+                              _repsController,
+                              keyboardType: TextInputType.number,
+                            ),
                           ],
                         ),
                     ],
@@ -842,7 +854,11 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
     );
   }
 
-  Widget _buildInputBox(String label, TextEditingController controller) {
+  Widget _buildInputBox(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.number,
+  }) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,7 +880,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen> {
             ),
             child: TextField(
               controller: controller,
-              keyboardType: TextInputType.number,
+              keyboardType: keyboardType,
               style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: Colors.white,

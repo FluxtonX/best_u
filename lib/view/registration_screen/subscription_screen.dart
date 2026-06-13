@@ -1,5 +1,7 @@
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/services/api_service.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
+import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -12,12 +14,14 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
   int _currentPage = 0;
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _plans = [
     {
       'title': 'Best-U Lose Weight',
       'price': '9.99',
       'period': 'month',
+      'priceId': 'price_lose_weight_monthly',
       'features': [
         'Structured 8-week workout plan',
         'Performance tracking for every exercise',
@@ -31,6 +35,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       'title': 'Best-U Gain Weight',
       'price': '9.99',
       'period': 'month',
+      'priceId': 'price_gain_weight_monthly',
       'features': [
         'Mass building workout protocols',
         'Strength progression tracking',
@@ -44,6 +49,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       'title': 'Best-U Combo',
       'price': '14.99',
       'period': 'month',
+      'priceId': 'price_combo_monthly',
       'features': [
         'Full access to all programs',
         'Advanced analytics dashboard',
@@ -54,6 +60,41 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       ],
     },
   ];
+
+  Future<void> _handleCheckout(String priceId) async {
+    setState(() => _isLoading = true);
+    try {
+      final apiService = ApiService();
+      final response = await apiService.checkout(priceId);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // final data = jsonDecode(response.body);
+        // final url = data['url'];
+        // In a real app, use url_launcher to open the Stripe checkout page
+        // For now, mark subscription in Firebase and navigate to Home.
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainHomeScreen()),
+        );
+      } else {
+        throw 'Failed to create checkout session. Status: ${response.statusCode}';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+      // Fallback for demo purposes
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainHomeScreen()),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +197,97 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
             ),
             const SizedBox(height: 32),
+            // Pricing
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.1),
+                ),
+              ),
+              child: Column(
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '\$${plan['price']}',
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary,
+                            fontSize: 48,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '/${plan['period']}',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary.withOpacity(0.5),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Cancel anytime, no commitment',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.primary.withOpacity(0.4),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Buttons
+            AppBounceAnimation(
+              onTap:
+                  _isLoading ? () {} : () => _handleCheckout(plan['priceId']),
+              child: Container(
+                width: double.infinity,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                              color: Colors.black, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Start Monthly Plan',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildSmallPayButton('Google Pay', Icons.payment),
+            const SizedBox(height: 32),
             // Features
             Container(
               padding: const EdgeInsets.all(20),
@@ -214,96 +346,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // Pricing
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.1),
-                ),
-              ),
-              child: Column(
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '\$${plan['price']}',
-                          style: const TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary,
-                            fontSize: 48,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '/${plan['period']}',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary.withOpacity(0.5),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Cancel anytime, no commitment',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: AppColors.primary.withOpacity(0.4),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Buttons
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const MainHomeScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Start Monthly Plan',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildSmallPayButton('Apple Pay', Icons.apple)),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: _buildSmallPayButton('Google Pay', Icons.payment)),
-              ],
-            ),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -324,30 +366,34 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildSmallPayButton(String text, IconData icon) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.white.withOpacity(0.08),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: AppColors.white.withOpacity(0.9), size: 20),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: 'Outfit',
-              color: AppColors.white.withOpacity(0.9),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+    return AppBounceAnimation(
+      onTap: () {},
+      scaleFactor: 0.96,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.white.withOpacity(0.08),
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.white.withOpacity(0.9), size: 20),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withOpacity(0.9),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

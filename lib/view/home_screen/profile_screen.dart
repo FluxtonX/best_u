@@ -9,6 +9,8 @@ import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:best_u/view/registration_screen/subscription_screen.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -77,22 +79,156 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Logout Icon
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Text titles
+                const Text(
+                  'Log Out',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to log out of your account?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppBounceAnimation(
+                        onTap: () => Navigator.pop(dialogContext),
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppBounceAnimation(
+                        onTap: () {
+                          Navigator.pop(dialogContext); // Close dialog
+                          _authService.logout();
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Log Out',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: Color(0xFF151515),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body:
-            Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      );
+      _profile = {
+        'name': 'John Doe',
+        'goal': 'Gain Strength',
+        'experienceLevel': 'Intermediate',
+        'age': 28,
+        'weight': 78.5,
+        'bmi': '22.5',
+      };
     }
 
-    if (_profile == null) {
+    if (!_isLoading && _profile == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-            child: Text("User data not found",
-                style: TextStyle(color: Colors.white))),
+          child: Text(
+            "User data not found",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
       );
     }
 
@@ -106,13 +242,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchProfile,
-          color: AppColors.primary,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
+        child: Skeletonizer(
+          enabled: _isLoading,
+          effect: ShimmerEffect(
+            baseColor: Colors.white.withOpacity(0.04),
+            highlightColor: Colors.white.withOpacity(0.12),
+            duration: const Duration(milliseconds: 1000),
+          ),
+          child: RefreshIndicator(
+            onRefresh: _fetchProfile,
+            color: AppColors.primary,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
@@ -166,15 +309,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: AppColors.primary, width: 2),
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
                               color: const Color(0xFF151515),
                             ),
                             child: ClipOval(
                               child: _imagePath != null
-                                  ? Image.file(File(_imagePath!),
-                                      fit: BoxFit.cover)
-                                  : const Icon(Icons.person_outline_rounded,
-                                      color: AppColors.primary, size: 40),
+                                  ? Image.file(
+                                      File(_imagePath!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : const Icon(
+                                      Icons.person_outline_rounded,
+                                      color: AppColors.primary,
+                                      size: 40,
+                                    ),
                             ),
                           ),
                           const SizedBox(width: 20),
@@ -195,8 +345,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   '$experience • $goal',
                                   style: TextStyle(
                                     fontFamily: 'Outfit',
-                                    color:
-                                        AppColors.primary.withValues(alpha: 0.8),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.8,
+                                    ),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -231,7 +382,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen()),
+                        builder: (context) => const EditProfileScreen(),
+                      ),
                     );
                     _fetchProfile();
                     _loadLocalImage();
@@ -279,30 +431,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.workspace_premium_outlined,
                   title: 'Manage Subscription',
                   subtitle: 'Premium Plan • \$9.99/week',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SubscriptionScreen(),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 40),
                 // Log Out Button
                 AppBounceAnimation(
-                  onTap: () {
-                    _authService.logout();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
+                  onTap: () => _showLogoutDialog(context),
                   child: Container(
                     width: double.infinity,
                     height: 56,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.5),
-                          width: 1.5),
+                        color: AppColors.primary.withValues(alpha: 0.5),
+                        width: 1.5,
+                      ),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.logout_rounded,
-                            color: AppColors.primary, size: 20),
+                        Icon(
+                          Icons.logout_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                         SizedBox(width: 12),
                         Text(
                           'Log Out',
@@ -347,7 +507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSectionLabel(String label) {
@@ -383,8 +543,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 4,
+          ),
           leading: Icon(icon, color: AppColors.primary, size: 22),
           title: Text(
             title,
@@ -405,9 +567,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 )
               : null,
-          trailing: trailing ??
-              const Icon(Icons.chevron_right_rounded,
-                  color: Colors.white24, size: 24),
+          trailing:
+              trailing ??
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white24,
+                size: 24,
+              ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -104,21 +105,46 @@ class _ProgressScreenState extends State<ProgressScreen>
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
+      // Temporarily set mock data for Skeletonizer
+      _summary = {
+        'totalWorkoutMinutes': 180,
+        'workoutIncreasePercent': 12,
+        'weightLost': 2.4,
+        'weightTrend': -2.4,
+        'proteinPercentage': 18,
+        'completionRate': 85,
+        'avgTime': 42.5,
+        'totalCalories': 1250,
+        'heartRate': 135,
+        'completedThisWeek': 3,
+        'totalThisWeek': 6,
+        'weeklyWorkouts': List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': index % 2 == 0 ? 24.0 : 12.0}),
+      };
+      _weightHistory = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': 75.0 - (index * 0.2)});
+      _strengthLevels = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': 20.0 + (index * 5)});
+      _weeklyWorkouts = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': index % 2 == 0 ? 24.0 : 12.0});
+      _personalBests = List.generate(3, (index) => {
+        'exercise': 'Bench Press',
+        'value': '45.0 kg',
+        'date': 'Jun 12, 2026',
+        'rating': 4,
+      });
     }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchData,
-          color: AppColors.primary,
-          child: SingleChildScrollView(
+        child: Skeletonizer(
+          enabled: _isLoading,
+          effect: ShimmerEffect(
+            baseColor: Colors.white.withOpacity(0.04),
+            highlightColor: Colors.white.withOpacity(0.12),
+            duration: const Duration(milliseconds: 1000),
+          ),
+          child: RefreshIndicator(
+            onRefresh: _fetchData,
+            color: AppColors.primary,
+            child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 22),
             child: Column(
@@ -159,7 +185,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildHeader() {

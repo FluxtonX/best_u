@@ -7,6 +7,7 @@ import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -49,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchDashboardData() async {
     try {
       final apiService = ApiService();
-      
+
       // Step 1: Fetch dashboard summary from Firebase/local program data.
       final response = await apiService.getDashboardSummary();
       if (response.statusCode == 200) {
@@ -57,7 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (data['success'] == true) {
           setState(() {
             _summary = data;
-            
+
             // FALLBACK: If no active program is found in DB, show Week 1 Skeleton
             if (_summary?['activeProgram'] == null) {
               _summary?['activeProgram'] = {
@@ -87,7 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _quote = _motivations[random.nextInt(_motivations.length)];
         _startQuoteRotation();
       }
-      
+
       setState(() {
         _isLoading = false;
       });
@@ -112,362 +113,395 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
-    }
-
     final greeting = _getGreeting();
-    final name = _summary?['user']?['name'] ?? 'User';
-    final activeProgram = _summary?['activeProgram'];
-    final todayWorkout = _summary?['todayWorkout'];
-    final streak = _summary?['user']?['streak'] ?? 0;
-    final weightLost = _summary?['user']?['weightLost'] ?? 0.0;
+
+    // When loading, use dummy data so Skeletonizer has contents to skeletonize.
+    final name =
+        _isLoading ? 'John Doe' : (_summary?['user']?['name'] ?? 'User');
+
+    final activeProgram = _isLoading
+        ? {
+            'currentWeek': 1,
+            'totalWeeks': 8,
+          }
+        : _summary?['activeProgram'];
+
+    final todayWorkout = _isLoading
+        ? {
+            'name': 'Upper Body Strength Routine',
+            'exercisesCount': 6,
+            'durationMinutes': 45,
+            'id': 'loading_workout',
+          }
+        : _summary?['todayWorkout'];
+
+    final streak = _isLoading ? 5 : (_summary?['user']?['streak'] ?? 0);
+    final weightLost =
+        _isLoading ? 2.5 : (_summary?['user']?['weightLost'] ?? 0.0);
+
+    final quote = _isLoading
+        ? {
+            'quote':
+                'This is a motivational quote placeholder that will fade out.',
+            'author': 'Author Name',
+          }
+        : _quote;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchDashboardData,
-          color: AppColors.primary,
-          backgroundColor: const Color(0xFF151515),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Text(
-                  '$greeting,\n$name',
-                  style: const TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    height: 1.1,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Ready to crush your workout?',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Current Week Card
-                if (activeProgram != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF151515),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.1),
-                        width: 1,
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Skeletonizer(
+            enabled: _isLoading,
+            effect: ShimmerEffect(
+              baseColor: Colors.white.withOpacity(0.04),
+              highlightColor: Colors.white.withOpacity(0.12),
+              duration: const Duration(milliseconds: 1000),
+            ),
+            child: RefreshIndicator(
+              onRefresh: _fetchDashboardData,
+              color: AppColors.primary,
+              backgroundColor: const Color(0xFF151515),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Text(
+                      '$greeting,\n$name',
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                        letterSpacing: -1,
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ready to crush your workout?',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withOpacity(0.5),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Current Week Card
+                    if (activeProgram != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF151515),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'CURRENT WEEK',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                color: AppColors.primary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'CURRENT WEEK',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Text(
+                                  'Week ${activeProgram['currentWeek']}/${activeProgram['totalWeeks']}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: AppColors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: (activeProgram['currentWeek'] /
+                                    activeProgram['totalWeeks']),
+                                minHeight: 8,
+                                backgroundColor: Colors.white.withOpacity(0.05),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    AppColors.primary),
                               ),
                             ),
+                            const SizedBox(height: 12),
                             Text(
-                              'Week ${activeProgram['currentWeek']}/${activeProgram['totalWeeks']}',
-                              style: const TextStyle(
+                              '${activeProgram['totalWeeks'] - activeProgram['currentWeek']} weeks remaining',
+                              style: TextStyle(
                                 fontFamily: 'Outfit',
-                                color: AppColors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary.withOpacity(0.6),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: LinearProgressIndicator(
-                            value: (activeProgram['currentWeek'] /
-                                activeProgram['totalWeeks']),
-                            minHeight: 8,
-                            backgroundColor: Colors.white.withOpacity(0.05),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '${activeProgram['totalWeeks'] - activeProgram['currentWeek']} weeks remaining',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary.withOpacity(0.6),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 10),
+                      ),
+                    const SizedBox(height: 10),
 
-                // Today's Workout Section
-                if (todayWorkout != null) ...[
-                  const Text(
-                    "Today's Workout",
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: AppColors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF151515),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.05),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
+                    // Today's Workout Section
+                    if (todayWorkout != null) ...[
+                      const Text(
+                        "Today's Workout",
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF151515),
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.05),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'TODAY',
-                                    style: TextStyle(
-                                      fontFamily: 'Outfit',
-                                      color: AppColors.primary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    todayWorkout['name'] ?? 'Workout',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontFamily: 'Outfit',
-                                      color: AppColors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.fitness_center_rounded,
-                                          size: 16,
-                                          color: AppColors.primary
-                                              .withOpacity(0.8)),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${todayWorkout['exercisesCount']} exercises',
+                                      const Text(
+                                        'TODAY',
                                         style: TextStyle(
                                           fontFamily: 'Outfit',
-                                          color: AppColors.primary
-                                              .withOpacity(0.8),
+                                          color: AppColors.primary,
                                           fontSize: 13,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
+                                      const SizedBox(height: 6),
                                       Text(
-                                        '${todayWorkout['durationMinutes']} min',
-                                        style: TextStyle(
+                                        todayWorkout['name'] ?? 'Workout',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
                                           fontFamily: 'Outfit',
-                                          color: AppColors.primary
-                                              .withOpacity(0.8),
-                                          fontSize: 13,
+                                          color: AppColors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
                                         ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.fitness_center_rounded,
+                                              size: 16,
+                                              color: AppColors.primary
+                                                  .withOpacity(0.8)),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${todayWorkout['exercisesCount']} exercises',
+                                            style: TextStyle(
+                                              fontFamily: 'Outfit',
+                                              color: AppColors.primary
+                                                  .withOpacity(0.8),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text(
+                                            '${todayWorkout['durationMinutes']} min',
+                                            style: TextStyle(
+                                              fontFamily: 'Outfit',
+                                              color: AppColors.primary
+                                                  .withOpacity(0.8),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.05),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                      Icons.fitness_center_rounded,
+                                      color: AppColors.primary,
+                                      size: 24),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.05),
-                                shape: BoxShape.circle,
+                            const SizedBox(height: 24),
+                            AppBounceAnimation(
+                              onTap: () {
+                                final workoutId =
+                                    todayWorkout['id'] ?? 'demo_id';
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => WorkoutListScreen(
+                                          workoutId: workoutId.toString())),
+                                ).then((_) => _fetchDashboardData()); // REFRESH
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          AppColors.primary.withOpacity(0.35),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'START WORKOUT',
+                                      style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Icon(Icons.chevron_right_rounded,
+                                        color: Colors.black, size: 20),
+                                  ],
+                                ),
                               ),
-                              child: const Icon(Icons.fitness_center_rounded,
-                                  color: AppColors.primary, size: 24),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        AppBounceAnimation(
-                          onTap: () {
-                            final workoutId = todayWorkout['id'] ?? 'demo_id';
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      WorkoutListScreen(workoutId: workoutId.toString())),
-                            ).then((_) => _fetchDashboardData()); // REFRESH
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.35),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'START WORKOUT',
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Icon(Icons.chevron_right_rounded,
-                                    color: Colors.black, size: 20),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-
-                // This Week Stats
-                const Text(
-                  "This Week",
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildStatCard(
-                  title: 'Week Progress',
-                  value: '3/3 days',
-                  icon: Icons.calendar_today_rounded,
-                ),
-                const SizedBox(height: 12),
-                _buildStatCard(
-                  title: 'Weekly Streak',
-                  value: '$streak weeks',
-                  icon: Icons.local_fire_department_rounded,
-                ),
-                const SizedBox(height: 12),
-                _buildStatCard(
-                  title: 'Weight Progress',
-                  value: '${weightLost >= 0 ? "-" : "+"}${weightLost.abs()} kg',
-                  icon: Icons.show_chart_rounded,
-                ),
-                const SizedBox(height: 32),
-
-                // Quote Container
-                if (_quote != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary.withOpacity(0.15),
-                          AppColors.primary.withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: const Border(
-                        left: BorderSide(color: AppColors.primary, width: 4),
+                      const SizedBox(height: 10),
+                    ],
+
+                    // This Week Stats
+                    const Text(
+                      "This Week",
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '"${_quote!['quote'] ?? "Consistency is key."}"',
-                          style: const TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.white,
-                            fontSize: 16,
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '— ${_quote!['author'] ?? "Stay consistent"}',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary.withOpacity(0.8),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 16),
+                    _buildStatCard(
+                      title: 'Week Progress',
+                      value: '3/3 days',
+                      icon: Icons.calendar_today_rounded,
                     ),
-                  ),
-                const SizedBox(height: 40),
-              ],
+                    const SizedBox(height: 12),
+                    _buildStatCard(
+                      title: 'Weekly Streak',
+                      value: '$streak weeks',
+                      icon: Icons.local_fire_department_rounded,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatCard(
+                      title: 'Weight Progress',
+                      value:
+                          '${weightLost >= 0 ? "-" : "+"}${weightLost.abs()} kg',
+                      icon: Icons.show_chart_rounded,
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Quote Container
+                    if (quote != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withOpacity(0.15),
+                              AppColors.primary.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: const Border(
+                            left:
+                                BorderSide(color: AppColors.primary, width: 4),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '"${quote['quote'] ?? "Consistency is key."}"',
+                              style: const TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.white,
+                                fontSize: 16,
+                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w500,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              '— ${quote['author'] ?? "Stay consistent"}',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.primary.withOpacity(0.8),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }
 

@@ -240,6 +240,7 @@ class _ResetScreenState extends State<ResetScreen> {
           hintText: 'Create a strong password',
           prefixIcon: Icons.lock_outline_rounded,
           isPassword: true,
+          keyboardType: TextInputType.visiblePassword,
         ),
         const SizedBox(height: 24),
         Align(
@@ -271,6 +272,7 @@ class _ResetScreenState extends State<ResetScreen> {
           hintText: 'Re-enter your password',
           prefixIcon: Icons.lock_outline_rounded,
           isPassword: true,
+          keyboardType: TextInputType.visiblePassword,
         ),
         const SizedBox(height: 48),
         AuthButton(

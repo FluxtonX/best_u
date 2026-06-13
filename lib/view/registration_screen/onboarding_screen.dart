@@ -82,6 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextStep() {
+    FocusScope.of(context).unfocus();
     if (_currentStep == 1) {
       if (_nameController.text.trim().isEmpty ||
           _ageController.text.trim().isEmpty ||
@@ -113,82 +114,86 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  OnboardingProgressHeader(
-                    currentStep: _currentStep,
-                    totalSteps: 2,
-                  ),
-                  const SizedBox(height: 32),
-                  // Logo / Title Section
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: const TextSpan(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    OnboardingProgressHeader(
+                      currentStep: _currentStep,
+                      totalSteps: 2,
+                    ),
+                    const SizedBox(height: 32),
+                    // Logo / Title Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Best-',
+                                style: TextStyle(color: AppColors.white),
+                              ),
+                              TextSpan(
+                                text: 'U',
+                                style: TextStyle(color: AppColors.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '8 Week Transformation Program',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
                           ),
-                          children: [
-                            TextSpan(
-                              text: 'Best-',
-                              style: TextStyle(color: AppColors.white),
-                            ),
-                            TextSpan(
-                              text: 'U',
-                              style: TextStyle(color: AppColors.primary),
-                            ),
-                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '8 Week Transformation Program',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildStep1(),
-                        _buildStep2(),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  OnboardingButton(
-                    text: _currentStep == 2 ? 'Complete Profile' : 'Continue',
-                    isLoading: _isLoading,
-                    onPressed: _isLoading ? () {} : _nextStep,
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 32),
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildStep1(),
+                          _buildStep2(),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OnboardingButton(
+                      text: _currentStep == 2 ? 'Complete Profile' : 'Continue',
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? () {} : _nextStep,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -224,6 +229,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             label: 'Name',
             hintText: 'Enter your name',
             controller: _nameController,
+            keyboardType: TextInputType.name,
           ),
           const SizedBox(height: 24),
           Row(
@@ -242,7 +248,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   label: 'Weight (kg)',
                   hintText: 'Weight',
                   controller: _weightController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
             ],
@@ -252,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             label: 'BMI (If known)',
             hintText: 'BMI',
             controller: _heightController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ],
       ),

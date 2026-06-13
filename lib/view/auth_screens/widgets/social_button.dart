@@ -6,18 +6,20 @@ class SocialButton extends StatelessWidget {
   final String text;
   final Widget icon;
   final VoidCallback onPressed;
+  final bool isLoading;
 
   const SocialButton({
     super.key,
     required this.text,
     required this.icon,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBounceAnimation(
-      onTap: onPressed,
+      onTap: isLoading ? () {} : onPressed,
       child: Container(
         width: double.infinity,
         height: 56,
@@ -29,25 +31,36 @@ class SocialButton extends StatelessWidget {
             width: 1,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            icon,
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                'Sign in with $text',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: AppColors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    icon,
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        'Sign in with $text',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
         ),
       ),
     );

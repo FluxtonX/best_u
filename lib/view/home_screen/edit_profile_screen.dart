@@ -92,6 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
+    FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
 
     try {
@@ -134,221 +135,226 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            fontFamily: 'Outfit',
-            color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.chevron_left_rounded, color: AppColors.white),
+            onPressed: () => Navigator.pop(context),
           ),
+          title: const Text(
+            'Edit Profile',
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              color: AppColors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Photo Edit
-            Center(
-              child: AppBounceAnimation(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF151515),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.05), width: 1),
-                      ),
-                      child: ClipOval(
-                        child: _imagePath != null
-                            ? Image.file(File(_imagePath!), fit: BoxFit.cover)
-                            : const Icon(Icons.person_outline_rounded,
-                                color: Colors.white24, size: 50),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Photo Edit
+              Center(
+                child: AppBounceAnimation(
+                  onTap: _pickImage,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: const Color(0xFF151515),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.05), width: 1),
                         ),
-                        child: const Icon(Icons.camera_alt_rounded,
-                            color: Color(0xFF151515), size: 16),
+                        child: ClipOval(
+                          child: _imagePath != null
+                              ? Image.file(File(_imagePath!), fit: BoxFit.cover)
+                              : const Icon(Icons.person_outline_rounded,
+                                  color: Colors.white24, size: 50),
+                        ),
                       ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded,
+                              color: Color(0xFF151515), size: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  'Tap to change photo',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+  
+              _buildSectionHeader('PERSONAL INFORMATION'),
+              _buildInputField(
+                label: 'Full Name',
+                controller: _nameController,
+                keyboardType: TextInputType.name,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInputField(
+                      label: 'Age',
+                      keyboardType: TextInputType.number,
+                      controller: _ageController,
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                'Tap to change photo',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.primary.withOpacity(0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            _buildSectionHeader('PERSONAL INFORMATION'),
-            _buildInputField(
-              label: 'Full Name',
-              controller: _nameController,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    label: 'Age',
-                    keyboardType: TextInputType.number,
-                    controller: _ageController,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildInputField(
-                    label: 'BMI (If known)',
-                    keyboardType: TextInputType.number,
-                    controller: _heightController,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildInputField(
+                      label: 'BMI (If known)',
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      controller: _heightController,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildInputField(
-              label: 'Current Weight (kg)',
-              keyboardType: TextInputType.number,
-              controller: _weightController,
-            ),
-
-            const SizedBox(height: 32),
-            _buildSectionHeader('FITNESS GOAL'),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 2.2,
-              children: [
-                _buildGoalCard('Lose Weight'),
-                _buildGoalCard('Gain Strength'),
-                _buildGoalCard('Combo'),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-            _buildSectionHeader('EXPERIENCE LEVEL'),
-            Row(
-              children: [
-                _buildExpCard('Beginner'),
-                const SizedBox(width: 8),
-                _buildExpCard('Intermediate'),
-                const SizedBox(width: 8),
-                _buildExpCard('Advanced'),
-              ],
-            ),
-
-            const SizedBox(height: 48),
-            Row(
-              children: [
-                Expanded(
-                  child: AppBounceAnimation(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildInputField(
+                label: 'Current Weight (kg)',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                controller: _weightController,
+              ),
+  
+              const SizedBox(height: 32),
+              _buildSectionHeader('FITNESS GOAL'),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.2,
+                children: [
+                  _buildGoalCard('Lose Weight'),
+                  _buildGoalCard('Gain Strength'),
+                  _buildGoalCard('Combo'),
+                ],
+              ),
+  
+              const SizedBox(height: 32),
+              _buildSectionHeader('EXPERIENCE LEVEL'),
+              Row(
+                children: [
+                  _buildExpCard('Beginner'),
+                  const SizedBox(width: 8),
+                  _buildExpCard('Intermediate'),
+                  const SizedBox(width: 8),
+                  _buildExpCard('Advanced'),
+                ],
+              ),
+  
+              const SizedBox(height: 48),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppBounceAnimation(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: AppColors.primary.withOpacity(0.3)),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AppBounceAnimation(
-                    onTap: _isLoading ? null : _saveChanges,
-                    isDisabled: _isLoading,
-                    child: Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                    color: Color(0xFF151515), strokeWidth: 2.5))
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.save_as_rounded,
-                                      color: Color(0xFF151515), size: 18),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Save Changes',
-                                    style: TextStyle(
-                                      fontFamily: 'Outfit',
-                                      color: Color(0xFF151515),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppBounceAnimation(
+                      onTap: _isLoading ? null : _saveChanges,
+                      isDisabled: _isLoading,
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Color(0xFF151515), strokeWidth: 2.5))
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.save_as_rounded,
+                                        color: Color(0xFF151515), size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Save Changes',
+                                      style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        color: Color(0xFF151515),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-          ],
+                ],
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

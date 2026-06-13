@@ -4,6 +4,7 @@ import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/local_workout_plan_service.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class WorkoutPlanScreen extends StatefulWidget {
   const WorkoutPlanScreen({super.key});
@@ -61,30 +62,48 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body:
-            Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      );
-    }
-
-    final String programTitle =
-        _activeProgram?['programName'] ?? 'Your Program';
-    final List<dynamic> weeks = _activeProgram?['weeks'] ?? [];
+    final String programTitle = _isLoading
+        ? 'Best-U 8-Week Transformation'
+        : (_activeProgram?['programName'] ?? 'Your Program');
+        
+    final double overallProgress = _isLoading ? 0.35 : _overallProgress;
+    final completedCount = _isLoading ? 8 : (_activeProgram?['completedCount'] ?? 0);
+    final totalWorkouts = _isLoading ? 24 : (_activeProgram?['totalWorkouts'] ?? 0);
+    
+    final List<dynamic> weeks = _isLoading
+        ? List.generate(4, (index) => {
+            'weekNum': index + 1,
+            'status': '0/3 workouts',
+            'isCompleted': index == 0,
+            'isCurrent': index == 1,
+            'isLocked': index > 1,
+            'days': [
+              {'title': 'Day 1 - Chest & Triceps', 'type': 'Strength', 'isCompleted': index == 0, 'isCurrent': index == 1, 'workoutId': 'dummy'},
+              {'title': 'Day 2 - Back & Biceps', 'type': 'Strength', 'isCompleted': false, 'isCurrent': false, 'workoutId': 'dummy'},
+              {'title': 'Day 3 - Legs & Shoulders', 'type': 'Strength', 'isCompleted': false, 'isCurrent': false, 'workoutId': 'dummy'},
+            ]
+          })
+        : (_activeProgram?['weeks'] ?? []);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchData,
-          color: AppColors.primary,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        child: Skeletonizer(
+          enabled: _isLoading,
+          effect: ShimmerEffect(
+            baseColor: Colors.white.withOpacity(0.04),
+            highlightColor: Colors.white.withOpacity(0.12),
+            duration: const Duration(milliseconds: 1000),
+          ),
+          child: RefreshIndicator(
+            onRefresh: _fetchData,
+            color: AppColors.primary,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Header
                 Text(
                   programTitle,
@@ -132,7 +151,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                             ),
                           ),
                           Text(
-                            '${(_overallProgress * 100).toInt()}%',
+                            '${(overallProgress * 100).toInt()}%',
                             style: const TextStyle(
                               fontFamily: 'Outfit',
                               color: AppColors.primary,
@@ -146,7 +165,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
-                          value: _overallProgress,
+                          value: overallProgress,
                           backgroundColor: Colors.white.withOpacity(0.05),
                           valueColor: const AlwaysStoppedAnimation<Color>(
                               AppColors.primary),
@@ -155,7 +174,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${_activeProgram?['completedCount'] ?? 0} of ${_activeProgram?['totalWorkouts'] ?? 0} workouts completed',
+                        '$completedCount of $totalWorkouts workouts completed',
                         style: TextStyle(
                           fontFamily: 'Outfit',
                           color: AppColors.white.withOpacity(0.4),
@@ -207,7 +226,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildWeekItem({
