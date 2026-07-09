@@ -7,6 +7,7 @@ import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -135,9 +136,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         : _summary?['todayWorkout'];
 
-    final streak = _isLoading ? 5 : (_summary?['user']?['streak'] ?? 0);
-    final weightLost =
-        _isLoading ? 2.5 : (_summary?['user']?['weightLost'] ?? 0.0);
+    final streak = _isLoading ? 5 : (_summary?['weekStats']?['weeklyStreak'] ?? 0);
+    final weightProgress =
+        _isLoading ? -2.5 : (_summary?['weekStats']?['weightProgress'] ?? 0.0);
+    final completedThisWeek =
+        _isLoading ? 2 : (_summary?['weekStats']?['completedThisWeek'] ?? 0);
+    final totalThisWeek =
+        _isLoading ? 3 : (_summary?['weekStats']?['totalThisWeek'] ?? 3);
+    final isDayLocked =
+        _isLoading ? false : (_summary?['weekStats']?['isDayLocked'] ?? false);
+    final nextDay =
+        _isLoading ? 1 : (_summary?['weekStats']?['nextDay'] ?? 1);
 
     final quote = _isLoading
         ? {
@@ -321,10 +330,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
-                                          Icon(Icons.fitness_center_rounded,
-                                              size: 16,
-                                              color: AppColors.primary
-                                                  .withOpacity(0.8)),
+                                          SvgPicture.asset(
+                                            'assets/icons/workout.svg',
+                                            width: 16,
+                                            height: 16,
+                                          ),
                                           const SizedBox(width: 6),
                                           Text(
                                             '${todayWorkout['exercisesCount']} exercises',
@@ -357,58 +367,118 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     color: Colors.white.withOpacity(0.05),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(
-                                      Icons.fitness_center_rounded,
-                                      color: AppColors.primary,
-                                      size: 24),
+                                  child: SvgPicture.asset(
+                                    'assets/icons/workout.svg',
+                                    width: 24,
+                                    height: 24,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 24),
                             AppBounceAnimation(
-                              onTap: () {
-                                final workoutId =
-                                    todayWorkout['id'] ?? 'demo_id';
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => WorkoutListScreen(
-                                          workoutId: workoutId.toString())),
-                                ).then((_) => _fetchDashboardData()); // REFRESH
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          AppColors.primary.withOpacity(0.35),
-                                      blurRadius: 14,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'START WORKOUT',
-                                      style: TextStyle(
-                                        fontFamily: 'Outfit',
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 16,
+                              onTap: isDayLocked
+                                  ? null
+                                  : () {
+                                      final workoutId =
+                                          todayWorkout['id'] ?? 'demo_id';
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                WorkoutListScreen(
+                                                    workoutId:
+                                                        workoutId.toString())),
+                                      ).then((_) => _fetchDashboardData()); // REFRESH
+                                    },
+                              child: isDayLocked
+                                  ? Container(
+                                      width: double.infinity,
+                                      height: 72,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.04),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.08),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.lock_rounded,
+                                            color: AppColors.primary
+                                                .withOpacity(0.5),
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Day $nextDay available tomorrow',
+                                                style: TextStyle(
+                                                  fontFamily: 'Outfit',
+                                                  color: AppColors.white
+                                                      .withOpacity(0.5),
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Great job today! Rest up 💪',
+                                                style: TextStyle(
+                                                  fontFamily: 'Outfit',
+                                                  color: AppColors.primary
+                                                      .withOpacity(0.5),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Container(
+                                      width: double.infinity,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary,
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withOpacity(0.35),
+                                            blurRadius: 14,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'START WORKOUT',
+                                            style: TextStyle(
+                                              fontFamily: 'Outfit',
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Icon(Icons.chevron_right_rounded,
+                                              color: Colors.black, size: 20),
+                                        ],
                                       ),
                                     ),
-                                    SizedBox(width: 10),
-                                    Icon(Icons.chevron_right_rounded,
-                                        color: Colors.black, size: 20),
-                                  ],
-                                ),
-                              ),
                             ),
                           ],
                         ),
@@ -430,21 +500,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 16),
                     _buildStatCard(
                       title: 'Week Progress',
-                      value: '3/3 days',
-                      icon: Icons.calendar_today_rounded,
+                      value: '$completedThisWeek/$totalThisWeek days',
+                      svgPath: 'assets/icons/week_progress.svg',
                     ),
                     const SizedBox(height: 12),
                     _buildStatCard(
                       title: 'Weekly Streak',
                       value: '$streak weeks',
-                      icon: Icons.local_fire_department_rounded,
+                      svgPath: 'assets/icons/weekly_streak.svg',
                     ),
                     const SizedBox(height: 12),
                     _buildStatCard(
                       title: 'Weight Progress',
-                      value:
-                          '${weightLost >= 0 ? "-" : "+"}${weightLost.abs()} kg',
-                      icon: Icons.show_chart_rounded,
+                      value: weightProgress == 0.0
+                          ? '0 kg'
+                          : '${weightProgress > 0 ? "+" : ""}${weightProgress.toStringAsFixed(1)} kg',
+                      svgPath: 'assets/icons/weight_progres.svg',
                     ),
                     const SizedBox(height: 32),
 
@@ -508,7 +579,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 Widget _buildStatCard({
   required String title,
   required String value,
-  required IconData icon,
+  required String svgPath,
 }) {
   return Container(
     padding: const EdgeInsets.all(16),
@@ -525,7 +596,11 @@ Widget _buildStatCard({
             color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 24),
+          child: SvgPicture.asset(
+            svgPath,
+            width: 24,
+            height: 24,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/view/home_screen/all_personal_bests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -118,74 +119,96 @@ class _ProgressScreenState extends State<ProgressScreen>
         'heartRate': 135,
         'completedThisWeek': 3,
         'totalThisWeek': 6,
-        'weeklyWorkouts': List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': index % 2 == 0 ? 24.0 : 12.0}),
+        'weeklyWorkouts': List.generate(
+            6,
+            (index) => {
+                  'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                  'value': index % 2 == 0 ? 24.0 : 12.0
+                }),
       };
-      _weightHistory = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': 75.0 - (index * 0.2)});
-      _strengthLevels = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': 20.0 + (index * 5)});
-      _weeklyWorkouts = List.generate(6, (index) => {'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], 'value': index % 2 == 0 ? 24.0 : 12.0});
-      _personalBests = List.generate(3, (index) => {
-        'exercise': 'Bench Press',
-        'value': '45.0 kg',
-        'date': 'Jun 12, 2026',
-        'rating': 4,
-      });
+      _weightHistory = List.generate(
+          6,
+          (index) => {
+                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                'value': 75.0 - (index * 0.2)
+              });
+      _strengthLevels = List.generate(
+          6,
+          (index) => {
+                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                'value': 20.0 + (index * 5)
+              });
+      _weeklyWorkouts = List.generate(
+          6,
+          (index) => {
+                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                'value': index % 2 == 0 ? 24.0 : 12.0
+              });
+      _personalBests = List.generate(
+          3,
+          (index) => {
+                'exercise': 'Bench Press',
+                'value': '45.0 kg',
+                'date': 'Jun 12, 2026',
+                'rating': 4,
+              });
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Skeletonizer(
-          enabled: _isLoading,
-          effect: ShimmerEffect(
-            baseColor: Colors.white.withOpacity(0.04),
-            highlightColor: Colors.white.withOpacity(0.12),
-            duration: const Duration(milliseconds: 1000),
-          ),
-          child: RefreshIndicator(
-            onRefresh: _fetchData,
-            color: AppColors.primary,
-            child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
-                  child: Column(
-                    children: [
-                      _buildKpiRow(),
-                      const SizedBox(height: 16),
-                      _buildWeightProgressCard(),
-                      const SizedBox(height: 16),
-                      _buildStrengthCard(),
-                      const SizedBox(height: 16),
-                      _buildBanner(
-                        icon: Icons.check_circle_outline_rounded,
-                        text:
-                            "You're on the track up, You've mastered the last 2 workouts",
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Skeletonizer(
+            enabled: _isLoading,
+            effect: ShimmerEffect(
+              baseColor: Colors.white.withOpacity(0.04),
+              highlightColor: Colors.white.withOpacity(0.12),
+              duration: const Duration(milliseconds: 1000),
+            ),
+            child: RefreshIndicator(
+              onRefresh: _fetchData,
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
+                      child: Column(
+                        children: [
+                          _buildKpiRow(),
+                          const SizedBox(height: 16),
+                          _buildWeightProgressCard(),
+                          const SizedBox(height: 16),
+                          _buildStrengthCard(),
+                          const SizedBox(height: 16),
+                          _buildBanner(
+                            icon: Icons.check_circle_outline_rounded,
+                            text:
+                                "You're on the track up, You've mastered the last 2 workouts",
+                          ),
+                          const SizedBox(height: 10),
+                          _buildBanner(
+                            icon: Icons.emoji_events_outlined,
+                            text: 'Strongest lift: Squats - 21 kg this week',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildWeeklyWorkoutsCard(),
+                          const SizedBox(height: 16),
+                          _buildActivityGrid(),
+                          const SizedBox(height: 16),
+                          _buildPersonalBestCard(),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      _buildBanner(
-                        icon: Icons.emoji_events_outlined,
-                        text: 'Strongest lift: Squats - 21 kg this week',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildWeeklyWorkoutsCard(),
-                      const SizedBox(height: 16),
-                      _buildActivityGrid(),
-                      const SizedBox(height: 16),
-                      _buildPersonalBestCard(),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    ));
+        ));
   }
 
   Widget _buildHeader() {
@@ -672,9 +695,9 @@ class _ProgressScreenState extends State<ProgressScreen>
       decoration: _cardDecoration(),
       child: Column(
         children: [
-          const Row(
+          Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
                   'Personal Best Records',
                   style: TextStyle(
@@ -685,22 +708,56 @@ class _ProgressScreenState extends State<ProgressScreen>
                   ),
                 ),
               ),
-              Text(
-                'View All',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        AllPersonalBestsScreen(personalBests: _personalBests),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      final curved = CurvedAnimation(
+                          parent: animation, curve: Curves.easeOutCubic);
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(1.0, 0),
+                          end: Offset.zero,
+                        ).animate(curved),
+                        child: FadeTransition(opacity: animation, child: child),
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 380),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'View All',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          ..._personalBests.asMap().entries.map((entry) {
+          ..._personalBests.take(3).toList().asMap().entries.map((entry) {
             return _buildPersonalBestRow(
               entry.value,
-              showDivider: entry.key != _personalBests.length - 1,
+              showDivider: entry.key !=
+                  (_personalBests.length > 3 ? 2 : _personalBests.length - 1),
             );
           }),
         ],
@@ -853,26 +910,35 @@ class _BarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxValue = items
-        .map((item) => (item['value'] as num?)?.toDouble() ?? 0)
-        .fold<double>(1, (max, value) => value > max ? value : max);
+    final values =
+        items.map((item) => (item['value'] as num?)?.toDouble() ?? 0).toList();
+    final maxValue = values.fold<double>(1, (max, v) => v > max ? v : max);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: items.map((item) {
         final value = ((item['value'] as num?)?.toDouble() ?? 0);
-        final height = (value / maxValue * maxBarHeight * progress)
-            .clamp(2.0, maxBarHeight);
+        final isDone = (item['done'] as bool?) ?? value > 0;
+
+        // Done bars animate to real height; empty bars show a tiny dim stub
+        final double barHeight = isDone
+            ? (value / maxValue * maxBarHeight * progress).clamp(4.0, maxBarHeight)
+            : 4.0;
+
+        final Color barColor = isDone
+            ? color
+            : color.withOpacity(0.15);
+
         return Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Container(
                 width: 40,
-                height: height,
+                height: barHeight,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: barColor,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(4),
                   ),
@@ -882,9 +948,11 @@ class _BarChart extends StatelessWidget {
               Text(
                 item['day']?.toString() ?? '',
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Outfit',
-                  color: _ProgressScreenState._muted,
+                  color: isDone
+                      ? _ProgressScreenState._muted
+                      : _ProgressScreenState._muted.withOpacity(0.4),
                   fontSize: 10,
                 ),
               ),

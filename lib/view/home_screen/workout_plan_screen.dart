@@ -32,8 +32,52 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
+          // Determine if any workout was completed TODAY across all weeks
+          final programData =
+              Map<String, dynamic>.from(data['data'] as Map);
+          final today = DateTime.now();
+          final todayStr =
+              '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+          // Step 1: Check if ANY workout was completed today
+          bool anyCompletedToday = false;
+          for (final week in (programData['weeks'] as List)) {
+            for (final day in ((week as Map)['days'] as List)) {
+              final completedAtRaw = (day as Map)['completedAt']?.toString();
+              if (completedAtRaw != null) {
+                final completedAt = DateTime.tryParse(completedAtRaw);
+                if (completedAt != null) {
+                  final completedStr =
+                      '${completedAt.year}-${completedAt.month.toString().padLeft(2, '0')}-${completedAt.day.toString().padLeft(2, '0')}';
+                  if (completedStr == todayStr) {
+                    anyCompletedToday = true;
+                    break;
+                  }
+                }
+              }
+            }
+            if (anyCompletedToday) break;
+          }
+
+          // Step 2: Mark ONLY the next pending (not yet completed) day as locked.
+          // Already-completed days are NEVER locked — just show their checkmark.
+          final weeks = (programData['weeks'] as List).map((week) {
+            final mappedWeek = Map<String, dynamic>.from(week as Map);
+            final days = (mappedWeek['days'] as List).map((day) {
+              final mappedDay = Map<String, dynamic>.from(day as Map);
+              final isCompleted = mappedDay['isCompleted'] == true;
+              final isCurrent = mappedDay['isCurrent'] == true;
+              // Lock only the current (next pending) day, not completed ones
+              final isLockedToday =
+                  anyCompletedToday && !isCompleted && isCurrent;
+              return {...mappedDay, 'isLockedToday': isLockedToday};
+            }).toList();
+            return {...mappedWeek, 'days': days};
+          }).toList();
+          programData['weeks'] = weeks;
+
           setState(() {
-            _activeProgram = data['data'];
+            _activeProgram = programData;
             _overallProgress =
                 (data['data']['progressPercentage'] ?? 0) / 100.0;
             _isLoading = false;
@@ -216,6 +260,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                                       day['isCompleted'] ?? false,
                                       workoutId: day['workoutId'],
                                       isCurrent: day['isCurrent'] ?? false,
+                                      isLockedToday:
+                                          day['isLockedToday'] ?? false,
                                     ))
                                 .toList()
                             : null,
@@ -339,25 +385,64 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
 
   Widget _buildDayItem(
       BuildContext context, String day, String type, bool isCompleted,
-      {required String? workoutId, bool isCurrent = false}) {
+      {required String? workoutId,
+      bool isCurrent = false,
+      bool isLockedToday = false}) {
+    final bool isFutureLocked = !isCompleted && !isCurrent;
+    final bool isClickable = isCompleted || (isCurrent && !isLockedToday);
+
+    Color iconBgColor;
+    Widget iconWidget;
+
+    if (isCompleted) {
+      iconBgColor = Colors.green.withOpacity(0.15);
+      iconWidget = const Icon(Icons.check_rounded, color: Colors.green, size: 16);
+    } else if (isLockedToday) {
+      iconBgColor = Colors.white.withOpacity(0.03);
+      iconWidget = Icon(Icons.lock_rounded, color: AppColors.white.withOpacity(0.2), size: 16);
+    } else if (isFutureLocked) {
+      iconBgColor = Colors.white.withOpacity(0.02);
+      iconWidget = Icon(Icons.lock_outline_rounded, color: AppColors.white.withOpacity(0.15), size: 16);
+    } else {
+      // Active / Current
+      iconBgColor = Colors.white.withOpacity(0.05);
+      iconWidget = const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 16);
+    }
+
+    String subtitleText = type;
+    Color titleColor = AppColors.white;
+    Color subtitleColor = AppColors.white.withOpacity(0.4);
+
+    if (isLockedToday) {
+      subtitleText = 'Come back tomorrow 💪';
+      titleColor = AppColors.white.withOpacity(0.35);
+      subtitleColor = AppColors.primary.withOpacity(0.4);
+    } else if (isFutureLocked) {
+      titleColor = AppColors.white.withOpacity(0.3);
+      subtitleColor = AppColors.white.withOpacity(0.2);
+    }
+
     return GestureDetector(
-      onTap: () {
-        if (workoutId != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => WorkoutListScreen(workoutId: workoutId)),
-          ).then((_) => _fetchData()); // Refresh when returning
-        } else {
-          // Demo/Mock navigation
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    const WorkoutListScreen(workoutId: 'demo_id')),
-          ).then((_) => _fetchData());
-        }
-      },
+      onTap: !isClickable
+          ? null // Prevent tap if locked (today or future)
+          : () {
+              if (workoutId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          WorkoutListScreen(workoutId: workoutId)),
+                ).then((_) => _fetchData()); // Refresh when returning
+              } else {
+                // Demo/Mock navigation
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const WorkoutListScreen(workoutId: 'demo_id')),
+                ).then((_) => _fetchData());
+              }
+            },
       child: Container(
         margin: const EdgeInsets.only(top: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -365,7 +450,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
           color: Colors.black.withOpacity(0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isCurrent
+            color: isCurrent && !isLockedToday
                 ? AppColors.primary.withOpacity(0.3)
                 : Colors.white.withOpacity(0.03),
           ),
@@ -375,16 +460,10 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: isCompleted
-                    ? Colors.green.withOpacity(0.15)
-                    : Colors.white.withOpacity(0.05),
+                color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded,
-                color: isCompleted ? Colors.green : AppColors.primary,
-                size: 16,
-              ),
+              child: iconWidget,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -393,25 +472,25 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                 children: [
                   Text(
                     day,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.white,
+                      color: titleColor,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    type,
+                    subtitleText,
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.white.withOpacity(0.4),
+                      color: subtitleColor,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            if (isCurrent)
+            if (isCurrent && !isLockedToday)
               const Icon(Icons.chevron_right_rounded,
                   color: AppColors.primary, size: 20),
           ],

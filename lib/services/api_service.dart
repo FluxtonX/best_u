@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:best_u/services/local_workout_plan_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class ApiResponse {
   final int statusCode;
@@ -172,13 +173,58 @@ class ApiService {
     final workoutId = _localWorkoutId(currentWeek, currentDay);
     final todayWorkout = await _localPlan.loadWorkout(workoutId);
 
+    // --- Real week stats ---
+    final completionsSnapshot =
+        await _userRef.collection('workoutCompletions').get();
+    final completions =
+        completionsSnapshot.docs.map((doc) => doc.data()).toList();
+
+    // Week progress: workouts completed in current Mon–Sun week
+    final completedThisWeek = _thisWeekCompletedCount(completions);
+
+    // Weekly streak: how many consecutive past weeks had all 3 days done
+    final weeklyStreak = _weeklyStreakCount(completions);
+
+    // Weight progress: difference between first logged weight and latest logged weight.
+    // If no logs are present, progress is 0.0 kg.
+    final weightLogsSnapshot = await _userRef.collection('weightLogs').get();
+    double weightProgress = 0.0;
+    if (weightLogsSnapshot.docs.isNotEmpty) {
+      final logs = weightLogsSnapshot.docs.map((doc) => doc.data()).toList();
+      logs.sort((a, b) {
+        final aDate = _dateFrom(a['createdAt']) ?? _dateFrom(a['date']) ?? DateTime.now();
+        final bDate = _dateFrom(b['createdAt']) ?? _dateFrom(b['date']) ?? DateTime.now();
+        return aDate.compareTo(bDate);
+      });
+      final firstWeight = (logs.first['weight'] as num).toDouble();
+      final latestWeight = (logs.last['weight'] as num).toDouble();
+      weightProgress = double.parse((latestWeight - firstWeight).toStringAsFixed(1));
+    }
+
+    // Day-lock: if the most recent completion was today, lock the next workout
+    bool isDayLocked = false;
+    DateTime? lastCompletedAt;
+    for (final c in completions) {
+      final date = _dateFrom(c['completedAt']);
+      if (date != null &&
+          (lastCompletedAt == null || date.isAfter(lastCompletedAt!))) {
+        lastCompletedAt = date;
+      }
+    }
+    if (lastCompletedAt != null) {
+      final now = DateTime.now();
+      isDayLocked = lastCompletedAt!.year == now.year &&
+          lastCompletedAt!.month == now.month &&
+          lastCompletedAt!.day == now.day;
+    }
+
     return ApiResponse(
         200,
         jsonEncode({
           'success': true,
           'user': {
             'name': profile['name'] ?? 'User',
-            'streak': profile['streak'] ?? 0,
+            'streak': weeklyStreak,
             'weightLost': profile['weightLost'] ?? 0,
           },
           'activeProgram': {
@@ -193,7 +239,63 @@ class ApiService {
             'exercisesCount':
                 (todayWorkout?['exercises'] as List?)?.length ?? 0,
           },
+          'weekStats': {
+            'completedThisWeek': completedThisWeek,
+            'totalThisWeek': 3,
+            'weeklyStreak': weeklyStreak,
+            'weightProgress': weightProgress,
+            'isDayLocked': isDayLocked,
+            'nextDay': currentDay,
+            'nextWeek': currentWeek,
+          },
         }));
+  }
+
+  /// Returns how many workouts were completed in the current Mon–Sun week.
+  int _thisWeekCompletedCount(List<Map<String, dynamic>> completions) {
+    final now = DateTime.now();
+    // Find Monday of this week
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final weekStart = DateTime(monday.year, monday.month, monday.day);
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    return completions.where((c) {
+      final date = _dateFrom(c['completedAt']);
+      if (date == null) return false;
+      return date.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+          date.isBefore(weekEnd);
+    }).length;
+  }
+
+  /// Returns the weekly streak: number of consecutive past weeks
+  /// where at least 3 workouts were completed.
+  int _weeklyStreakCount(List<Map<String, dynamic>> completions) {
+    if (completions.isEmpty) return 0;
+    final now = DateTime.now();
+    int streak = 0;
+
+    // Check up to 52 past weeks
+    for (int weeksAgo = 1; weeksAgo <= 52; weeksAgo++) {
+      final weekOffset = Duration(days: weeksAgo * 7);
+      final refDay = now.subtract(weekOffset);
+      final monday = refDay.subtract(Duration(days: refDay.weekday - 1));
+      final weekStart = DateTime(monday.year, monday.month, monday.day);
+      final weekEnd = weekStart.add(const Duration(days: 7));
+
+      final count = completions.where((c) {
+        final date = _dateFrom(c['completedAt']);
+        if (date == null) return false;
+        return date.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+            date.isBefore(weekEnd);
+      }).length;
+
+      if (count >= 3) {
+        streak++;
+      } else {
+        break; // Streak broken
+      }
+    }
+    return streak;
   }
 
   Future<ApiResponse> getDailyQuote() async {
@@ -214,6 +316,20 @@ class ApiService {
     final completedIds = (progress['completedWorkouts'] as List? ?? [])
         .map((id) => '$id')
         .toSet();
+
+    // Fetch completion timestamps so plan screen can detect same-day locks
+    final completionsSnapshot =
+        await _userRef.collection('workoutCompletions').get();
+    final completionDates = <String, DateTime>{};
+    for (final doc in completionsSnapshot.docs) {
+      final data = doc.data();
+      final workoutId = data['workoutId']?.toString();
+      final date = _dateFrom(data['completedAt']);
+      if (workoutId != null && date != null) {
+        completionDates[workoutId] = date;
+      }
+    }
+
     int completedCount = 0;
 
     final weeks = (program['weeks'] as List).map((week) {
@@ -227,6 +343,9 @@ class ApiService {
         return {
           ...mappedDay,
           'isCompleted': isCompleted,
+          'completedAt': workoutId != null
+              ? completionDates[workoutId]?.toIso8601String()
+              : null,
           'isCurrent': workoutId ==
               _localWorkoutId(
                 progress['currentWeek'] ?? 1,
@@ -289,11 +408,23 @@ class ApiService {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
+    // Recalculate and persist the weekly streak on the user profile
+    final allCompletionsSnapshot =
+        await _userRef.collection('workoutCompletions').get();
+    final allCompletions =
+        allCompletionsSnapshot.docs.map((doc) => doc.data()).toList();
+    final newStreak = _weeklyStreakCount(allCompletions);
+    await _userRef.set({
+      'streak': newStreak,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
     return _ok({
       'workoutId': id,
       'completedAt': completedAt,
       'currentWeek': next.$1,
       'currentDay': next.$2,
+      'weeklyStreak': newStreak,
     });
   }
 
@@ -303,6 +434,68 @@ class ApiService {
       'loggedAt': FieldValue.serverTimestamp(),
     });
     return _ok({'id': doc.id, ...setData}, statusCode: 201);
+  }
+
+  /// Returns the most recent logged result for a specific exercise + set number.
+  /// Returns null if no previous log found.
+  Future<Map<String, dynamic>?> getLastResultForExercise(
+      String exerciseName, int setNumber) async {
+    try {
+      final snapshot = await _userRef
+          .collection('exerciseLogs')
+          .where('exerciseName', isEqualTo: exerciseName)
+          .where('setNumber', isEqualTo: setNumber)
+          .orderBy('loggedAt', descending: true)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) return null;
+      final data = snapshot.docs.first.data();
+      return {
+        'reps': (data['reps'] as num?)?.toInt() ?? 0,
+        'weight': (data['weight'] as num?)?.toDouble() ?? 0.0,
+        'loggedAt': _dateFrom(data['loggedAt'])?.toIso8601String(),
+      };
+    } catch (e) {
+      debugPrint('getLastResultForExercise error: $e');
+      return null;
+    }
+  }
+
+  /// Batch fetches last results for multiple exercises (all set numbers combined).
+  /// Returns a map of exerciseName -> list of {setNumber, reps, weight}.
+  Future<Map<String, List<Map<String, dynamic>>>> getLastResultsForExercises(
+      List<String> exerciseNames) async {
+    final result = <String, List<Map<String, dynamic>>>{};
+    if (exerciseNames.isEmpty) return result;
+    try {
+      final snapshot = await _userRef
+          .collection('exerciseLogs')
+          .where('exerciseName', whereIn: exerciseNames.take(10).toList())
+          .orderBy('loggedAt', descending: true)
+          .limit(200)
+          .get();
+
+      // Group by exercise name, keeping only the most recent per set number
+      final seen = <String, Set<int>>{};
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final name = data['exerciseName']?.toString();
+        if (name == null) continue;
+        final setNum = (data['setNumber'] as num?)?.toInt() ?? 1;
+        seen[name] ??= {};
+        if (seen[name]!.contains(setNum)) continue;
+        seen[name]!.add(setNum);
+        result[name] ??= [];
+        result[name]!.add({
+          'setNumber': setNum,
+          'reps': (data['reps'] as num?)?.toInt() ?? 0,
+          'weight': (data['weight'] as num?)?.toDouble() ?? 0.0,
+        });
+      }
+    } catch (e) {
+      debugPrint('getLastResultsForExercises error: $e');
+    }
+    return result;
   }
 
   Future<ApiResponse> getProgressSummary() async {
@@ -403,7 +596,7 @@ class ApiService {
       }
     }
 
-    final bests = bestByExercise.values.take(3).toList();
+    final bests = bestByExercise.values.toList();
     if (bests.isEmpty) {
       return _ok([
         {
@@ -431,9 +624,14 @@ class ApiService {
 
   Future<ApiResponse> getSubscriptionStatus() async {
     final profile = await _ensureProfile();
+    // paymentProcessed is only set to true when the user completes the
+    // in-app payment sheet — NOT during onboarding.
+    final paymentProcessed = profile['paymentProcessed'] == true;
+    final priceId = profile['selectedPriceId'] as String?;
     return _ok({
-      'status': profile['subscriptionStatus'] ?? 'active',
-      'isActive': (profile['subscriptionStatus'] ?? 'active') == 'active',
+      'status': paymentProcessed ? 'active' : 'inactive',
+      'isActive': paymentProcessed,
+      'priceId': paymentProcessed ? priceId : null,
     });
   }
 
@@ -441,6 +639,7 @@ class ApiService {
     await _userRef.set({
       'subscriptionStatus': 'active',
       'selectedPriceId': priceId,
+      'paymentProcessed': true, // only set via real payment sheet
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     return _ok({'status': 'active', 'priceId': priceId});
@@ -520,7 +719,8 @@ class ApiService {
       }).length;
       return {
         'day': _dayLabel(date),
-        'value': count == 0 ? 12 : count * 24,
+        'value': count * 24, // 0 if no workout done that day
+        'done': count > 0,
       };
     });
   }
@@ -528,14 +728,11 @@ class ApiService {
   List<Map<String, dynamic>> _strengthLevelData(
       List<Map<String, dynamic>> logs) {
     if (logs.isEmpty) {
-      return const [
-        {'day': 'Mon', 'value': 20},
-        {'day': 'Tue', 'value': 28},
-        {'day': 'Wed', 'value': 34},
-        {'day': 'Thu', 'value': 42},
-        {'day': 'Fri', 'value': 52},
-        {'day': 'Sat', 'value': 58},
-      ];
+      // No data at all — return 6 zero bars
+      return List.generate(6, (index) {
+        final date = DateTime.now().subtract(Duration(days: 5 - index));
+        return {'day': _dayLabel(date), 'value': 0.0, 'done': false};
+      });
     }
 
     return List.generate(6, (index) {
@@ -555,7 +752,8 @@ class ApiService {
       }
       return {
         'day': _dayLabel(date),
-        'value': volume == 0 ? 14 + (index * 6) : volume.clamp(12, 100),
+        'value': volume.clamp(0, 100), // 0 if no exercises logged that day
+        'done': volume > 0,
       };
     });
   }

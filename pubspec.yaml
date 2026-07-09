@@ -83,6 +83,7 @@ flutter:
     - assets/video/excercise-video.mp4
     - assets/video/exercises/
 
+
   fonts:
     - family: Outfit
       fonts:

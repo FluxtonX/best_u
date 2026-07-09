@@ -1,6 +1,5 @@
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:best_u/view/registration_screen/subscription_screen.dart';
 import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
@@ -48,6 +47,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     try {
       final apiService = ApiService();
+
+      // Step 1: Save onboarding profile
       final response = await apiService.onboarding({
         'name': _nameController.text.trim(),
         'currentWeight': double.tryParse(_weightController.text.trim()) ?? 0.0,
@@ -64,13 +65,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         throw 'Failed to save onboarding data. Status: ${response.statusCode}';
       }
 
+      // Step 2: Auto-activate subscription (static — no payment required)
+      await apiService.checkout('price_best_u_default');
+
       if (!mounted) return;
 
-      // Navigate to Subscription Screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-      );
+      // Step 3: Go directly to home — subscription screen bypassed
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.show(context, 'Error saving data: $e',
@@ -271,7 +272,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       {
         'title': 'Lose Weight',
         'icon': null,
-        'svg': 'assets/icons/lose_weight_icon.svg',
+        'svg': 'assets/icons/lose_weight.svg',
       },
       {
         'title': 'Gain Strength',
@@ -281,7 +282,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       {
         'title': 'Combo',
         'icon': null,
-        'svg': 'assets/icons/build muscle icon.svg',
+        'svg': 'assets/icons/lose_weight&gain_strength.svg',
       },
     ];
 
