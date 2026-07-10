@@ -182,20 +182,19 @@ class _ProgressScreenState extends State<ProgressScreen>
                           const SizedBox(height: 16),
                           _buildWeightProgressCard(),
                           const SizedBox(height: 16),
-                          _buildStrengthCard(),
+                          _buildWeeklyWorkoutsCard(),
                           const SizedBox(height: 16),
                           _buildBanner(
                             icon: Icons.check_circle_outline_rounded,
-                            text:
-                                "You're on the track up, You've mastered the last 2 workouts",
+                            text: _summary?['masteredBanner'] ??
+                                "Start your first workout today to track your progress!",
                           ),
                           const SizedBox(height: 10),
                           _buildBanner(
                             icon: Icons.emoji_events_outlined,
-                            text: 'Strongest lift: Squats - 21 kg this week',
+                            text: _summary?['strongestLiftBanner'] ??
+                                "No weight lifts logged yet this week",
                           ),
-                          const SizedBox(height: 16),
-                          _buildWeeklyWorkoutsCard(),
                           const SizedBox(height: 16),
                           _buildActivityGrid(),
                           const SizedBox(height: 16),
@@ -263,13 +262,6 @@ class _ProgressScreenState extends State<ProgressScreen>
           unit: 'kg',
           iconColor: _green,
         ),
-        const SizedBox(width: 14),
-        _buildKpiCard(
-          icon: Icons.grain_rounded,
-          label: 'Protein',
-          value: '${_summary?['proteinPercentage'] ?? 0}',
-          iconColor: AppColors.primary,
-        ),
       ],
     );
   }
@@ -284,79 +276,88 @@ class _ProgressScreenState extends State<ProgressScreen>
   }) {
     return Expanded(
       child: Container(
-        height: 148,
-        padding: const EdgeInsets.all(14),
+        height: 156,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: _cardDecoration(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: iconColor,
-                    borderRadius: BorderRadius.circular(9),
+            if (trend != null)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Text(
+                  trend,
+                  style: const TextStyle(
+                    fontFamily: 'Outfit',
+                    color: _green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
-                  child: Icon(icon, color: Colors.black, size: 18),
                 ),
-                const Spacer(),
-                if (trend != null)
-                  Text(
-                    trend,
-                    style: const TextStyle(
-                      fontFamily: 'Outfit',
-                      color: _green,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Outfit',
-                color: _muted,
-                fontSize: 13,
-                height: 1.18,
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Flexible(
-                  child: Text(
-                    value,
+            Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: iconColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: Colors.black, size: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Outfit',
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
+                      color: _muted,
+                      fontSize: 12,
+                      height: 1.15,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                if (unit != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 2, bottom: 4),
-                    child: Text(
-                      unit,
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: _muted,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          value,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (unit != null) ...[
+                        const SizedBox(width: 2),
+                        Text(
+                          unit,
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: _muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -385,23 +386,7 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  Widget _buildStrengthCard() {
-    return AnimatedBuilder(
-      animation: _graphAnimation,
-      builder: (context, _) {
-        return _buildChartCard(
-          title: 'Strength Levels Up',
-          height: 192,
-          child: _BarChart(
-            items: _strengthLevels,
-            color: AppColors.primary,
-            maxBarHeight: 78,
-            progress: _graphAnimation.value,
-          ),
-        );
-      },
-    );
-  }
+
 
   Widget _buildWeeklyWorkoutsCard() {
     return AnimatedBuilder(
@@ -418,6 +403,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             color: _orange,
             maxBarHeight: 58,
             progress: _graphAnimation.value,
+            maxValue: 24.0,
           ),
         );
       },
@@ -596,21 +582,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           ],
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMetricCard(
-                icon: Icons.monitor_heart_outlined,
-                value: '${_summary?['heartRate'] ?? 0} bpm',
-                label: 'Avg heart rate',
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildMonthProgressCard(),
-            ),
-          ],
-        ),
+        _buildMonthProgressCard(),
       ],
     );
   }
@@ -663,19 +635,25 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   Widget _buildMonthProgressCard() {
+    final completedThisMonth = _summary?['completedThisMonth'] ?? 0;
+    final progressText = completedThisMonth > 0
+        ? '$completedThisMonth workouts\nthis month'
+        : 'Adding progress\nthis month';
+
     return Container(
       height: 78,
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: _cardDecoration(),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.check_circle_outline_rounded,
+          const Icon(Icons.check_circle_outline_rounded,
               color: AppColors.primary, size: 18),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Adding progress\nthis month',
-              style: TextStyle(
+              progressText,
+              style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: Colors.white,
                 fontSize: 13,
@@ -753,20 +731,37 @@ class _ProgressScreenState extends State<ProgressScreen>
             ],
           ),
           const SizedBox(height: 14),
-          ..._personalBests.take(3).toList().asMap().entries.map((entry) {
-            return _buildPersonalBestRow(
-              entry.value,
-              showDivider: entry.key !=
-                  (_personalBests.length > 3 ? 2 : _personalBests.length - 1),
-            );
-          }),
+          if (_personalBests.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'No personal records logged yet',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else
+            ..._personalBests.take(3).toList().asMap().entries.map((entry) {
+              return _buildPersonalBestRow(
+                entry.value,
+                entry.key,
+                showDivider: entry.key !=
+                    (_personalBests.length > 3 ? 2 : _personalBests.length - 1),
+              );
+            }),
         ],
       ),
     );
   }
 
   Widget _buildPersonalBestRow(
-    Map<String, dynamic> item, {
+    Map<String, dynamic> item,
+    int index, {
     required bool showDivider,
   }) {
     return Column(
@@ -779,14 +774,39 @@ class _ProgressScreenState extends State<ProgressScreen>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF26272C),
+                  color: index == 0
+                      ? AppColors.primary.withValues(alpha: 0.18)
+                      : const Color(0xFF26272C),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  item['icon'] as IconData? ?? Icons.fitness_center_rounded,
-                  color: AppColors.primary,
-                  size: 19,
-                ),
+                child: index == 0
+                    ? Center(
+                        child: Image.asset(
+                          'assets/icons/cup.png',
+                          width: 19,
+                          height: 19,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    : index < 3
+                        ? Icon(
+                            [
+                              Icons.emoji_events_rounded,
+                              Icons.workspace_premium_rounded,
+                              Icons.military_tech_rounded,
+                            ][index],
+                            color: [
+                              AppColors.primary,
+                              const Color(0xFFC0C0C0),
+                              const Color(0xFFCD7F32),
+                            ][index],
+                            size: 19,
+                          )
+                    : Icon(
+                        item['icon'] as IconData? ?? Icons.fitness_center_rounded,
+                        color: AppColors.primary,
+                        size: 19,
+                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -901,18 +921,20 @@ class _BarChart extends StatelessWidget {
     required this.color,
     required this.maxBarHeight,
     required this.progress,
+    this.maxValue,
   });
 
   final List<Map<String, dynamic>> items;
   final Color color;
   final double maxBarHeight;
   final double progress;
+  final double? maxValue;
 
   @override
   Widget build(BuildContext context) {
     final values =
         items.map((item) => (item['value'] as num?)?.toDouble() ?? 0).toList();
-    final maxValue = values.fold<double>(1, (max, v) => v > max ? v : max);
+    final double computedMaxValue = maxValue ?? values.fold<double>(1, (max, v) => v > max ? v : max);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -923,7 +945,7 @@ class _BarChart extends StatelessWidget {
 
         // Done bars animate to real height; empty bars show a tiny dim stub
         final double barHeight = isDone
-            ? (value / maxValue * maxBarHeight * progress).clamp(4.0, maxBarHeight)
+            ? (value / computedMaxValue * maxBarHeight * progress).clamp(4.0, maxBarHeight)
             : 4.0;
 
         final Color barColor = isDone
@@ -970,11 +992,57 @@ class _LineChartPainter extends CustomPainter {
   final List<Map<String, dynamic>> items;
   final double progress;
 
+  String _dayLabel(DateTime date) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[date.weekday - 1];
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    if (items.length < 2) return;
-
     final chartHeight = size.height - 30;
+
+    if (items.length < 2) {
+      final linePaint = Paint()
+        ..color = _ProgressScreenState._orange
+        ..strokeWidth = 2.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
+      final dotPaint = Paint()..color = _ProgressScreenState._orange;
+
+      canvas.drawLine(
+        Offset(0, chartHeight + 5),
+        Offset(size.width, chartHeight + 5),
+        linePaint,
+      );
+
+      final now = DateTime.now();
+      for (int i = 0; i < 5; i++) {
+        final date = now.subtract(Duration(days: 4 - i));
+        final dayLabel = _dayLabel(date);
+        final x = (size.width / 4) * i;
+        
+        canvas.drawCircle(Offset(x, chartHeight + 5), 5, dotPaint);
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: dayLabel,
+            style: const TextStyle(
+              color: _ProgressScreenState._muted,
+              fontSize: 10,
+              fontFamily: 'Outfit',
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - textPainter.width / 2, chartHeight + 18),
+        );
+      }
+      return;
+    }
+
     final values =
         items.map((item) => (item['value'] as num).toDouble()).toList();
     final minValue = values.reduce((a, b) => a < b ? a : b) - 0.4;

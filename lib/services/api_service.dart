@@ -192,19 +192,25 @@ class ApiService {
     if (weightLogsSnapshot.docs.isNotEmpty) {
       final logs = weightLogsSnapshot.docs.map((doc) => doc.data()).toList();
       logs.sort((a, b) {
-        final aDate = _dateFrom(a['createdAt']) ?? _dateFrom(a['date']) ?? DateTime.now();
-        final bDate = _dateFrom(b['createdAt']) ?? _dateFrom(b['date']) ?? DateTime.now();
+        final aDate =
+            _dateFrom(a['createdAt']) ?? _dateFrom(a['date']) ?? DateTime.now();
+        final bDate =
+            _dateFrom(b['createdAt']) ?? _dateFrom(b['date']) ?? DateTime.now();
         return aDate.compareTo(bDate);
       });
       final firstWeight = (logs.first['weight'] as num).toDouble();
       final latestWeight = (logs.last['weight'] as num).toDouble();
-      weightProgress = double.parse((latestWeight - firstWeight).toStringAsFixed(1));
+      weightProgress =
+          double.parse((latestWeight - firstWeight).toStringAsFixed(1));
     }
 
     // Day-lock: if the most recent completion was today, lock the next workout
     bool isDayLocked = false;
     DateTime? lastCompletedAt;
     for (final c in completions) {
+      if (c['isCompleted'] == false || c['isAbandoned'] == true) {
+        continue;
+      }
       final date = _dateFrom(c['completedAt']);
       if (date != null &&
           (lastCompletedAt == null || date.isAfter(lastCompletedAt!))) {
@@ -259,12 +265,17 @@ class ApiService {
     final weekStart = DateTime(monday.year, monday.month, monday.day);
     final weekEnd = weekStart.add(const Duration(days: 7));
 
-    return completions.where((c) {
-      final date = _dateFrom(c['completedAt']);
-      if (date == null) return false;
-      return date.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
-          date.isBefore(weekEnd);
-    }).length;
+    return completions
+        .where((c) {
+          final date = _dateFrom(c['completedAt']);
+          if (date == null) return false;
+          if (c['isCompleted'] == false) return false;
+          return date.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+              date.isBefore(weekEnd);
+        })
+        .map((c) => c['workoutId'])
+        .toSet()
+        .length;
   }
 
   /// Returns the weekly streak: number of consecutive past weeks
@@ -282,12 +293,18 @@ class ApiService {
       final weekStart = DateTime(monday.year, monday.month, monday.day);
       final weekEnd = weekStart.add(const Duration(days: 7));
 
-      final count = completions.where((c) {
-        final date = _dateFrom(c['completedAt']);
-        if (date == null) return false;
-        return date.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
-            date.isBefore(weekEnd);
-      }).length;
+      final count = completions
+          .where((c) {
+            final date = _dateFrom(c['completedAt']);
+            if (date == null) return false;
+            if (c['isCompleted'] == false) return false;
+            return date
+                    .isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+                date.isBefore(weekEnd);
+          })
+          .map((c) => c['workoutId'])
+          .toSet()
+          .length;
 
       if (count >= 3) {
         streak++;
@@ -323,10 +340,16 @@ class ApiService {
     final completionDates = <String, DateTime>{};
     for (final doc in completionsSnapshot.docs) {
       final data = doc.data();
+      if (data['isCompleted'] == false || data['isAbandoned'] == true) {
+        continue;
+      }
       final workoutId = data['workoutId']?.toString();
       final date = _dateFrom(data['completedAt']);
       if (workoutId != null && date != null) {
-        completionDates[workoutId] = date;
+        final existing = completionDates[workoutId];
+        if (existing == null || date.isAfter(existing)) {
+          completionDates[workoutId] = date;
+        }
       }
     }
 
@@ -384,47 +407,105 @@ class ApiService {
     return _ok(workout);
   }
 
-  Future<ApiResponse> completeWorkout(
-      String id, int timeTakenMinutes, int volumeLifted) async {
+  String generateSessionId() {
+    return _userRef.collection('workoutCompletions').doc().id;
+  }
+
+  Future<Map<String, dynamic>?> getActiveWorkoutSession(
+      String workoutId) async {
+    final snapshot = await _userRef
+        .collection('workoutCompletions')
+        .where('workoutId', isEqualTo: workoutId)
+        .where('isCompleted', isEqualTo: false)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      final activeDocs = snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .where((data) => data['isAbandoned'] != true)
+          .toList();
+
+      if (activeDocs.isNotEmpty) {
+        activeDocs.sort((a, b) {
+          final dateA = _dateFrom(a['completedAt']) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final dateB = _dateFrom(b['completedAt']) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          return dateB.compareTo(dateA);
+        });
+        return activeDocs.first;
+      }
+    }
+    return null;
+  }
+
+  Future<void> abandonWorkoutSession(String docId) async {
+    await _userRef.collection('workoutCompletions').doc(docId).set({
+      'isAbandoned': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<ApiResponse> updateWorkoutSession({
+    required String docId,
+    required String workoutId,
+    required int timeTakenMinutes,
+    required int volumeLifted,
+    required double completionPercentage,
+    required bool isCompleted,
+    int? currentExerciseIndex,
+    int? currentSetIndex,
+    String? weight,
+    String? reps,
+    String? sessionStartTime,
+  }) async {
     final completedAt = DateTime.now();
-    await _userRef.collection('workoutCompletions').doc(id).set({
-      'workoutId': id,
+    await _userRef.collection('workoutCompletions').doc(docId).set({
+      'workoutId': workoutId,
       'timeTakenMinutes': timeTakenMinutes,
       'volumeLifted': volumeLifted,
+      'completionPercentage': completionPercentage,
+      'isCompleted': isCompleted,
       'completedAt': completedAt,
+      if (currentExerciseIndex != null)
+        'currentExerciseIndex': currentExerciseIndex,
+      if (currentSetIndex != null) 'currentSetIndex': currentSetIndex,
+      if (weight != null) 'weight': weight,
+      if (reps != null) 'reps': reps,
+      if (sessionStartTime != null) 'sessionStartTime': sessionStartTime,
     }, SetOptions(merge: true));
 
-    final progress = await _programProgress();
-    final completedWorkouts = (progress['completedWorkouts'] as List? ?? [])
-        .map((id) => '$id')
-        .toSet()
-      ..add(id);
-    final next = _nextWorkoutPosition(id);
+    if (isCompleted) {
+      final progress = await _programProgress();
+      final completedWorkouts = (progress['completedWorkouts'] as List? ?? [])
+          .map((id) => '$id')
+          .toSet()
+        ..add(workoutId);
+      final next = _nextWorkoutPosition(workoutId);
 
-    await _userRef.collection('progress').doc('program').set({
-      'completedWorkouts': completedWorkouts.toList(),
-      'currentWeek': next.$1,
-      'currentDay': next.$2,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+      await _userRef.collection('progress').doc('program').set({
+        'completedWorkouts': completedWorkouts.toList(),
+        'currentWeek': next.$1,
+        'currentDay': next.$2,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-    // Recalculate and persist the weekly streak on the user profile
-    final allCompletionsSnapshot =
-        await _userRef.collection('workoutCompletions').get();
-    final allCompletions =
-        allCompletionsSnapshot.docs.map((doc) => doc.data()).toList();
-    final newStreak = _weeklyStreakCount(allCompletions);
-    await _userRef.set({
-      'streak': newStreak,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+      // Recalculate and persist the weekly streak on the user profile
+      final allCompletionsSnapshot =
+          await _userRef.collection('workoutCompletions').get();
+      final allCompletions =
+          allCompletionsSnapshot.docs.map((doc) => doc.data()).toList();
+      final newStreak = _weeklyStreakCount(allCompletions);
+      await _userRef.set({
+        'streak': newStreak,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
 
     return _ok({
-      'workoutId': id,
+      'workoutId': workoutId,
+      'isCompleted': isCompleted,
       'completedAt': completedAt,
-      'currentWeek': next.$1,
-      'currentDay': next.$2,
-      'weeklyStreak': newStreak,
     });
   }
 
@@ -436,6 +517,26 @@ class ApiService {
     return _ok({'id': doc.id, ...setData}, statusCode: 201);
   }
 
+  Future<List<Map<String, dynamic>>> getExerciseLogsForWorkout(
+      String workoutId) async {
+    try {
+      final snapshot = await _userRef
+          .collection('exerciseLogs')
+          .where('workoutId', isEqualTo: workoutId)
+          .get();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          ...data,
+          'loggedAt': _dateFrom(data['loggedAt'])?.toIso8601String(),
+        };
+      }).toList();
+    } catch (e) {
+      debugPrint('getExerciseLogsForWorkout error: $e');
+      return [];
+    }
+  }
+
   /// Returns the most recent logged result for a specific exercise + set number.
   /// Returns null if no previous log found.
   Future<Map<String, dynamic>?> getLastResultForExercise(
@@ -445,11 +546,17 @@ class ApiService {
           .collection('exerciseLogs')
           .where('exerciseName', isEqualTo: exerciseName)
           .where('setNumber', isEqualTo: setNumber)
-          .orderBy('loggedAt', descending: true)
-          .limit(1)
           .get();
       if (snapshot.docs.isEmpty) return null;
-      final data = snapshot.docs.first.data();
+      final docs = snapshot.docs.map((doc) => doc.data()).toList();
+      docs.sort((a, b) {
+        final aDate =
+            _dateFrom(a['loggedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate =
+            _dateFrom(b['loggedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bDate.compareTo(aDate); // Descending (most recent first)
+      });
+      final data = docs.first;
       return {
         'reps': (data['reps'] as num?)?.toInt() ?? 0,
         'weight': (data['weight'] as num?)?.toDouble() ?? 0.0,
@@ -471,14 +578,20 @@ class ApiService {
       final snapshot = await _userRef
           .collection('exerciseLogs')
           .where('exerciseName', whereIn: exerciseNames.take(10).toList())
-          .orderBy('loggedAt', descending: true)
-          .limit(200)
           .get();
+
+      final docs = snapshot.docs.map((doc) => doc.data()).toList();
+      docs.sort((a, b) {
+        final aDate =
+            _dateFrom(a['loggedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate =
+            _dateFrom(b['loggedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bDate.compareTo(aDate); // Descending (most recent first)
+      });
 
       // Group by exercise name, keeping only the most recent per set number
       final seen = <String, Set<int>>{};
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
+      for (final data in docs) {
         final name = data['exerciseName']?.toString();
         if (name == null) continue;
         final setNum = (data['setNumber'] as num?)?.toInt() ?? 1;
@@ -510,26 +623,77 @@ class ApiService {
         completionsSnapshot.docs.map((doc) => doc.data()).toList();
     final exerciseLogs =
         exerciseLogsSnapshot.docs.map((doc) => doc.data()).toList();
-    final totalWorkoutMinutes = completions.fold<int>(
-      0,
-      (total, item) =>
-          total + ((item['timeTakenMinutes'] as num?)?.toInt() ?? 0),
-    );
-    final completedThisWeek = completions.where((item) {
-      final date = _dateFrom(item['completedAt']);
-      if (date == null) return false;
-      return DateTime.now().difference(date).inDays < 7;
-    }).length;
-    final avgTime = completions.isEmpty
-        ? (profile['avgTime'] ?? 0)
-        : totalWorkoutMinutes / completions.length;
+    final activeSessionsForAvg = completions.where((item) {
+      final time = (item['timeTakenMinutes'] as num?)?.toInt() ?? 0;
+      return item['isAbandoned'] != true && time > 0;
+    }).toList();
+
+    final totalWorkoutMinutes = completions
+        .where((item) => item['isAbandoned'] != true)
+        .fold<int>(
+          0,
+          (total, item) =>
+              total + ((item['timeTakenMinutes'] as num?)?.toInt() ?? 0),
+        );
+    final completedThisWeek = completions
+        .where((item) {
+          final date = _dateFrom(item['completedAt']);
+          if (date == null) return false;
+          if (item['isCompleted'] == false) return false;
+          return DateTime.now().difference(date).inDays < 7;
+        })
+        .map((item) => item['workoutId'])
+        .toSet()
+        .length;
+
+    // Completed in current calendar month
+    final completedThisMonth = completions
+        .where((item) {
+          final date = _dateFrom(item['completedAt']);
+          if (date == null) return false;
+          if (item['isCompleted'] == false) return false;
+          final now = DateTime.now();
+          return date.year == now.year && date.month == now.month;
+        })
+        .map((item) => item['workoutId'])
+        .toSet()
+        .length;
+
+    final avgTime = activeSessionsForAvg.isEmpty
+        ? (profile['avgTime'] ?? 0.0)
+        : totalWorkoutMinutes / activeSessionsForAvg.length;
     final firstWeight =
         weightHistory.isNotEmpty ? (weightHistory.first['value'] as num) : null;
     final lastWeight =
         weightHistory.isNotEmpty ? (weightHistory.last['value'] as num) : null;
     final weightTrend = firstWeight != null && lastWeight != null
-        ? lastWeight - firstWeight
-        : 0;
+        ? double.parse((lastWeight - firstWeight).toStringAsFixed(1))
+        : 0.0;
+
+    // Dynamic Mastered Workouts Banner
+    final masteredBanner = completions.isEmpty
+        ? "Start your first workout today to track your progress!"
+        : "You're on the track up, You've completed ${completions.length} ${completions.length == 1 ? 'workout' : 'workouts'} total";
+
+    // Dynamic Strongest Lift Banner
+    String strongestLiftBanner = "No weight lifts logged yet this week";
+    if (exerciseLogs.isNotEmpty) {
+      double maxWeight = 0.0;
+      String strongestExercise = '';
+      for (final log in exerciseLogs) {
+        final w = (log['weight'] as num?)?.toDouble() ?? 0.0;
+        if (w > maxWeight) {
+          maxWeight = w;
+          strongestExercise = log['exerciseName']?.toString() ?? '';
+        }
+      }
+      if (maxWeight > 0 && strongestExercise.isNotEmpty) {
+        strongestLiftBanner =
+            "Strongest lift: $strongestExercise - ${maxWeight.toStringAsFixed(0)} kg";
+      }
+    }
+
+    final heartRate = completions.isEmpty ? (profile['heartRate'] ?? 72) : 132;
 
     return _ok({
       'totalWorkoutMinutes': totalWorkoutMinutes == 0
@@ -546,9 +710,12 @@ class ApiService {
       'totalCalories': totalWorkoutMinutes == 0
           ? (profile['totalCalories'] ?? 0)
           : totalWorkoutMinutes * 7,
-      'heartRate': profile['heartRate'] ?? 142,
+      'heartRate': heartRate,
       'completedThisWeek': completedThisWeek,
       'totalThisWeek': 6,
+      'completedThisMonth': completedThisMonth,
+      'masteredBanner': masteredBanner,
+      'strongestLiftBanner': strongestLiftBanner,
       'weeklyWorkouts': _weeklyWorkoutData(completions),
       'strengthLevels': _strengthLevelData(exerciseLogs),
     });
@@ -569,44 +736,57 @@ class ApiService {
   }
 
   Future<ApiResponse> getPersonalBests() async {
-    final explicitSnapshot = await _userRef.collection('personalBests').get();
-    if (explicitSnapshot.docs.isNotEmpty) {
-      return _ok(explicitSnapshot.docs
-          .map((doc) => {'id': doc.id, ...doc.data()})
-          .toList());
-    }
-
     final logsSnapshot = await _userRef.collection('exerciseLogs').get();
     final bestByExercise = <String, Map<String, dynamic>>{};
     for (final doc in logsSnapshot.docs) {
       final data = doc.data();
       final exerciseName = data['exerciseName']?.toString();
       if (exerciseName == null || exerciseName.isEmpty) continue;
-      final weight = (data['weight'] as num?)?.toDouble() ?? 0;
+      final weight = (data['weight'] as num?)?.toDouble() ?? 0.0;
+      final reps = (data['reps'] as num?)?.toInt() ?? 0;
+      final loggedAt = _dateFrom(data['loggedAt']) ?? DateTime.now();
+
       final current = bestByExercise[exerciseName];
-      final currentWeight = (current?['rawWeight'] as num?)?.toDouble() ?? -1;
-      if (weight >= currentWeight) {
+      bool isBetter = false;
+
+      if (current == null) {
+        isBetter = true;
+      } else {
+        final currentWeight = (current['rawWeight'] as num?)?.toDouble() ?? 0.0;
+        final currentReps = (current['rawReps'] as num?)?.toInt() ?? 0;
+
+        if (weight > currentWeight) {
+          isBetter = true;
+        } else if (weight == currentWeight) {
+          if (reps > currentReps) {
+            isBetter = true;
+          }
+        }
+      }
+
+      if (isBetter) {
+        String displayValue;
+        if (weight > 0) {
+          final weightStr = weight.truncateToDouble() == weight
+              ? weight.toInt().toString()
+              : weight.toStringAsFixed(1);
+          displayValue = "$weightStr kg";
+        } else {
+          displayValue = "$reps reps";
+        }
+
         bestByExercise[exerciseName] = {
           'exercise': exerciseName,
-          'value': weight > 0 ? '${weight.toStringAsFixed(1)} kg' : '--',
+          'value': displayValue,
           'rawWeight': weight,
-          'date': _displayDate(_dateFrom(data['loggedAt']) ?? DateTime.now()),
-          'rating': weight > 0 ? 4 : 3,
+          'rawReps': reps,
+          'date': _displayDate(loggedAt),
+          'rating': weight > 0 ? 5 : 4,
         };
       }
     }
 
     final bests = bestByExercise.values.toList();
-    if (bests.isEmpty) {
-      return _ok([
-        {
-          'exercise': 'Bench Press',
-          'value': '--',
-          'date': _displayDate(DateTime.now()),
-          'rating': 3,
-        },
-      ]);
-    }
     return _ok(bests);
   }
 
@@ -693,34 +873,43 @@ class ApiService {
     final profile = await _ensureProfile();
     final weight = (profile['weight'] as num?)?.toDouble() ??
         (profile['currentWeight'] as num?)?.toDouble() ??
-        0;
-    if (weight <= 0) return _fallbackWeightHistory();
-    return List.generate(5, (index) {
-      final date = DateTime.now().subtract(Duration(days: 4 - index));
-      return {
+        0.0;
+    if (weight <= 0) return [];
+    final date = DateTime.now();
+    return [
+      {
         'day': _dayLabel(date),
-        'value':
-            double.parse((weight + ((4 - index) * 0.2)).toStringAsFixed(1)),
+        'value': weight,
         'date': date.toIso8601String(),
-      };
-    });
+      }
+    ];
   }
 
   List<Map<String, dynamic>> _weeklyWorkoutData(
       List<Map<String, dynamic>> completions) {
     return List.generate(6, (index) {
       final date = DateTime.now().subtract(Duration(days: 5 - index));
-      final count = completions.where((item) {
+      final dayCompletions = completions.where((item) {
         final completedAt = _dateFrom(item['completedAt']);
         return completedAt != null &&
             completedAt.year == date.year &&
             completedAt.month == date.month &&
             completedAt.day == date.day;
-      }).length;
+      });
+
+      double maxPercent = 0.0;
+      for (final item in dayCompletions) {
+        final pct = (item['completionPercentage'] as num?)?.toDouble() ??
+            ((item['isCompleted'] == true) ? 1.0 : 0.0);
+        if (pct > maxPercent) {
+          maxPercent = pct;
+        }
+      }
+
       return {
         'day': _dayLabel(date),
-        'value': count * 24, // 0 if no workout done that day
-        'done': count > 0,
+        'value': maxPercent * 24.0,
+        'done': maxPercent > 0,
       };
     });
   }
@@ -754,19 +943,6 @@ class ApiService {
         'day': _dayLabel(date),
         'value': volume.clamp(0, 100), // 0 if no exercises logged that day
         'done': volume > 0,
-      };
-    });
-  }
-
-  List<Map<String, dynamic>> _fallbackWeightHistory() {
-    const values = [78.4, 77.2, 78.0, 77.4, 78.0];
-    return List.generate(values.length, (index) {
-      final date =
-          DateTime.now().subtract(Duration(days: values.length - 1 - index));
-      return {
-        'day': _dayLabel(date),
-        'value': values[index],
-        'date': date.toIso8601String(),
       };
     });
   }

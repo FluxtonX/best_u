@@ -191,8 +191,12 @@ class _AllPersonalBestsScreenState extends State<AllPersonalBestsScreen>
           ),
           child: Column(
             children: [
-              const Icon(Icons.emoji_events_rounded,
-                  color: AppColors.primary, size: 48),
+              Image.asset(
+                'assets/icons/cup.png',
+                width: 48,
+                height: 48,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(height: 10),
               Text(
                 '${widget.personalBests.length} Personal Records',
@@ -252,20 +256,29 @@ class _AllPersonalBestsScreenState extends State<AllPersonalBestsScreen>
                   : const Color(0xFF26272C),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: index < 3
-                ? Icon(
-                    [
-                      Icons.emoji_events_rounded,
-                      Icons.workspace_premium_rounded,
-                      Icons.military_tech_rounded,
-                    ][index],
-                    color: [
-                      AppColors.primary,
-                      const Color(0xFFC0C0C0),
-                      const Color(0xFFCD7F32),
-                    ][index],
-                    size: 22,
+            child: index == 0
+                ? Center(
+                    child: Image.asset(
+                      'assets/icons/cup.png',
+                      width: 22,
+                      height: 22,
+                      fit: BoxFit.contain,
+                    ),
                   )
+                : index < 3
+                    ? Icon(
+                        [
+                          Icons.emoji_events_rounded,
+                          Icons.workspace_premium_rounded,
+                          Icons.military_tech_rounded,
+                        ][index],
+                        color: [
+                          AppColors.primary,
+                          const Color(0xFFC0C0C0),
+                          const Color(0xFFCD7F32),
+                        ][index],
+                        size: 22,
+                      )
                 : Center(
                     child: Text(
                       '${index + 1}',

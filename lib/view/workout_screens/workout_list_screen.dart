@@ -631,6 +631,15 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                         ),
                       );
                       if (!context.mounted) return;
+                      if (resume == false) {
+                        final apiService = ApiService();
+                        final docId = saved['id'] ?? saved['sessionDocId'];
+                        if (docId != null) {
+                          await apiService.abandonWorkoutSession(docId.toString());
+                        }
+                      }
+
+                      if (!context.mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -638,10 +647,10 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                                   exercises: exercises,
                                   workoutId: workoutId,
                                   resumeExerciseIndex: resume == true
-                                      ? saved['exerciseIndex'] as int?
+                                      ? ((saved['currentExerciseIndex'] ?? saved['exerciseIndex']) as num?)?.toInt()
                                       : null,
                                   resumeSetIndex: resume == true
-                                      ? saved['setIndex'] as int?
+                                      ? ((saved['currentSetIndex'] ?? saved['setIndex']) as num?)?.toInt()
                                       : null,
                                 )),
                       );

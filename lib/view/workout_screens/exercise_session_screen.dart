@@ -29,6 +29,10 @@ class ExerciseSessionScreen extends StatefulWidget {
 
   static Future<Map<String, dynamic>?> getSavedSession(String workoutId) async {
     try {
+      final apiService = ApiService();
+      final active = await apiService.getActiveWorkoutSession(workoutId);
+      if (active != null) return active;
+
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('$_sessionPrefKey$workoutId');
       if (raw == null) return null;
@@ -47,7 +51,9 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
 
-  final DateTime _sessionStartTime = DateTime.now();
+  late DateTime _sessionStartTime;
+  final Map<String, double> _loggedSetsVolume = {};
+  String? _sessionDocId;
   int _currentExerciseIndex = 0;
   int _currentSetIndex = 0;
   VideoPlayerController? _videoController;
@@ -82,6 +88,9 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   @override
   void initState() {
     super.initState();
+    _sessionStartTime = DateTime.now();
+    _sessionDocId = ApiService().generateSessionId();
+    _loadSessionStartTimeAndVolume();
     // Restore saved position if resuming
     if (widget.resumeExerciseIndex != null) {
       _currentExerciseIndex = widget.resumeExerciseIndex!;
@@ -264,6 +273,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
         'setIndex': _currentSetIndex,
         'weight': _weightController.text,
         'reps': _repsController.text,
+        'startTime': _sessionStartTime.toIso8601String(),
+        'sessionDocId': _sessionDocId,
       });
       await prefs.setString(_sessionKey, data);
     } catch (e) {
@@ -277,6 +288,111 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       await prefs.remove(_sessionKey);
     } catch (e) {
       debugPrint('Error clearing session: $e');
+    }
+  }
+
+  DateTime? _dateFrom(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+
+  Future<void> _loadSessionStartTimeAndVolume() async {
+    // If resuming, try to load original session start time and previous set logs
+    if (widget.resumeExerciseIndex != null) {
+      final saved = await ExerciseSessionScreen.getSavedSession(widget.workoutId);
+      if (saved != null) {
+        final startStr = saved['sessionStartTime'] ?? saved['startTime'];
+        if (startStr != null) {
+          final parsed = DateTime.tryParse(startStr.toString());
+          if (parsed != null) {
+            setState(() {
+              _sessionStartTime = parsed;
+            });
+          }
+        }
+        final docId = saved['id'] ?? saved['sessionDocId'];
+        if (docId != null) {
+          _sessionDocId = docId.toString();
+        }
+        
+        final exIndex = saved['currentExerciseIndex'] ?? saved['exerciseIndex'];
+        final setIndex = saved['currentSetIndex'] ?? saved['setIndex'];
+        final weightVal = saved['weight'];
+        final repsVal = saved['reps'];
+
+        setState(() {
+          if (exIndex != null) _currentExerciseIndex = (exIndex as num).toInt();
+          if (setIndex != null) _currentSetIndex = (setIndex as num).toInt();
+          if (weightVal != null) _weightController.text = weightVal.toString();
+          if (repsVal != null) _repsController.text = repsVal.toString();
+        });
+      }
+
+      // Load previous logged sets for this workout from Firestore to compute initial volume
+      try {
+        final apiService = ApiService();
+        final logs = await apiService.getExerciseLogsForWorkout(widget.workoutId);
+        final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+        for (final log in logs) {
+          final date = _dateFrom(log['loggedAt']);
+          if (date != null && date.isAfter(twelveHoursAgo)) {
+            final exerciseName = log['exerciseName']?.toString() ?? '';
+            final setNum = (log['setNumber'] as num?)?.toInt() ?? 0;
+            final weight = (log['weight'] as num?)?.toDouble() ?? 0.0;
+            final reps = (log['reps'] as num?)?.toInt() ?? 0;
+            final setKey = '$exerciseName-$setNum';
+            _loggedSetsVolume[setKey] = weight * reps;
+          }
+        }
+      } catch (e) {
+        debugPrint("Error restoring session volume: $e");
+      }
+    }
+  }
+
+  int get _totalSetsCount {
+    int count = 0;
+    for (final ex in widget.exercises) {
+      if (ex is Map) {
+        final sets = ex['sets'];
+        if (sets is num) {
+          count += sets.toInt();
+        }
+      }
+    }
+    return count > 0 ? count : 1;
+  }
+
+  Future<void> _updateSessionProgress({required bool isCompleted}) async {
+    if (_sessionDocId == null) return;
+    try {
+      final apiService = ApiService();
+      final durationMinutes = DateTime.now()
+          .difference(_sessionStartTime)
+          .inMinutes
+          .clamp(1, 999);
+      final totalVolume = _loggedSetsVolume.values
+          .fold<double>(0.0, (sum, val) => sum + val)
+          .round();
+      final double completionPercentage = _loggedSetsVolume.length / _totalSetsCount;
+
+      await apiService.updateWorkoutSession(
+        docId: _sessionDocId!,
+        workoutId: widget.workoutId,
+        timeTakenMinutes: durationMinutes,
+        volumeLifted: totalVolume,
+        completionPercentage: completionPercentage,
+        isCompleted: isCompleted,
+        currentExerciseIndex: _currentExerciseIndex,
+        currentSetIndex: _currentSetIndex,
+        weight: _weightController.text,
+        reps: _repsController.text,
+        sessionStartTime: _sessionStartTime.toIso8601String(),
+      );
+    } catch (e) {
+      debugPrint("Error updating session progress: $e");
     }
   }
 
@@ -391,6 +507,9 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
         'setNumber': setNum,
         'goal': currentSet['goal'] ?? currentSet['instruction'],
       });
+      final setKey = '$exerciseName-$setNum';
+      _loggedSetsVolume[setKey] = loggedWeight * loggedReps;
+      _updateSessionProgress(isCompleted: false);
     } catch (e) {
       debugPrint("Error logging set: $e");
     }
@@ -409,19 +528,27 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       last = null;
     }
 
-    if (last == null) return; // No history to compare against
-
-    final lastReps = last['reps'] as int? ?? 0;
-    final lastWeight = last['weight'] as double? ?? 0.0;
     bool isPB = false;
+    int repDiff = loggedReps;
+    double weightDiff = loggedWeight;
 
-    if (loggedWeight > 0 && lastWeight > 0) {
-      // Weight exercise: PB if more weight, or same weight + more reps
-      isPB = loggedWeight > lastWeight ||
-          (loggedWeight >= lastWeight && loggedReps > lastReps);
+    if (last == null) {
+      // First time logging this set of this exercise — it is a Personal Best!
+      isPB = loggedReps > 0 || loggedWeight > 0;
     } else {
-      // Bodyweight / timed: PB if more reps/seconds
-      isPB = loggedReps > lastReps;
+      final lastReps = last['reps'] as int? ?? 0;
+      final lastWeight = last['weight'] as double? ?? 0.0;
+      repDiff = loggedReps - lastReps;
+      weightDiff = loggedWeight - lastWeight;
+
+      if (loggedWeight > 0 && lastWeight > 0) {
+        // Weight exercise: PB if more weight, or same weight + more reps
+        isPB = loggedWeight > lastWeight ||
+            (loggedWeight >= lastWeight && loggedReps > lastReps);
+      } else {
+        // Bodyweight / timed: PB if more reps/seconds
+        isPB = loggedReps > lastReps;
+      }
     }
 
     if (isPB) {
@@ -429,8 +556,17 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       final wStr = loggedWeight > 0
           ? ' x ${loggedWeight == loggedWeight.roundToDouble() ? loggedWeight.round() : loggedWeight.toStringAsFixed(1)}kg'
           : '';
-      _sessionImprovements[exerciseName] =
-          '+${loggedReps - lastReps} reps$wStr';
+      
+      if (last == null) {
+        _sessionImprovements[exerciseName] = '${loggedReps} reps$wStr';
+      } else {
+        final sign = weightDiff > 0 ? '+' : '';
+        final wDiffStr = weightDiff > 0
+            ? ' (+$weightDiff kg)'
+            : '';
+        final repSign = repDiff >= 0 ? '+' : '';
+        _sessionImprovements[exerciseName] = '${repSign}${repDiff} reps$wDiffStr';
+      }
     }
   }
 
@@ -504,20 +640,22 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
 
   Future<void> _completeWorkout() async {
     try {
-      final apiService = ApiService();
-      await apiService.completeWorkout(widget.workoutId, 45, 0);
+      await _updateSessionProgress(isCompleted: true);
+      await _clearSession();
 
       if (!mounted) return;
+      final durationMinutes = DateTime.now()
+          .difference(_sessionStartTime)
+          .inMinutes
+          .clamp(1, 999);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => AchievementScreen(
             nextScreen: WorkoutCompleteScreen(
+              workoutId: widget.workoutId,
               exercisesCompleted: widget.exercises.length,
-              durationMinutes: DateTime.now()
-                  .difference(_sessionStartTime)
-                  .inMinutes
-                  .clamp(1, 999),
+              durationMinutes: durationMinutes,
               personalBests: _personalBestsCount,
               improvements: Map<String, String>.from(_sessionImprovements),
             ),
@@ -527,16 +665,18 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
     } catch (e) {
       debugPrint("Error completing workout: $e");
       if (!mounted) return;
+      final durationMinutes = DateTime.now()
+          .difference(_sessionStartTime)
+          .inMinutes
+          .clamp(1, 999);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => AchievementScreen(
             nextScreen: WorkoutCompleteScreen(
+              workoutId: widget.workoutId,
               exercisesCompleted: widget.exercises.length,
-              durationMinutes: DateTime.now()
-                  .difference(_sessionStartTime)
-                  .inMinutes
-                  .clamp(1, 999),
+              durationMinutes: durationMinutes,
               personalBests: _personalBestsCount,
               improvements: Map<String, String>.from(_sessionImprovements),
             ),
@@ -714,7 +854,10 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
 
     return PopScope(
       onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) await _saveSession();
+        if (didPop) {
+          await _updateSessionProgress(isCompleted: false);
+          await _saveSession();
+        }
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -734,6 +877,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                       children: [
                         IconButton(
                           onPressed: () async {
+                            await _updateSessionProgress(isCompleted: false);
                             await _saveSession();
                             if (mounted) Navigator.pop(context);
                           },

@@ -377,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(height: 24),
                             AppBounceAnimation(
-                              onTap: isDayLocked
+                              onTap: (_isLoading || isDayLocked)
                                   ? null
                                   : () {
                                       final workoutId =

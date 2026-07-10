@@ -82,6 +82,7 @@ flutter:
     - assets/data/
     - assets/video/excercise-video.mp4
     - assets/video/exercises/
+    - assets/sound/
 
 
   fonts:

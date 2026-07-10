@@ -1,13 +1,19 @@
+import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/services/api_service.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
+import 'package:best_u/view/home_screen/widgets/weight_update_modal.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 class WorkoutCompleteScreen extends StatefulWidget {
   final int exercisesCompleted;
   final int durationMinutes;
   final int personalBests;
   final Map<String, String> improvements;
+  final String workoutId;
 
   const WorkoutCompleteScreen({
     super.key,
@@ -15,6 +21,7 @@ class WorkoutCompleteScreen extends StatefulWidget {
     this.durationMinutes = 42,
     this.personalBests = 0,
     this.improvements = const {},
+    this.workoutId = '',
   });
 
   @override
@@ -23,6 +30,8 @@ class WorkoutCompleteScreen extends StatefulWidget {
 
 class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
     with TickerProviderStateMixin {
+  VideoPlayerController? _audioController;
+
   // ─── Controllers ──────────────────────────────────────────────
   late final AnimationController _checkCtrl;
   late final AnimationController _glowCtrl;
@@ -193,9 +202,48 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
         .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
 
     _runSequence();
+    _checkWeeklyWeightTrigger();
+  }
+
+  void _checkWeeklyWeightTrigger() {
+    if (widget.workoutId.endsWith('_d3')) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          final apiService = ApiService();
+          final response = await apiService.getProfile();
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final currentWeight = data['data']?['weight']?.toString() ?? '70.0';
+            if (mounted) {
+              await WeightUpdateModal.show(context, currentWeight);
+            }
+          }
+        } catch (e) {
+          debugPrint('Error getting profile for weekly weight update trigger: $e');
+          if (mounted) {
+            await WeightUpdateModal.show(context, '70.0');
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _playCelebrationSound() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final soundEnabled = prefs.getBool('soundEffectsEnabled') ?? true;
+      if (!soundEnabled) return;
+
+      _audioController = VideoPlayerController.asset('assets/sound/celeberation.mp3');
+      await _audioController!.initialize();
+      await _audioController!.play();
+    } catch (e) {
+      debugPrint('Error playing celebration sound: $e');
+    }
   }
 
   Future<void> _runSequence() async {
+    _playCelebrationSound();
     await Future.delayed(const Duration(milliseconds: 120));
     _checkCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 300));
@@ -213,6 +261,7 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
 
   @override
   void dispose() {
+    _audioController?.dispose();
     _checkCtrl.dispose();
     _glowCtrl.dispose();
     _headerCtrl.dispose();
@@ -666,11 +715,16 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.emoji_events_rounded, color: AppColors.primary, size: 46),
-          SizedBox(height: 14),
-          Text(
+          Image.asset(
+            'assets/icons/cup.png',
+            width: 46,
+            height: 46,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 14),
+          const Text(
             '"Success is the sum of small\nefforts repeated day in and\nday out."',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -682,8 +736,8 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
               height: 1.35,
             ),
           ),
-          SizedBox(height: 16),
-          Text(
+          const SizedBox(height: 16),
+          const Text(
             'Keep crushing it!',
             style: TextStyle(
               fontFamily: 'Outfit',
