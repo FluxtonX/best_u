@@ -962,36 +962,305 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildAnalyticsTab() {
     final weightLost = _dashboardSummary?['user']?['weightLost'] ?? 3;
-    final weeklyStreak = _dashboardSummary?['weekStats']?['weeklyStreak'] ?? 0;
+    final longestFast = _dashboardSummary?['stats']?['longestFast'] ?? '18h';
+    final mealsDone = _dashboardSummary?['stats']?['mealsDone'] ?? 42;
+    final streak = _dashboardSummary?['weekStats']?['weeklyStreak'] ?? 7;
+    final weightLostPct = _dashboardSummary?['user']?['weightLost'] ?? 1.5;
+    final goalRate = _dashboardSummary?['weekStats']?['goalRate'] ?? 85;
+
+    Widget _miniStat(String label, String value) {
+      return Expanded(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF26211C),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.03)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.primary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.55),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        Row(
-          children: [
-            _statBox(
-                label: 'Weight lost',
-                value: '${weightLost.toString()} kg',
-                highlight: true),
-            const SizedBox(width: 12),
-            _statBox(
-                label: 'Fasting streak',
-                value: '$weeklyStreak days',
-                highlight: false),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _sectionLabel('Performance'),
+
+        // Top small stats (2 rows of 3)
+        Row(children: [
+          _miniStat('Avg Fasting', '${weightLost}0h'),
+          const SizedBox(width: 10),
+          _miniStat('Longest Fast', longestFast.toString()),
+          const SizedBox(width: 10),
+          _miniStat('Meals Done', mealsDone.toString()),
+        ]),
         const SizedBox(height: 10),
+        Row(children: [
+          _miniStat('Streak', '${streak} days'),
+          const SizedBox(width: 10),
+          _miniStat('Weight Lost', '${weightLostPct} kg'),
+          const SizedBox(width: 10),
+          _miniStat('Goal Rate', '${goalRate}%'),
+        ]),
+
+        const SizedBox(height: 18),
+
+        // Goal completion card
+        _card(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Goal Completion',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '6 of 7 days this week',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withOpacity(0.7),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Above average performance ↑',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withOpacity(0.54),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 86,
+                height: 86,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 86,
+                      height: 86,
+                      child: CircularProgressIndicator(
+                        value: (goalRate as num) / 100.0,
+                        strokeWidth: 8,
+                        backgroundColor: Colors.white.withOpacity(0.04),
+                        valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${goalRate}%',
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          'rate',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.white.withOpacity(0.54),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // Fasting hours chart placeholder
         _card(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _progressRow('Average daily calories', 0.75),
-              const SizedBox(height: 14),
-              _progressRow('Hydration goal', 0.6),
-              const SizedBox(height: 14),
-              _progressRow('Macronutrient balance', 0.85),
+                Text(
+                'Fasting hours this week',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.7),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 120,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // simple line with dots as a lightweight chart placeholder
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(7, (i) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon'][i % 7],
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: AppColors.white.withOpacity(0.45),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // weekly consistency
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Weekly consistency',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.7),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) {
+                  final idx = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].indexOf(d);
+                  final status = idx % 3; // demo statuses
+                  Color bg;
+                  Widget child;
+                  if (status == 0) {
+                    bg = const Color(0xFF2E4B2E);
+                    child = const Icon(Icons.check, color: Colors.black, size: 14);
+                  } else if (status == 1) {
+                    bg = const Color(0xFF4E3A20);
+                    child = const Icon(Icons.star, color: AppColors.primary, size: 14);
+                  } else {
+                    bg = Colors.transparent;
+                    child = Container(width: 14, height: 14);
+                  }
+                  return Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.03)),
+                        ),
+                        child: Center(child: child),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        d,
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Excellent', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  const SizedBox(width: 16),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF4E3A20)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Completed', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  const SizedBox(width: 16),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Missed', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                ],
+              ),
             ],
           ),
         ),
@@ -1074,42 +1343,135 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        _coachTip('💧', 'Stay hydrated',
-            'Drink 250ml of water every hour to support your fasting window and keep energy steady.'),
-        const SizedBox(height: 12),
-        _coachTip('🥗', 'Break fast smart',
-            'Start with protein-rich meals and vegetables to avoid blood sugar spikes after your fast.'),
-        const SizedBox(height: 12),
-        _coachTip('📋', 'Track your meals',
-            'Log what you eat after 2 PM so the app can keep your nutrition plan aligned with your goals.'),
-        const SizedBox(height: 24),
-        AppBounceAnimation(
-          onTap: () {},
-          child: Container(
-            width: double.infinity,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+
+        // top coach card
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1F1A17),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.person, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'COACH · TODAY',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Stay the course.',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2E2419), Color(0xFF1B120E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'Ask Your Nutrition Coach →',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: Colors.black,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+                child: Center(
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1F1A17),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.person, color: AppColors.primary, size: 34),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 12),
+              Text(
+                'Every successful fast adds up. You\'ve now completed 21 days of tracked nutrition. That\'s a real lifestyle change in progress.',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.65),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A241E),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withOpacity(0.03)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lightbulb, color: AppColors.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Today's Tip\nPlan your first meal ahead of time — having it ready removes decision fatigue.",
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.7),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppBounceAnimation(
+                onTap: () {},
+                child: Container(
+                  width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Get Today's Plan",
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
