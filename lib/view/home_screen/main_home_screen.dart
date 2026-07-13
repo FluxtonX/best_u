@@ -3,6 +3,8 @@ import 'package:best_u/view/home_screen/dashboard_screen.dart';
 import 'package:best_u/view/home_screen/profile_screen.dart';
 import 'package:best_u/view/home_screen/progress_screen.dart';
 import 'package:best_u/view/home_screen/workout_plan_screen.dart';
+import 'package:best_u/view/home_screen/nutrition_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 
 class MainHomeScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const WorkoutPlanScreen(),
+    const NutritionScreen(),
     const ProgressScreen(),
     const ProfileScreen(),
   ];
@@ -43,28 +46,58 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           child: Row(
             children: [
               _BottomNavItem(
-                icon: Icons.home_outlined,
+                iconBuilder: (isSelected) => Icon(
+                  Icons.home_outlined,
+                  color: isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25),
+                  size: 25,
+                ),
                 label: 'Home',
                 isSelected: _currentIndex == 0,
                 onTap: () => setState(() => _currentIndex = 0),
               ),
               _BottomNavItem(
-                icon: Icons.calendar_month_outlined,
+                iconBuilder: (isSelected) => Icon(
+                  Icons.calendar_month_outlined,
+                  color: isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25),
+                  size: 25,
+                ),
                 label: 'Program',
                 isSelected: _currentIndex == 1,
                 onTap: () => setState(() => _currentIndex = 1),
               ),
               _BottomNavItem(
-                icon: Icons.trending_up_rounded,
-                label: 'Progress',
+                iconBuilder: (isSelected) => SvgPicture.asset(
+                  'assets/icons/nutrition.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(
+                    isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25),
+                    BlendMode.srcIn,
+                  ),
+                ),
+                label: 'Nutrition',
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
               ),
               _BottomNavItem(
-                icon: Icons.person_outline_rounded,
-                label: 'Profile',
+                iconBuilder: (isSelected) => Icon(
+                  Icons.trending_up_rounded,
+                  color: isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25),
+                  size: 24,
+                ),
+                label: 'Progress',
                 isSelected: _currentIndex == 3,
                 onTap: () => setState(() => _currentIndex = 3),
+              ),
+              _BottomNavItem(
+                iconBuilder: (isSelected) => Icon(
+                  Icons.person_outline_rounded,
+                  color: isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25),
+                  size: 25,
+                ),
+                label: 'Profile',
+                isSelected: _currentIndex == 4,
+                onTap: () => setState(() => _currentIndex = 4),
               ),
             ],
           ),
@@ -75,13 +108,13 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 }
 
 class _BottomNavItem extends StatelessWidget {
-  final IconData icon;
+  final Widget Function(bool isSelected) iconBuilder;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _BottomNavItem({
-    required this.icon,
+    required this.iconBuilder,
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -89,26 +122,20 @@ class _BottomNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25);
+    final color = isSelected ? const Color(0xFFF2B84B) : const Color(0xFF805F25);
 
     return Expanded(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        splashColor: const Color(0xFFF2B84B).withValues(alpha: 0.06),
-        highlightColor: const Color(0xFFF2B84B).withValues(alpha: 0.03),
+        splashColor: const Color(0xFFF2B84B).withOpacity(0.06),
+        highlightColor: const Color(0xFFF2B84B).withOpacity(0.03),
         child: SizedBox(
           height: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                color: color,
-                size: label == 'Progress' ? 24 : 25,
-                weight: 400,
-              ),
+              iconBuilder(isSelected),
               const SizedBox(height: 3),
               Text(
                 label,
