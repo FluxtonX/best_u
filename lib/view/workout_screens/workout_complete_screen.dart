@@ -410,7 +410,7 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MainHomeScreen(),
+                          builder: (context) =>  MainHomeScreen(),
                         ),
                         (route) => false,
                       );

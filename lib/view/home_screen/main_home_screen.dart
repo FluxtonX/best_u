@@ -8,7 +8,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 
 class MainHomeScreen extends StatefulWidget {
-  const MainHomeScreen({super.key});
+  /// Static key — assign this when creating the widget so external code can
+  /// call [_MainHomeScreenState.switchToNutrition].
+  static final GlobalKey<_MainHomeScreenState> mainKey =
+      GlobalKey<_MainHomeScreenState>();
+
+  MainHomeScreen({Key? key}) : super(key: key ?? mainKey);
 
   @override
   State<MainHomeScreen> createState() => _MainHomeScreenState();
@@ -16,6 +21,9 @@ class MainHomeScreen extends StatefulWidget {
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
   int _currentIndex = 0;
+
+  /// Switch bottom-nav to the Nutrition tab (index 2).
+  void switchToNutrition() => setState(() => _currentIndex = 2);
 
   final List<Widget> _screens = [
     const DashboardScreen(),

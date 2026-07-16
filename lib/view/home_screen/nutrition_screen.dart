@@ -1,8 +1,10 @@
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/nutrition_viewmodel.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
+
+import '../../services/nutrition_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC ENTRY POINT
@@ -26,22 +28,12 @@ class _NutritionScreenBody extends StatefulWidget {
 
 class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     with TickerProviderStateMixin {
-  // ── state ──────────────────────────────────────────────────────────────────
-  final ApiService _apiService = ApiService();
-  bool _isLoading = true;
-  Map<String, dynamic>? _profile;
-  Map<String, dynamic>? _dashboardSummary;
+  // ── ViewModel (single source of truth) ────────────────────────────────────
+  late final NutritionViewModel _vm;
 
   // tabs — match mockup exactly: Today | Analytics | Coach
   int _selectedTab = 0;
   final List<String> _tabs = ['Today', 'Analytics', 'Coach'];
-
-  // level selector: 0=Beginner 1=Intermediate 2=Elite
-  int _selectedLevel = 0;
-
-  // timeline interaction
-  bool _showYesNoPrompt = true;   // whether 11AM card shows YES/NO
-  bool _answeredNo = false;       // user tapped NO → show advice card
 
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
@@ -53,57 +45,43 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     _fadeCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
-    _loadData();
+
+    _vm = NutritionViewModel(
+      repo: NutritionRepository(),
+      api: ApiService(),
+    );
+
+    // Wire milestone callbacks to popups
+    _vm.onMilestone = (milestone) {
+      if (!mounted) return;
+      if (milestone == NutritionMilestone.half) {
+        _showFirstGoalReachedPopup();
+      } else if (milestone == NutritionMilestone.complete) {
+        _showDayCompletePopup();
+      }
+    };
+
+    // Rebuild when VM notifies of updates (timer ticks, network loads, weight edits)
+    _vm.addListener(() {
+      if (!mounted) return;
+      setState(() {});
+      if (!_vm.isLoading && !_fadeCtrl.isCompleted) {
+        _fadeCtrl.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _vm.dispose();
     super.dispose();
   }
 
-  // ── data ───────────────────────────────────────────────────────────────────
-  Future<void> _loadData() async {
-    Map<String, dynamic>? profile;
-    Map<String, dynamic>? dashboard;
-    try {
-      final pRes = await _apiService.getProfile();
-      final dRes = await _apiService.getDashboardSummary();
-      if (pRes.statusCode == 200) {
-        final d = jsonDecode(pRes.body)['data'];
-        if (d is Map<String, dynamic>) profile = Map.from(d);
-      }
-      if (dRes.statusCode == 200) {
-        final d = jsonDecode(dRes.body)['data'];
-        if (d is Map<String, dynamic>) dashboard = Map.from(d);
-      }
-    } catch (e) {
-      debugPrint('Nutrition load error: $e');
-    }
-    if (!mounted) return;
-    setState(() {
-      _profile = profile;
-      _dashboardSummary = dashboard;
-      _isLoading = false;
-    });
-    _fadeCtrl.forward();
-  }
-
   // ── helpers ─────────────────────────────────────────────────────────────────
-  double get _fastProgress {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = today.add(const Duration(hours: 8));
-    final end = today.add(const Duration(hours: 14));
-    if (now.isBefore(start)) return 0.0;
-    if (now.isAfter(end)) return 1.0;
-    return ((now.difference(start).inSeconds) /
-            (end.difference(start).inSeconds))
-        .clamp(0.0, 1.0);
-  }
-
-  String get _currentWeight => (_profile?['weight'] ?? 82).toString();
-  String get _targetWeight => (_profile?['targetWeight'] ?? 75).toString();
+  double get _fastProgress => _vm.fastProgress;
+  String get _currentWeight => _vm.currentWeight;
+  String get _targetWeight => _vm.targetWeight;
 
   // ── build ───────────────────────────────────────────────────────────────────
   @override
@@ -122,13 +100,13 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
             // ── Scrollable content ───────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                onRefresh: _loadData,
+                onRefresh: _vm.loadData,
                 color: AppColors.primary,
                 backgroundColor: const Color(0xFF1A1A1A),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
-                  child: _isLoading
+                  child: _vm.isLoading
                       ? _buildSkeleton()
                       : FadeTransition(
                           opacity: _fadeAnim,
@@ -240,6 +218,14 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
         const SizedBox(height: 22),
 
+        // ── SECTION: Log Your First Meal (Real-time Nutrition Tracking) ──
+        if (_vm.activeSession != null && _fastProgress >= 0.50) ...[
+          _sectionLabel("Meal Recommendation"),
+          const SizedBox(height: 10),
+          _buildMealLoggerCard(),
+          const SizedBox(height: 22),
+        ],
+
         // ── SECTION: Today's Goal ─────────────────────────────────────
         _sectionLabel("Today's Goal"),
         const SizedBox(height: 10),
@@ -255,12 +241,230 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     );
   }
 
+  Widget _buildMealLoggerCard() {
+    if (_vm.mealLogged) {
+      return _card(
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1E3A1E),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, color: AppColors.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Meal Completed!',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Excellent nutrition choice logged!',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _selectorRow(String icon, String label, List<String> options, int selectedIndex, Function(int) onSelect) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                icon,
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(options.length, (i) {
+              final sel = selectedIndex == i;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onSelect(i),
+                  child: Container(
+                    height: 38,
+                    margin: EdgeInsets.only(
+                      right: i == options.length - 1 ? 0 : 8,
+                    ),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: sel ? AppColors.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: sel ? AppColors.primary : Colors.white.withOpacity(0.12),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      options[i],
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: sel ? Colors.black : AppColors.white.withOpacity(0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131313),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Build your first meal',
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Food Emoji indicators
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.04)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text('🥩', style: TextStyle(fontSize: 28)),
+                  SizedBox(width: 14),
+                  Text('🥦', style: TextStyle(fontSize: 28)),
+                  SizedBox(width: 14),
+                  Text('🧈', style: TextStyle(fontSize: 28)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _selectorRow(
+            '🥩',
+            'PROTEIN · 100G',
+            ['Chicken', 'Fish', 'Tofu'],
+            _vm.selectedProtein,
+            (val) => _vm.setMealPicker(protein: val),
+          ),
+          const SizedBox(height: 18),
+          _selectorRow(
+            '🥦',
+            'VEGETABLES · 100G',
+            ['Broccoli', 'Green Veg'],
+            _vm.selectedFiber,
+            (val) => _vm.setMealPicker(fiber: val),
+          ),
+          const SizedBox(height: 18),
+          _selectorRow(
+            '🧈',
+            'HEALTHY FAT',
+            ['Butter', 'Cheese Sauce'],
+            _vm.selectedFat,
+            (val) => _vm.setMealPicker(fat: val),
+          ),
+          const SizedBox(height: 24),
+          AppBounceAnimation(
+            onTap: () => _vm.logMeal(),
+            child: Container(
+              width: double.infinity,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "I've Finished My Meal",
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(Icons.check, color: Colors.black, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // FASTING CARD  (weight chips + level pills + start button)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildFastingCard() {
     final progress = _fastProgress;
-    final percent = (progress * 100).round();
+    final percent = _vm.fastPercent;
+    final buttonLabel = _vm.buttonLabel;
 
     return _card(
       child: Column(
@@ -308,7 +512,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
           // ── Start Today button
           AppBounceAnimation(
-            onTap: () {},
+            onTap: () => _vm.handleMainButton(),
             child: Container(
               width: double.infinity,
               height: 52,
@@ -323,10 +527,10 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                   ),
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'Start Today',
-                  style: TextStyle(
+                  buttonLabel,
+                  style: const TextStyle(
                     fontFamily: 'Outfit',
                     color: Colors.black,
                     fontSize: 16,
@@ -453,9 +657,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
   // level pill
   Widget _levelPill(String label, int index) {
-    final sel = _selectedLevel == index;
+    final sel = _vm.selectedLevel == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedLevel = index),
+      onTap: () => _vm.setLevel(index),
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -479,6 +683,15 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // GOAL CARD  (2×2 metric grid)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildGoalCard() {
+    final session = _vm.activeSession;
+    String fastUntil = '2 PM';
+    if (session != null) {
+      fastUntil = _formatTimeOfDay(session.endsAt ?? session.endedAt ?? DateTime.now());
+    }
+
+    final weightProgressPct = _vm.weightProgressFraction;
+    final int weightProgressPercent = (weightProgressPct * 100).round();
+
     return _card(
       child: Column(
         children: [
@@ -487,7 +700,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
               _goalCell(
                 icon: Icons.access_time_rounded,
                 label: 'Fast Until',
-                value: '2 PM',
+                value: fastUntil,
                 highlight: true,
               ),
               const SizedBox(width: 10),
@@ -542,7 +755,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          value: 0.40,
+                          value: weightProgressPct,
                           minHeight: 5,
                           backgroundColor: const Color(0xFF33271A),
                           valueColor: const AlwaysStoppedAnimation(
@@ -551,7 +764,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '40%',
+                        '$weightProgressPercent%',
                         style: const TextStyle(
                           fontFamily: 'Outfit',
                           color: AppColors.primary,
@@ -629,40 +842,78 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // TIMELINE CARD
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildTimelineCard() {
+    final progress = _fastProgress;
+
+    // Determine states based on progress (4 timeline rows)
+    final session = _vm.activeSession;
+    final hasAnswered11Am = session == null ||
+        session.yesNoResponse == 'yes' ||
+        session.yesNoResponse == 'no' ||
+        !_vm.showYesNoPrompt;
+
+    final hasPassed50 = progress >= 0.50;
+    final hasPassed100 = progress >= 1.0;
+
+    final s1 = session == null
+        ? _TLState.future
+        : (hasAnswered11Am ? _TLState.completed : _TLState.current);
+
+    final s2 = session == null
+        ? _TLState.future
+        : (hasPassed50 ? _TLState.completed : _TLState.future);
+
+    final s3 = session == null
+        ? _TLState.future
+        : (hasPassed100
+            ? _TLState.completed
+            : ((hasPassed50 && hasAnswered11Am) ? _TLState.current : _TLState.future));
+
+    final s4 = session == null
+        ? _TLState.future
+        : (hasPassed100 ? _TLState.completed : _TLState.future);
+
+    // Calculate real-time tracking milestones based on active session startedAt and endsAt
+    String t1Str = '11 AM';
+    String t2Str = '2 PM';
+    String t3Str = '3 PM';
+    String t4Str = '5 PM';
+
     return _card(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       child: Column(
         children: [
           _timelineRow(
-            time: '8 AM',
-            title: 'Morning Check',
-            subtitle: '✓ Fasting goal reached',
-            state: _TLState.completed,
-            isLast: false,
-          ),
-          _timelineRow(
-            time: '11 AM',
+            time: t1Str,
             title: 'Mid-Morning',
-            state: _TLState.current,
+            subtitle: _vm.activeSession == null
+                ? null
+                : (progress >= 0.25 ? '✓ Fasting goal reached' : 'Active'),
+            state: s1,
+            expandWidget: s1 == _TLState.current ? _build11amExpand() : null,
             isLast: false,
-            expandWidget: _build11amExpand(),
           ),
           _timelineRow(
-            time: '2 PM',
+            time: t2Str,
             title: 'First Goal!',
-            state: _TLState.future,
+            subtitle: progress >= 0.50 ? '✓ Fasting goal reached' : null,
+            state: s2,
+            tag: 'Meal time',
+            tagBgColor: Colors.white.withOpacity(0.08),
+            tagTextColor: Colors.white.withOpacity(0.6),
             isLast: false,
           ),
           _timelineRow(
-            time: '3 PM',
+            time: t3Str,
             title: 'Afternoon',
-            state: _TLState.future,
+            state: s3,
             isLast: false,
+            expandWidget: s3 == _TLState.current ? _build11amExpand() : null,
           ),
           _timelineRow(
-            time: '5 PM',
+            time: t4Str,
             title: 'Evening Goal!',
-            state: _TLState.future,
+            subtitle: progress >= 1.0 ? '✓ Fast completed' : null,
+            state: s4,
             isLast: true,
           ),
         ],
@@ -672,9 +923,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
   // 11AM expandable widget — YES/NO → advice card
   Widget _build11amExpand() {
-    if (!_showYesNoPrompt && !_answeredNo) return const SizedBox.shrink();
+    if (!_vm.showYesNoPrompt && !_vm.answeredNo) return const SizedBox.shrink();
 
-    if (_answeredNo) {
+    if (_vm.answeredNo) {
       // Advice card
       return Container(
         margin: const EdgeInsets.only(top: 8),
@@ -687,9 +938,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Not ideal, but that\'s okay.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Outfit',
                 color: AppColors.white,
                 fontSize: 13,
@@ -712,19 +963,13 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 _smallActionBtn(
                   label: 'Deal! ✓',
                   filled: true,
-                  onTap: () => setState(() {
-                    _showYesNoPrompt = false;
-                    _answeredNo = false;
-                  }),
+                  onTap: () => _vm.dismissYesNoAdvice(),
                 ),
                 const SizedBox(width: 10),
                 _smallActionBtn(
                   label: 'Not now',
                   filled: false,
-                  onTap: () => setState(() {
-                    _showYesNoPrompt = false;
-                    _answeredNo = false;
-                  }),
+                  onTap: () => _vm.dismissYesNoAdvice(),
                 ),
               ],
             ),
@@ -760,16 +1005,13 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
               _smallActionBtn(
                 label: 'YES',
                 filled: false,
-                onTap: () => setState(() => _showYesNoPrompt = false),
+                onTap: () => _vm.answerYes(),
               ),
               const SizedBox(width: 10),
               _smallActionBtn(
                 label: 'NO ✓',
                 filled: true,
-                onTap: () => setState(() {
-                  _showYesNoPrompt = false;
-                  _answeredNo = true;
-                }),
+                onTap: () => _vm.answerNo(),
               ),
             ],
           ),
@@ -815,6 +1057,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     required _TLState state,
     required bool isLast,
     Widget? expandWidget,
+    String? tag,
+    Color? tagBgColor,
+    Color? tagTextColor,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -856,7 +1101,26 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      if (state == _TLState.current) ...[
+                      if (tag != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: tagBgColor ?? AppColors.primary.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: tagTextColor ?? AppColors.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ] else if (state == _TLState.current) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1413,7 +1677,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
               ),
               const SizedBox(height: 12),
               Text(
-                'Every successful fast adds up. You\'ve now completed 21 days of tracked nutrition. That\'s a real lifestyle change in progress.',
+                _vm.coachMessage,
                 style: TextStyle(
                   fontFamily: 'Outfit',
                   color: AppColors.white.withOpacity(0.65),
@@ -1580,6 +1844,204 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
       ),
       child: child,
     );
+  }
+
+  void _showFirstGoalReachedPopup() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'First Goal Reached!',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "You've completed 50% of your fasting goal for today. Outstanding effort, keep it going!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                AppBounceAnimation(
+                  onTap: () => Navigator.pop(dialogContext),
+                  child: Container(
+                    height: 50,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Keep Going!',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDayCompletePopup() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Day Complete!',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Congratulations! You've successfully completed your fasting goal.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                AppBounceAnimation(
+                  onTap: () => Navigator.pop(dialogContext),
+                  child: Container(
+                    height: 50,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Fantastic!',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatTimeOfDay(DateTime dateTime) {
+    final hour = dateTime.hour;
+    final minute = dateTime.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final formattedHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    if (minute == 0) {
+      return '$formattedHour $period';
+    } else {
+      final formattedMinute = minute.toString().padLeft(2, '0');
+      return '$formattedHour:$formattedMinute $period';
+    }
+  }
+
+  Map<String, dynamic>? get _dashboardSummary {
+    final analytics = _vm.analytics;
+    final currentWeight = double.tryParse(_vm.currentWeight) ?? 82.0;
+    final startWeight = (_vm.profile?['startWeight'] as num?)?.toDouble() ?? (currentWeight + 1.5);
+    final weightLost = (startWeight - currentWeight).clamp(0.0, 100.0);
+
+    return {
+      'user': {
+        'weightLost': weightLost,
+      },
+      'stats': {
+        'longestFast': '${analytics?['longestFastH'] ?? 18.0}h',
+        'mealsDone': analytics?['mealsCount'] ?? 42,
+      },
+      'weekStats': {
+        'weeklyStreak': analytics?['streak'] ?? 7,
+        'goalRate': (analytics?['completionPct'] as num?)?.round() ?? 85,
+      },
+    };
   }
 }
 

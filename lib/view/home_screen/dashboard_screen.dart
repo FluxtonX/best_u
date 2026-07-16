@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:best_u/view/home_screen/nutrition_screen.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
@@ -821,10 +822,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Button
           AppBounceAnimation(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NutritionScreen()),
-              );
+              // Switch bottom-nav to Nutrition tab if possible, else push
+              final mainState = MainHomeScreen.mainKey.currentState;
+              if (mainState != null) {
+                mainState.switchToNutrition();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NutritionScreen()),
+                );
+              }
             },
             child: Container(
               width: double.infinity,
