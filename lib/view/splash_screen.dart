@@ -136,18 +136,18 @@ class _SplashScreenState extends State<SplashScreen>
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
             if (!mounted) return;
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
             if (!mounted) return;
-            Navigator.pushReplacementNamed(context, '/registration');
+            Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           if (!mounted) return;
-          Navigator.pushReplacementNamed(context, '/registration');
+          Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       } catch (_) {
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/registration');
+        Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
       }
     } else {
       if (!mounted) return;

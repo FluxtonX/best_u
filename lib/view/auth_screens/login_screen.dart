@@ -67,13 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
-            Navigator.pushReplacementNamed(context, '/registration');
+            Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
-          Navigator.pushReplacementNamed(context, '/registration');
+          Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }
     } catch (e) {
@@ -105,13 +105,13 @@ class _LoginScreenState extends State<LoginScreen> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
-            Navigator.pushReplacementNamed(context, '/registration');
+            Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
-          Navigator.pushReplacementNamed(context, '/registration');
+          Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }
     } catch (e) {

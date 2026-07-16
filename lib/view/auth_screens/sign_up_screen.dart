@@ -382,7 +382,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'Account Created Successfully!',
           type: AppSnackType.success,
         );
-        Navigator.pushReplacementNamed(context, '/registration');
+        Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
       }
     } catch (e) {
       if (!mounted) return;
@@ -412,13 +412,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
-            Navigator.pushReplacementNamed(context, '/registration');
+            Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
-          Navigator.pushReplacementNamed(context, '/registration');
+          Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }
     } catch (e) {

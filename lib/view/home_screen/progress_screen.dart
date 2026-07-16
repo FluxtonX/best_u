@@ -17,7 +17,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     with SingleTickerProviderStateMixin {
   Map<String, dynamic>? _summary;
   List<Map<String, dynamic>> _weightHistory = [];
-  List<Map<String, dynamic>> _strengthLevels = [];
   List<Map<String, dynamic>> _weeklyWorkouts = [];
   List<Map<String, dynamic>> _personalBests = [];
   bool _isLoading = true;
@@ -56,20 +55,17 @@ class _ProgressScreenState extends State<ProgressScreen>
       final responses = await Future.wait([
         apiService.getProgressSummary(),
         apiService.getWeightHistory(),
-        apiService.getStrengthLevels(),
         apiService.getPersonalBests(),
       ]);
 
       final summaryData = _responseData(responses[0]);
       final weightData = _responseData(responses[1]);
-      final strengthData = _responseData(responses[2]);
-      final personalBestData = _responseData(responses[3]);
+      final personalBestData = _responseData(responses[2]);
 
       if (!mounted) return;
       setState(() {
         _summary = _asMap(summaryData);
         _weightHistory = _asMapList(weightData);
-        _strengthLevels = _asMapList(strengthData);
         _weeklyWorkouts = _asMapList(_summary?['weeklyWorkouts']);
         _personalBests = _asMapList(personalBestData);
         _isLoading = false;
@@ -131,12 +127,6 @@ class _ProgressScreenState extends State<ProgressScreen>
           (index) => {
                 'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
                 'value': 75.0 - (index * 0.2)
-              });
-      _strengthLevels = List.generate(
-          6,
-          (index) => {
-                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
-                'value': 20.0 + (index * 5)
               });
       _weeklyWorkouts = List.generate(
           6,

@@ -112,7 +112,8 @@ class NutritionRepository {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
-      debugPrint('Exact alarm scheduling failed: $e. Falling back to inexact alarm.');
+      debugPrint(
+          'Exact alarm scheduling failed: $e. Falling back to inexact alarm.');
       try {
         await _notifications.zonedSchedule(
           id,
@@ -125,7 +126,8 @@ class NutritionRepository {
               UILocalNotificationDateInterpretation.absoluteTime,
         );
       } catch (innerErr) {
-        debugPrint('Fallback inexact notification scheduling also failed: $innerErr');
+        debugPrint(
+            'Fallback inexact notification scheduling also failed: $innerErr');
       }
     }
   }
@@ -141,10 +143,30 @@ class NutritionRepository {
     final totalSeconds = endsAt.difference(startedAt).inSeconds;
 
     final milestones = [
-      ('25', 1, 'Quarter-way there! 💪', 'Keep going — you\'re 25% through your fast.'),
-      ('50', 2, 'Halfway! Great work 🔥', 'You\'ve hit 50% — the hardest part is behind you.'),
-      ('75', 3, 'Almost there! 🏃', '75% done — finish strong, your goal is close.'),
-      ('100', 0, 'Fasting complete 🎉', 'You\'ve completed your fast — time to eat your first meal!'),
+      (
+        '25',
+        1,
+        'Quarter-way there! 💪',
+        'Keep going — you\'re 25% through your fast.'
+      ),
+      (
+        '50',
+        2,
+        'Halfway! Great work 🔥',
+        'You\'ve hit 50% — the hardest part is behind you.'
+      ),
+      (
+        '75',
+        3,
+        'Almost there! 🏃',
+        '75% done — finish strong, your goal is close.'
+      ),
+      (
+        '100',
+        0,
+        'Fasting complete 🎉',
+        'You\'ve completed your fast — time to eat your first meal!'
+      ),
     ];
 
     for (final (key, offset, title, body) in milestones) {
@@ -316,7 +338,8 @@ class NutritionRepository {
     final startedAt = startedTs.toDate();
     final pausedDuration = DateTime.now().difference(pausedAt);
     final newEnds = endsAt.add(pausedDuration);
-    final newStart = startedAt.add(pausedDuration); // shift for accurate milestones
+    final newStart =
+        startedAt.add(pausedDuration); // shift for accurate milestones
 
     await _sessionsRef.doc(sessionId).set({
       'status': 'active',
@@ -500,7 +523,7 @@ class NutritionRepository {
           break;
         }
       } else {
-        if (lastDay!.difference(d).inDays == 1) {
+        if (lastDay.difference(d).inDays == 1) {
           streak++;
           lastDay = d;
         } else if (d == lastDay) {
@@ -523,8 +546,7 @@ class NutritionRepository {
           .difference(DateTime(started.year, started.month, started.day))
           .inDays;
       if (daysAgo >= 0 && daysAgo < 7) {
-        weeklyHours[6 - daysAgo] +=
-            ended.difference(started).inMinutes / 60.0;
+        weeklyHours[6 - daysAgo] += ended.difference(started).inMinutes / 60.0;
       }
     }
 

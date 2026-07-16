@@ -71,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
 
       // Step 3: Go directly to home — subscription screen bypassed
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.show(context, 'Error saving data: $e',

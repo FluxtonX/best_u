@@ -20,7 +20,7 @@ class NutritionScreen extends StatelessWidget {
 // STATEFUL BODY
 // ─────────────────────────────────────────────────────────────────────────────
 class _NutritionScreenBody extends StatefulWidget {
-  const _NutritionScreenBody({super.key});
+  const _NutritionScreenBody();
 
   @override
   State<_NutritionScreenBody> createState() => _NutritionScreenBodyState();
@@ -125,9 +125,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // APP BAR
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildAppBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: const Text(
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Text(
         'Nutrition Coach',
         style: TextStyle(
           fontFamily: 'Outfit',
@@ -173,7 +173,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                   _tabs[i],
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: sel ? Colors.black : AppColors.white.withOpacity(0.55),
+                    color:
+                        sel ? Colors.black : AppColors.white.withOpacity(0.55),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -218,14 +219,6 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
         const SizedBox(height: 22),
 
-        // ── SECTION: Log Your First Meal (Real-time Nutrition Tracking) ──
-        if (_vm.activeSession != null && _fastProgress >= 0.50) ...[
-          _sectionLabel("Meal Recommendation"),
-          const SizedBox(height: 10),
-          _buildMealLoggerCard(),
-          const SizedBox(height: 22),
-        ],
-
         // ── SECTION: Today's Goal ─────────────────────────────────────
         _sectionLabel("Today's Goal"),
         const SizedBox(height: 10),
@@ -237,6 +230,14 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _sectionLabel("Today's Timeline"),
         const SizedBox(height: 10),
         _buildTimelineCard(),
+
+        // ── SECTION: Log Your First Meal (Real-time Nutrition Tracking) ──
+        if (_vm.activeSession != null && _fastProgress >= 0.50) ...[
+          const SizedBox(height: 22),
+          _sectionLabel("Meal Recommendation"),
+          const SizedBox(height: 10),
+          _buildMealLoggerCard(),
+        ],
       ],
     );
   }
@@ -252,7 +253,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 color: Color(0xFF1E3A1E),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: AppColors.primary, size: 20),
+              child:
+                  const Icon(Icons.check, color: AppColors.primary, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -285,7 +287,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
       );
     }
 
-    Widget _selectorRow(String icon, String label, List<String> options, int selectedIndex, Function(int) onSelect) {
+    Widget _selectorRow(String icon, String label, List<String> options,
+        int selectedIndex, Function(int) onSelect) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -325,7 +328,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                       color: sel ? AppColors.primary : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: sel ? AppColors.primary : Colors.white.withOpacity(0.12),
+                        color: sel
+                            ? AppColors.primary
+                            : Colors.white.withOpacity(0.12),
                         width: 1,
                       ),
                     ),
@@ -333,7 +338,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                       options[i],
                       style: TextStyle(
                         fontFamily: 'Outfit',
-                        color: sel ? Colors.black : AppColors.white.withOpacity(0.8),
+                        color: sel
+                            ? Colors.black
+                            : AppColors.white.withOpacity(0.8),
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -380,9 +387,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withOpacity(0.04)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Text('🥩', style: TextStyle(fontSize: 28)),
                   SizedBox(width: 14),
                   Text('🥦', style: TextStyle(fontSize: 28)),
@@ -462,7 +469,6 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // FASTING CARD  (weight chips + level pills + start button)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildFastingCard() {
-    final progress = _fastProgress;
     final percent = _vm.fastPercent;
     final buttonLabel = _vm.buttonLabel;
 
@@ -686,7 +692,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     final session = _vm.activeSession;
     String fastUntil = '2 PM';
     if (session != null) {
-      fastUntil = _formatTimeOfDay(session.endsAt ?? session.endedAt ?? DateTime.now());
+      fastUntil =
+          _formatTimeOfDay(session.endsAt ?? session.endedAt ?? DateTime.now());
     }
 
     final weightProgressPct = _vm.weightProgressFraction;
@@ -734,7 +741,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.adjust_rounded,
                             color: AppColors.primary,
                             size: 14,
@@ -758,8 +765,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                           value: weightProgressPct,
                           minHeight: 5,
                           backgroundColor: const Color(0xFF33271A),
-                          valueColor: const AlwaysStoppedAnimation(
-                              AppColors.primary),
+                          valueColor:
+                              const AlwaysStoppedAnimation(AppColors.primary),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -866,7 +873,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         ? _TLState.future
         : (hasPassed100
             ? _TLState.completed
-            : ((hasPassed50 && hasAnswered11Am) ? _TLState.current : _TLState.future));
+            : ((hasPassed50 && hasAnswered11Am)
+                ? _TLState.current
+                : _TLState.future));
 
     final s4 = session == null
         ? _TLState.future
@@ -1032,9 +1041,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         decoration: BoxDecoration(
           color: filled ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          border: filled
-              ? null
-              : Border.all(color: Colors.white.withOpacity(0.2)),
+          border:
+              filled ? null : Border.all(color: Colors.white.withOpacity(0.2)),
         ),
         child: Text(
           label,
@@ -1107,7 +1115,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: tagBgColor ?? AppColors.primary.withOpacity(0.18),
+                            color: tagBgColor ??
+                                AppColors.primary.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -1182,7 +1191,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         return Container(
           width: 28,
           height: 28,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
           ),
@@ -1301,7 +1310,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Goal Completion',
                       style: TextStyle(
                         fontFamily: 'Outfit',
@@ -1346,7 +1355,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                         value: (goalRate as num) / 100.0,
                         strokeWidth: 8,
                         backgroundColor: Colors.white.withOpacity(0.04),
-                        valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                        valueColor:
+                            const AlwaysStoppedAnimation(AppColors.primary),
                       ),
                     ),
                     Column(
@@ -1386,7 +1396,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Text(
+              Text(
                 'Fasting hours this week',
                 style: TextStyle(
                   fontFamily: 'Outfit',
@@ -1412,14 +1422,22 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: AppColors.primary,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon'][i % 7],
+                                [
+                                  'Tue',
+                                  'Wed',
+                                  'Thu',
+                                  'Fri',
+                                  'Sat',
+                                  'Sun',
+                                  'Mon'
+                                ][i % 7],
                                 style: TextStyle(
                                   fontFamily: 'Outfit',
                                   color: AppColors.white.withOpacity(0.45),
@@ -1464,10 +1482,12 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                   Widget child;
                   if (status == 0) {
                     bg = const Color(0xFF2E4B2E);
-                    child = const Icon(Icons.check, color: Colors.black, size: 14);
+                    child =
+                        const Icon(Icons.check, color: Colors.black, size: 14);
                   } else if (status == 1) {
                     bg = const Color(0xFF4E3A20);
-                    child = const Icon(Icons.star, color: AppColors.primary, size: 14);
+                    child = const Icon(Icons.star,
+                        color: AppColors.primary, size: 14);
                   } else {
                     bg = Colors.transparent;
                     child = Container(width: 14, height: 14);
@@ -1480,7 +1500,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                         decoration: BoxDecoration(
                           color: bg,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white.withOpacity(0.03)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.03)),
                         ),
                         child: Center(child: child),
                       ),
@@ -1503,96 +1524,39 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary),
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: AppColors.primary),
                   ),
                   const SizedBox(width: 8),
-                  Text('Excellent', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  Text('Excellent',
+                      style:
+                          TextStyle(color: AppColors.white.withOpacity(0.6))),
                   const SizedBox(width: 16),
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF4E3A20)),
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: Color(0xFF4E3A20)),
                   ),
                   const SizedBox(width: 8),
-                  Text('Completed', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  Text('Completed',
+                      style:
+                          TextStyle(color: AppColors.white.withOpacity(0.6))),
                   const SizedBox(width: 16),
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06)),
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.06)),
                   ),
                   const SizedBox(width: 8),
-                  Text('Missed', style: TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  Text('Missed',
+                      style:
+                          TextStyle(color: AppColors.white.withOpacity(0.6))),
                 ],
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _statBox(
-      {required String label, required String value, required bool highlight}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text(value,
-                style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: highlight ? AppColors.primary : AppColors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _progressRow(String label, double value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label,
-                style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.7),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
-            Text('${(value * 100).round()}%',
-                style: const TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.primary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: value,
-            minHeight: 6,
-            backgroundColor: Colors.white.withOpacity(0.07),
-            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
           ),
         ),
       ],
@@ -1625,9 +1589,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     child: const Icon(Icons.person, color: AppColors.primary),
                   ),
                   const SizedBox(width: 12),
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'COACH · TODAY',
                         style: TextStyle(
@@ -1671,7 +1635,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                       color: const Color(0xFF1F1A17),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.person, color: AppColors.primary, size: 34),
+                    child: const Icon(Icons.person,
+                        color: AppColors.primary, size: 34),
                   ),
                 ),
               ),
@@ -1742,46 +1707,6 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     );
   }
 
-  Widget _coachTip(String emoji, String title, String desc) {
-    return _card(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text(desc,
-                    style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.6),
-                        fontSize: 12,
-                        height: 1.55)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
   // LOADING SKELETON
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1835,8 +1760,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   Widget _card({required Widget child, EdgeInsets? padding}) {
     return Container(
       width: double.infinity,
-      padding: padding ??
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
@@ -2026,7 +1951,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   Map<String, dynamic>? get _dashboardSummary {
     final analytics = _vm.analytics;
     final currentWeight = double.tryParse(_vm.currentWeight) ?? 82.0;
-    final startWeight = (_vm.profile?['startWeight'] as num?)?.toDouble() ?? (currentWeight + 1.5);
+    final startWeight = (_vm.profile?['startWeight'] as num?)?.toDouble() ??
+        (currentWeight + 1.5);
     final weightLost = (startWeight - currentWeight).clamp(0.0, 100.0);
 
     return {

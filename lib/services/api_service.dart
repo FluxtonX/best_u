@@ -213,15 +213,15 @@ class ApiService {
       }
       final date = _dateFrom(c['completedAt']);
       if (date != null &&
-          (lastCompletedAt == null || date.isAfter(lastCompletedAt!))) {
+          (lastCompletedAt == null || date.isAfter(lastCompletedAt))) {
         lastCompletedAt = date;
       }
     }
     if (lastCompletedAt != null) {
       final now = DateTime.now();
-      isDayLocked = lastCompletedAt!.year == now.year &&
-          lastCompletedAt!.month == now.month &&
-          lastCompletedAt!.day == now.day;
+      isDayLocked = lastCompletedAt.year == now.year &&
+          lastCompletedAt.month == now.month &&
+          lastCompletedAt.day == now.day;
     }
 
     return ApiResponse(
@@ -628,13 +628,12 @@ class ApiService {
       return item['isAbandoned'] != true && time > 0;
     }).toList();
 
-    final totalWorkoutMinutes = completions
-        .where((item) => item['isAbandoned'] != true)
-        .fold<int>(
-          0,
-          (total, item) =>
-              total + ((item['timeTakenMinutes'] as num?)?.toInt() ?? 0),
-        );
+    final totalWorkoutMinutes =
+        completions.where((item) => item['isAbandoned'] != true).fold<int>(
+              0,
+              (total, item) =>
+                  total + ((item['timeTakenMinutes'] as num?)?.toInt() ?? 0),
+            );
     final completedThisWeek = completions
         .where((item) {
           final date = _dateFrom(item['completedAt']);
