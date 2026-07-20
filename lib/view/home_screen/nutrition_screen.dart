@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/nutrition_viewmodel.dart';
@@ -79,7 +81,6 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   }
 
   // ── helpers ─────────────────────────────────────────────────────────────────
-  double get _fastProgress => _vm.fastProgress;
   String get _currentWeight => _vm.currentWeight;
   String get _targetWeight => _vm.targetWeight;
 
@@ -232,7 +233,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _buildTimelineCard(),
 
         // ── SECTION: Log Your First Meal (Real-time Nutrition Tracking) ──
-        if (_vm.activeSession != null && _fastProgress >= 0.50) ...[
+        if (_vm.activeSession != null && _vm.currentTimelineStep > 2) ...[
           const SizedBox(height: 22),
           _sectionLabel("Meal Recommendation"),
           const SizedBox(height: 10),
@@ -262,7 +263,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Meal Completed!',
+                    'Meal Completed! 🎉',
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       color: AppColors.white,
@@ -849,80 +850,106 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // TIMELINE CARD
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildTimelineCard() {
-    final progress = _fastProgress;
-
-    // Determine states based on progress (4 timeline rows)
+    final step = _vm.currentTimelineStep;
     final session = _vm.activeSession;
-    final hasAnswered11Am = session == null ||
-        session.yesNoResponse == 'yes' ||
-        session.yesNoResponse == 'no' ||
-        !_vm.showYesNoPrompt;
 
-    final hasPassed50 = progress >= 0.50;
-    final hasPassed100 = progress >= 1.0;
+    final s0 = session == null
+        ? _TLState.future
+        : (step > 0 ? _TLState.completed : _TLState.current);
 
     final s1 = session == null
         ? _TLState.future
-        : (hasAnswered11Am ? _TLState.completed : _TLState.current);
+        : (step > 1
+            ? _TLState.completed
+            : (step == 1 ? _TLState.current : _TLState.future));
 
     final s2 = session == null
         ? _TLState.future
-        : (hasPassed50 ? _TLState.completed : _TLState.future);
+        : (step > 2
+            ? _TLState.completed
+            : (step == 2 ? _TLState.current : _TLState.future));
 
     final s3 = session == null
         ? _TLState.future
-        : (hasPassed100
+        : (step > 3
             ? _TLState.completed
-            : ((hasPassed50 && hasAnswered11Am)
-                ? _TLState.current
-                : _TLState.future));
+            : (step == 3 ? _TLState.current : _TLState.future));
 
     final s4 = session == null
         ? _TLState.future
-        : (hasPassed100 ? _TLState.completed : _TLState.future);
+        : (step > 4
+            ? _TLState.completed
+            : (step == 4 ? _TLState.current : _TLState.future));
 
     // Calculate real-time tracking milestones based on active session startedAt and endsAt
+    String t0Str = '8 AM';
     String t1Str = '11 AM';
     String t2Str = '2 PM';
     String t3Str = '3 PM';
     String t4Str = '5 PM';
+
+    // Time-gating: only show "Have you eaten yet?" when real clock reaches the milestone time
+    final now = DateTime.now();
+    final bool showPrompt8Am = s0 == _TLState.current && now.hour >= 8;
+    final bool showPrompt11Am = s1 == _TLState.current && now.hour >= 11;
+    final bool showPrompt2Pm = s2 == _TLState.current && now.hour >= 14;
+    final bool showPrompt3Pm = s3 == _TLState.current && now.hour >= 15;
+    final bool showPrompt5Pm = s4 == _TLState.current && now.hour >= 17;
 
     return _card(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       child: Column(
         children: [
           _timelineRow(
+            time: t0Str,
+            title: 'Morning Check',
+            subtitle: _vm.activeSession == null
+                ? null
+                : (step > 0 ? '✓ Fasting goal reached' : 'Active'),
+            state: s0,
+            expandWidget: showPrompt8Am ? _build11amExpand() : null,
+            isLast: false,
+          ),
+          _timelineRow(
             time: t1Str,
             title: 'Mid-Morning',
             subtitle: _vm.activeSession == null
                 ? null
-                : (progress >= 0.25 ? '✓ Fasting goal reached' : 'Active'),
+                : (step > 1 ? '✓ Fasting goal reached' : (step == 1 ? 'Active' : null)),
             state: s1,
-            expandWidget: s1 == _TLState.current ? _build11amExpand() : null,
+            expandWidget: showPrompt11Am ? _build11amExpand() : null,
             isLast: false,
           ),
           _timelineRow(
             time: t2Str,
             title: 'First Goal!',
-            subtitle: progress >= 0.50 ? '✓ Fasting goal reached' : null,
+            subtitle: step > 2
+                ? '✓ Fasting goal reached'
+                : (step == 2 ? 'Active' : null),
             state: s2,
             tag: 'Meal time',
             tagBgColor: Colors.white.withOpacity(0.08),
             tagTextColor: Colors.white.withOpacity(0.6),
+            expandWidget: showPrompt2Pm ? _build11amExpand() : null,
             isLast: false,
           ),
           _timelineRow(
             time: t3Str,
             title: 'Afternoon',
+            subtitle: step > 3
+                ? '✓ Fasting goal reached'
+                : (step == 3 ? 'Active' : null),
             state: s3,
             isLast: false,
-            expandWidget: s3 == _TLState.current ? _build11amExpand() : null,
+            expandWidget: showPrompt3Pm ? _build11amExpand() : null,
           ),
           _timelineRow(
             time: t4Str,
             title: 'Evening Goal!',
-            subtitle: progress >= 1.0 ? '✓ Fast completed' : null,
+            subtitle:
+                step > 4 ? '✓ Fast completed' : (step == 4 ? 'Active' : null),
             state: s4,
+            expandWidget: showPrompt5Pm ? _build11amExpand() : null,
             isLast: true,
           ),
         ],
@@ -972,13 +999,13 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 _smallActionBtn(
                   label: 'Deal! ✓',
                   filled: true,
-                  onTap: () => _vm.dismissYesNoAdvice(),
+                  onTap: () => _vm.answerYesDeal(),
                 ),
                 const SizedBox(width: 10),
                 _smallActionBtn(
                   label: 'Not now',
                   filled: false,
-                  onTap: () => _vm.dismissYesNoAdvice(),
+                  onTap: () => _vm.answerYesNotNow(),
                 ),
               ],
             ),
@@ -1234,12 +1261,13 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // ANALYTICS TAB
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildAnalyticsTab() {
-    final weightLost = _dashboardSummary?['user']?['weightLost'] ?? 3;
-    final longestFast = _dashboardSummary?['stats']?['longestFast'] ?? '18h';
-    final mealsDone = _dashboardSummary?['stats']?['mealsDone'] ?? 42;
-    final streak = _dashboardSummary?['weekStats']?['weeklyStreak'] ?? 7;
-    final weightLostPct = _dashboardSummary?['user']?['weightLost'] ?? 1.5;
-    final goalRate = _dashboardSummary?['weekStats']?['goalRate'] ?? 85;
+    final ds = _dashboardSummary;
+    final avgFasting = ds?['stats']?['avgFastH'] ?? 0.0;
+    final longestFast = ds?['stats']?['longestFast'] ?? '0h';
+    final mealsDone = ds?['stats']?['mealsDone'] ?? 0;
+    final streak = ds?['weekStats']?['weeklyStreak'] ?? 0;
+    final weightLostVal = ds?['user']?['weightLost'] ?? 0.0;
+    final goalRate = ds?['weekStats']?['goalRate'] ?? 0;
 
     Widget _miniStat(String label, String value) {
       return Expanded(
@@ -1285,7 +1313,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 
         // Top small stats (2 rows of 3)
         Row(children: [
-          _miniStat('Avg Fasting', '${weightLost}0h'),
+          _miniStat('Avg Fasting', '${avgFasting}h'),
           const SizedBox(width: 10),
           _miniStat('Longest Fast', longestFast.toString()),
           const SizedBox(width: 10),
@@ -1293,272 +1321,381 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         ]),
         const SizedBox(height: 10),
         Row(children: [
-          _miniStat('Streak', '${streak} days'),
+          _miniStat('Streak', '$streak days'),
           const SizedBox(width: 10),
-          _miniStat('Weight Lost', '${weightLostPct} kg'),
+          _miniStat('Weight Lost', '${(weightLostVal as num).toStringAsFixed(1)} kg'),
           const SizedBox(width: 10),
-          _miniStat('Goal Rate', '${goalRate}%'),
+          _miniStat('Goal Rate', '$goalRate%'),
         ]),
 
         const SizedBox(height: 18),
 
-        // Goal completion card
-        _card(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Goal Completion',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '6 of 7 days this week',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Above average performance ↑',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.54),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: 86,
-                height: 86,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 86,
-                      height: 86,
-                      child: CircularProgressIndicator(
-                        value: (goalRate as num) / 100.0,
-                        strokeWidth: 8,
-                        backgroundColor: Colors.white.withOpacity(0.04),
-                        valueColor:
-                            const AlwaysStoppedAnimation(AppColors.primary),
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${goalRate}%',
-                          style: const TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          'rate',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.54),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Goal completion card — driven by weeklyConsistency from Firestore
+        Builder(builder: (_) {
+          final weeklyConsistency = (ds?['weekStats']?['weeklyConsistency']
+                  as List<bool>?) ??
+              List.filled(7, false);
+          final completedDaysCount =
+              weeklyConsistency.where((d) => d).length;
+          final goalCompletionPct =
+              ((completedDaysCount / 7) * 100).round();
+          final goalFraction = goalCompletionPct / 100.0;
 
-        const SizedBox(height: 18),
+          final String perfSubtitle;
+          if (goalCompletionPct >= 90) {
+            perfSubtitle = 'Outstanding performance 🔥';
+          } else if (goalCompletionPct >= 70) {
+            perfSubtitle = 'Above average performance ↑';
+          } else if (goalCompletionPct >= 40) {
+            perfSubtitle = 'Average performance →';
+          } else if (completedDaysCount > 0) {
+            perfSubtitle = 'Room to improve ↓';
+          } else {
+            perfSubtitle = 'Start your first goal!';
+          }
 
-        // Fasting hours chart placeholder
-        _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Fasting hours this week',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.7),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 120,
-                child: Center(
+          return _card(
+            child: Row(
+              children: [
+                Expanded(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // simple line with dots as a lightweight chart placeholder
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(7, (i) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                [
-                                  'Tue',
-                                  'Wed',
-                                  'Thu',
-                                  'Fri',
-                                  'Sat',
-                                  'Sun',
-                                  'Mon'
-                                ][i % 7],
-                                style: TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: AppColors.white.withOpacity(0.45),
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 18),
-
-        // weekly consistency
-        _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Weekly consistency',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.7),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) {
-                  final idx = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].indexOf(d);
-                  final status = idx % 3; // demo statuses
-                  Color bg;
-                  Widget child;
-                  if (status == 0) {
-                    bg = const Color(0xFF2E4B2E);
-                    child =
-                        const Icon(Icons.check, color: Colors.black, size: 14);
-                  } else if (status == 1) {
-                    bg = const Color(0xFF4E3A20);
-                    child = const Icon(Icons.star,
-                        color: AppColors.primary, size: 14);
-                  } else {
-                    bg = Colors.transparent;
-                    child = Container(width: 14, height: 14);
-                  }
-                  return Column(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: bg,
-                          borderRadius: BorderRadius.circular(10),
-                          border:
-                              Border.all(color: Colors.white.withOpacity(0.03)),
+                      const Text(
+                        'Goal Completion',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
-                        child: Center(child: child),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        d,
+                        '$completedDaysCount of 7 days this week',
                         style: TextStyle(
                           fontFamily: 'Outfit',
-                          color: AppColors.white.withOpacity(0.6),
+                          color: AppColors.white.withOpacity(0.7),
                           fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        perfSubtitle,
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.54),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-              Row(
+                  ),
+                ),
+                SizedBox(
+                  width: 86,
+                  height: 86,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 86,
+                        height: 86,
+                        child: CircularProgressIndicator(
+                          value: goalFraction.clamp(0.0, 1.0),
+                          strokeWidth: 8,
+                          backgroundColor: Colors.white.withOpacity(0.04),
+                          valueColor:
+                              const AlwaysStoppedAnimation(AppColors.primary),
+                        ),
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '$goalCompletionPct%',
+                            style: const TextStyle(
+                              fontFamily: 'Outfit',
+                              color: AppColors.primary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            'rate',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: AppColors.white.withOpacity(0.54),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
+        const SizedBox(height: 18),
+
+        // Fasting hours line chart — driven by weeklyHours from Firestore
+        Builder(builder: (_) {
+          final weeklyHours = (ds?['stats']?['weeklyHours']
+                  as List<double>?) ??
+              List.filled(7, 0.0);
+
+          // Compute day labels dynamically (index 6 = today, 0 = 6 days ago)
+          const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+          final today = DateTime.now();
+          final labels = List.generate(7, (i) {
+            final d = today.subtract(Duration(days: 6 - i));
+            return dayNames[d.weekday - 1];
+          });
+
+          return _card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Fasting hours this week',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.white.withOpacity(0.7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 140,
+                  child: CustomPaint(
+                    size: Size.infinite,
+                    painter: _FastingChartPainter(
+                      values: weeklyHours,
+                      labels: labels,
+                      lineColor: AppColors.primary,
+                      labelColor: AppColors.white.withOpacity(0.45),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
+        const SizedBox(height: 18),
+
+        // Weekly consistency — driven by weeklyConsistency + weeklyHours
+        Builder(builder: (_) {
+          final weeklyConsistency = (ds?['weekStats']?['weeklyConsistency']
+                  as List<bool>?) ??
+              List.filled(7, false);
+          final weeklyHours = (ds?['stats']?['weeklyHours']
+                  as List<double>?) ??
+              List.filled(7, 0.0);
+
+          // Current calendar week: find Monday of this week
+          final now = DateTime.now();
+          final todayDate = DateTime(now.year, now.month, now.day);
+          final monday =
+              todayDate.subtract(Duration(days: todayDate.weekday - 1));
+
+          // Average fasting hours (only for days with data > 0)
+          final activeDayHours =
+              weeklyHours.where((h) => h > 0).toList();
+          final avgHours = activeDayHours.isEmpty
+              ? 0.0
+              : activeDayHours.reduce((a, b) => a + b) /
+                  activeDayHours.length;
+
+          const dayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+          // Build status for each day of the calendar week
+          final dayWidgets = <Widget>[];
+          for (int i = 0; i < 7; i++) {
+            final dayDate = monday.add(Duration(days: i));
+            final dateNum = dayDate.day;
+            final isFuture = dayDate.isAfter(todayDate);
+
+            // Map this calendar day to the repo's "last 7 days" index
+            final daysAgo =
+                todayDate.difference(dayDate).inDays; // 0=today, 1=yesterday…
+            final repoIdx =
+                (daysAgo >= 0 && daysAgo < 7) ? 6 - daysAgo : -1;
+
+            String status;
+            if (isFuture) {
+              status = 'upcoming';
+            } else if (repoIdx >= 0 && weeklyConsistency[repoIdx]) {
+              // Completed — check if excellent (above average hours)
+              final hours = weeklyHours[repoIdx];
+              status = (hours > avgHours && avgHours > 0)
+                  ? 'excellent'
+                  : 'completed';
+            } else if (repoIdx >= 0) {
+              status = 'missed';
+            } else {
+              status = 'missed'; // older than 7 days ago
+            }
+
+            // Build the circle badge
+            Color badgeBg;
+            Widget badgeChild;
+            switch (status) {
+              case 'excellent':
+                badgeBg = const Color(0xFF4E3A20);
+                badgeChild = const Icon(Icons.star_rounded,
+                    color: AppColors.primary, size: 18);
+                break;
+              case 'completed':
+                badgeBg = const Color(0xFF2E4B2E);
+                badgeChild = const Icon(Icons.check_rounded,
+                    color: Color(0xFF4CAF50), size: 18);
+                break;
+              case 'upcoming':
+                badgeBg = Colors.white.withOpacity(0.04);
+                badgeChild = Text(
+                  '$dateNum',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.white.withOpacity(0.3),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                );
+                break;
+              default: // missed
+                badgeBg = Colors.white.withOpacity(0.04);
+                badgeChild = Text(
+                  '—',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.white.withOpacity(0.2),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                );
+            }
+
+            dayWidgets.add(
+              Column(
                 children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: AppColors.primary),
+                  // Day letter
+                  Text(
+                    dayLetters[i],
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white.withOpacity(0.5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Text('Excellent',
-                      style:
-                          TextStyle(color: AppColors.white.withOpacity(0.6))),
-                  const SizedBox(width: 16),
+                  const SizedBox(height: 8),
+                  // Status badge
                   Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: Color(0xFF4E3A20)),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('Completed',
-                      style:
-                          TextStyle(color: AppColors.white.withOpacity(0.6))),
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 10,
-                    height: 10,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.06)),
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border:
+                          Border.all(color: Colors.white.withOpacity(0.04)),
+                    ),
+                    child: Center(child: badgeChild),
                   ),
-                  const SizedBox(width: 8),
-                  Text('Missed',
-                      style:
-                          TextStyle(color: AppColors.white.withOpacity(0.6))),
+                  const SizedBox(height: 6),
+                  // Date number
+                  Text(
+                    '$dateNum',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white.withOpacity(0.4),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
+            );
+          }
+
+          return _card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WEEKLY CONSISTENCY',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.white.withOpacity(0.55),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: dayWidgets,
+                ),
+                const SizedBox(height: 14),
+                // Legend row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('Excellent',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.5),
+                          fontSize: 11,
+                        )),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle, color: Color(0xFF4CAF50)),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('Completed',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.5),
+                          fontSize: 11,
+                        )),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.15)),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('Missed',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withOpacity(0.5),
+                          fontSize: 11,
+                        )),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
@@ -1796,14 +1933,14 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.star_rounded,
+                    Icons.emoji_events_rounded,
                     color: AppColors.primary,
                     size: 32,
                   ),
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'First Goal Reached!',
+                  'First Goal Reached! 🏆',
                   style: TextStyle(
                     fontFamily: 'Outfit',
                     color: Colors.white,
@@ -1813,7 +1950,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "You've completed 50% of your fasting goal for today. Outstanding effort, keep it going!",
+                  "You reached today's first fasting goal. Now enjoy your first meal.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Outfit',
@@ -1822,7 +1959,25 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Fasting Champion!',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 AppBounceAnimation(
                   onTap: () => Navigator.pop(dialogContext),
                   child: Container(
@@ -1834,7 +1989,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     ),
                     child: const Center(
                       child: Text(
-                        'Keep Going!',
+                        'Continue',
                         style: TextStyle(
                           fontFamily: 'Outfit',
                           color: Colors.black,
@@ -1960,12 +2115,19 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         'weightLost': weightLost,
       },
       'stats': {
-        'longestFast': '${analytics?['longestFastH'] ?? 18.0}h',
-        'mealsDone': analytics?['mealsCount'] ?? 42,
+        'longestFast': '${analytics?['longestFastH'] ?? 0.0}h',
+        'avgFastH': analytics?['avgFastH'] ?? 0.0,
+        'mealsDone': analytics?['mealsCount'] ?? 0,
+        'weeklyHours':
+            (analytics?['weeklyHours'] as List<double>?) ??
+                List.filled(7, 0.0),
       },
       'weekStats': {
-        'weeklyStreak': analytics?['streak'] ?? 7,
-        'goalRate': (analytics?['completionPct'] as num?)?.round() ?? 85,
+        'weeklyStreak': analytics?['streak'] ?? 0,
+        'goalRate': (analytics?['completionPct'] as num?)?.round() ?? 0,
+        'weeklyConsistency':
+            (analytics?['weeklyConsistency'] as List<bool>?) ??
+                List.filled(7, false),
       },
     };
   }
@@ -1975,3 +2137,123 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
 // TIMELINE STATE ENUM
 // ─────────────────────────────────────────────────────────────────────────────
 enum _TLState { completed, current, future }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FASTING CHART CUSTOM PAINTER
+// ─────────────────────────────────────────────────────────────────────────────
+/// Draws a smooth Catmull-Rom spline line chart with gradient fill, gold dots,
+/// and bottom-aligned day labels. Zero-dependency — no fl_chart needed.
+class _FastingChartPainter extends CustomPainter {
+  final List<double> values;
+  final List<String> labels;
+  final Color lineColor;
+  final Color labelColor;
+
+  _FastingChartPainter({
+    required this.values,
+    required this.labels,
+    required this.lineColor,
+    required this.labelColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.isEmpty) return;
+
+    const double labelAreaHeight = 24;
+    const double dotRadius = 4.5;
+    const double topPad = 12;
+    final chartHeight = size.height - labelAreaHeight - topPad;
+    final chartWidth = size.width;
+
+    // Determine Y range
+    final maxVal = values.reduce((a, b) => a > b ? a : b);
+    final minVal = values.reduce((a, b) => a < b ? a : b);
+    final range = (maxVal - minVal).clamp(1.0, double.infinity);
+
+    // Map data to pixel coordinates
+    final points = <Offset>[];
+    final step = chartWidth / (values.length - 1).clamp(1, values.length);
+    for (int i = 0; i < values.length; i++) {
+      final x = i * step;
+      final normalised = (values[i] - minVal) / range;
+      final y = topPad + chartHeight * (1.0 - normalised);
+      points.add(Offset(x, y));
+    }
+
+    // Build smooth Catmull-Rom path
+    final path = Path();
+    path.moveTo(points.first.dx, points.first.dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = i > 0 ? points[i - 1] : points[i];
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final p3 = i + 2 < points.length ? points[i + 2] : points[i + 1];
+
+      final cp1x = p1.dx + (p2.dx - p0.dx) / 6;
+      final cp1y = p1.dy + (p2.dy - p0.dy) / 6;
+      final cp2x = p2.dx - (p3.dx - p1.dx) / 6;
+      final cp2y = p2.dy - (p3.dy - p1.dy) / 6;
+
+      path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+    }
+
+    // Gradient fill under the curve
+    final fillPath = Path.from(path)
+      ..lineTo(points.last.dx, topPad + chartHeight)
+      ..lineTo(points.first.dx, topPad + chartHeight)
+      ..close();
+
+    final fillPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, topPad),
+        Offset(0, topPad + chartHeight),
+        [
+          lineColor.withOpacity(0.25),
+          lineColor.withOpacity(0.0),
+        ],
+      );
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Draw the line
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, linePaint);
+
+    // Draw dots and labels
+    final dotPaintOuter = Paint()..color = lineColor;
+    final dotPaintInner = Paint()..color = const Color(0xFF1A1A1A);
+
+    for (int i = 0; i < points.length; i++) {
+      // Outer dot
+      canvas.drawCircle(points[i], dotRadius, dotPaintOuter);
+      // Inner dot (gives a ring look)
+      canvas.drawCircle(points[i], dotRadius - 1.8, dotPaintInner);
+
+      // Day label
+      final tp = TextPainter(
+        text: TextSpan(
+          text: i < labels.length ? labels[i] : '',
+          style: TextStyle(
+            fontFamily: 'Outfit',
+            color: labelColor,
+            fontSize: 11,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(
+        canvas,
+        Offset(points[i].dx - tp.width / 2,
+            topPad + chartHeight + 6),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FastingChartPainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.labels != labels;
+}

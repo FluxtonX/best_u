@@ -73,6 +73,8 @@ class NutritionViewModel extends ChangeNotifier {
   bool _answeredNo = false;
   bool get answeredNo => _answeredNo;
 
+  int currentTimelineStep = 0;
+
   // ── Progress ─────────────────────────────────────────────────────────────
   double get fastProgress {
     if (_activeSession == null) return 0.0;
@@ -87,7 +89,7 @@ class NutritionViewModel extends ChangeNotifier {
     return (now.difference(s.startedAt).inSeconds / total).clamp(0.0, 1.0);
   }
 
-  int get fastPercent => (fastProgress * 100).round();
+  int get fastPercent => (currentTimelineStep * 20).clamp(0, 100);
 
   // ── Loading ───────────────────────────────────────────────────────────────
   bool _isLoading = true;
@@ -168,9 +170,17 @@ class NutritionViewModel extends ChangeNotifier {
 
   void _syncYesNoState() {
     final resp = _activeSession?.yesNoResponse;
-    if (resp == 'yes' || resp == 'no') {
+    if (resp == 'yes') {
       _showYesNoPrompt = false;
-      _answeredNo = resp == 'yes';
+      _answeredNo = true;
+    } else if (resp != null && resp.startsWith('no_')) {
+      currentTimelineStep = int.tryParse(resp.split('_')[1]) ?? 0;
+      _showYesNoPrompt = currentTimelineStep <= 3;
+      _answeredNo = false;
+    } else if (resp == 'no') {
+      currentTimelineStep = 1;
+      _showYesNoPrompt = true;
+      _answeredNo = false;
     }
   }
 
@@ -265,6 +275,7 @@ class NutritionViewModel extends ChangeNotifier {
       _ach100Shown = false;
       _showYesNoPrompt = true;
       _answeredNo = false;
+      currentTimelineStep = 0;
 
       _ensureTicker();
       notifyListeners();
@@ -319,23 +330,31 @@ class NutritionViewModel extends ChangeNotifier {
   }
 
   Future<void> answerNo() async {
-    // User selected NO (they did not eat) -> done (dismiss prompt, continue fast)
-    _showYesNoPrompt = false;
-    _answeredNo = false;
+    if (currentTimelineStep < 4) {
+      currentTimelineStep++;
+    } else {
+      _showYesNoPrompt = false;
+      currentTimelineStep++;
+    }
     notifyListeners();
     if (_activeSession != null) {
-      await _repo.saveYesNoResponse(_activeSession!.id, 'no');
+      await _repo.saveYesNoResponse(_activeSession!.id, 'no_$currentTimelineStep');
     }
   }
 
-  Future<void> dismissYesNoAdvice() async {
+  Future<void> answerYesDeal() async {
     _showYesNoPrompt = false;
     _answeredNo = false;
     notifyListeners();
     if (_activeSession != null) {
-      // Complete the session early since they ate
       await completeFast();
     }
+  }
+
+  void answerYesNotNow() {
+    _answeredNo = false;
+    _showYesNoPrompt = true;
+    notifyListeners();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -402,7 +421,7 @@ class NutritionViewModel extends ChangeNotifier {
     if (_activeSession == null) return 'Start Today';
     switch (_activeSession!.status) {
       case 'active':
-        return 'Complete Fast';
+        return 'End Fast';
       case 'paused':
         return 'Resume Fast';
       default:
