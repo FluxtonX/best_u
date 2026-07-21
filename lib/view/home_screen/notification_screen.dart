@@ -78,8 +78,25 @@ class _NotificationScreenState extends State<NotificationScreen> {
             itemCount: docs.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
+              final docId = docs[index].id;
               final data = docs[index].data() as Map<String, dynamic>;
-              return _buildNotificationCard(data);
+              return Dismissible(
+                key: Key(docId),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 24.0),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
+                ),
+                onDismissed: (direction) {
+                  _apiService.deleteNotification(docId);
+                },
+                child: _buildNotificationCard(data),
+              );
             },
           );
         },

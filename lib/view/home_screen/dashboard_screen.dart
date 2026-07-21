@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:best_u/view/home_screen/nutrition_screen.dart';
 import 'package:best_u/view/home_screen/notification_screen.dart';
@@ -219,10 +220,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: AppColors.primary.withOpacity(0.15),
                             ),
                           ),
-                          child: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: AppColors.primary,
-                            size: 22,
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: ApiService().getNotificationsStream(),
+                            builder: (context, snapshot) {
+                              bool hasUnread = false;
+                              if (snapshot.hasData) {
+                                for (var doc in snapshot.data!.docs) {
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  if (data['isRead'] == false) {
+                                    hasUnread = true;
+                                    break;
+                                  }
+                                }
+                              }
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: AppColors.primary,
+                                    size: 22,
+                                  ),
+                                  if (hasUnread)
+                                    Positioned(
+                                      top: 12,
+                                      right: 12,
+                                      child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),

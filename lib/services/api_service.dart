@@ -829,6 +829,14 @@ class ApiService {
         .snapshots();
   }
 
+  Future<void> deleteNotification(String id) async {
+    try {
+      await _userRef.collection('notifications').doc(id).delete();
+    } catch (e) {
+      debugPrint('Error deleting notification: $e');
+    }
+  }
+
   Future<void> markNotificationsAsRead() async {
     try {
       final snapshot = await _userRef

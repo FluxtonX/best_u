@@ -19,6 +19,7 @@ Future<void> main() async {
   );
   await PasswordResetLinkService.instance.initialize(appNavigatorKey);
   await NotificationService.instance.initialize();
+
   runApp(const MyApp());
 }
 
