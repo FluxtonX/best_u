@@ -189,6 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'your@email.com',
                       prefixIcon: Icons.alternate_email_rounded,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 24),
                     Column(
@@ -201,6 +202,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icons.lock_outline_rounded,
                           isPassword: true,
                           keyboardType: TextInputType.visiblePassword,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _signIn(),
                         ),
                         const SizedBox(height: 8),
                         AppBounceAnimation(

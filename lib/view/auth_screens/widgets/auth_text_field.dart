@@ -9,6 +9,8 @@ class AuthTextField extends StatefulWidget {
   final IconData? prefixIcon;
   final bool isPassword;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   const AuthTextField({
     super.key,
@@ -18,6 +20,8 @@ class AuthTextField extends StatefulWidget {
     this.prefixIcon,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   @override
@@ -55,6 +59,8 @@ class _AuthTextFieldState extends State<AuthTextField> {
             controller: widget.controller,
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            onSubmitted: widget.onSubmitted,
             style: TextStyle(fontFamily: 'Outfit', 
               color: AppColors.white,
               fontSize: 14,

@@ -93,6 +93,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       hintText: 'your@email.com',
                       prefixIcon: Icons.alternate_email_rounded,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 24),
                     AuthTextField(
@@ -102,6 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       prefixIcon: Icons.lock_outline_rounded,
                       isPassword: true,
                       keyboardType: TextInputType.visiblePassword,
+                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 24),
                     // Password Requirements
@@ -142,6 +144,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       prefixIcon: Icons.lock_outline_rounded,
                       isPassword: true,
                       keyboardType: TextInputType.visiblePassword,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _createAccount(),
                     ),
                     const SizedBox(height: 24),
                     Row(
