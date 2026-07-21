@@ -7,6 +7,7 @@ import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -38,8 +39,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _loadLocalImage() async {
     final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
     setState(() {
-      _imagePath = prefs.getString('profile_image_path');
+      _imagePath = prefs.getString('profile_image_path_$uid');
     });
   }
 
@@ -51,7 +53,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _imagePath = image.path;
         });
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image_path', image.path);
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
+        await prefs.setString('profile_image_path_$uid', image.path);
       }
     } catch (e) {
       debugPrint("Error picking image: $e");

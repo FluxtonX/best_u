@@ -76,8 +76,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadLocalImage() async {
     final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
     setState(() {
-      _imagePath = prefs.getString('profile_image_path');
+      _imagePath = prefs.getString('profile_image_path_$uid');
     });
   }
 
