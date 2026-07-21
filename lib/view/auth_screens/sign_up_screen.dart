@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/notification_service.dart';
 import 'package:best_u/view/auth_screens/auth_services.dart';
 import 'package:best_u/view/auth_screens/login_screen.dart';
 import 'package:best_u/view/auth_screens/widgets/auth_button.dart';
@@ -382,6 +383,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'Account Created Successfully!',
           type: AppSnackType.success,
         );
+        NotificationService.instance.showWelcomeNotification();
         Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
       }
     } catch (e) {
@@ -412,12 +414,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
+          NotificationService.instance.showWelcomeNotification();
           Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }

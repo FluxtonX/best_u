@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/notification_service.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:best_u/view/home_screen/widgets/weight_update_modal.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
@@ -203,6 +204,12 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
 
     _runSequence();
     _checkWeeklyWeightTrigger();
+    // Notify: daily workout done. Fire immediately when this screen appears.
+    NotificationService.instance.showDailyWorkoutCompleteNotification();
+    // Notify: weekly workout done only when this is the final day of a week (e.g. _d3).
+    if (widget.workoutId.endsWith('_d3')) {
+      NotificationService.instance.showWeeklyWorkoutCompleteNotification();
+    }
   }
 
   void _checkWeeklyWeightTrigger() {

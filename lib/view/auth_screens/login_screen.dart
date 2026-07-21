@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/notification_service.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:best_u/view/auth_screens/auth_services.dart';
@@ -67,12 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
+          NotificationService.instance.showWelcomeNotification();
           Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }
@@ -105,12 +109,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           } else {
+            NotificationService.instance.showWelcomeNotification();
             Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
           }
         } else {
           // If profile doesn't exist yet, go to onboarding.
+          NotificationService.instance.showWelcomeNotification();
           Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
         }
       }

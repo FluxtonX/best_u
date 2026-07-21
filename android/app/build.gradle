@@ -43,6 +43,16 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def version = variant.versionName
+            if (version != null) {
+                def newApkName = "best-u.${version}.apk"
+                outputFileName = new File(newApkName)
+            }
+        }
+    }
 }
 
 flutter {

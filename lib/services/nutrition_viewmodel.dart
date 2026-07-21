@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/fasting_session.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../services/nutrition_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ class NutritionViewModel extends ChangeNotifier {
       _answeredNo = true;
     } else if (resp != null && resp.startsWith('no_')) {
       currentTimelineStep = int.tryParse(resp.split('_')[1]) ?? 0;
-      _showYesNoPrompt = currentTimelineStep <= 3;
+      _showYesNoPrompt = currentTimelineStep <= 4;
       _answeredNo = false;
     } else if (resp == 'no') {
       currentTimelineStep = 1;
@@ -223,25 +224,7 @@ class NutritionViewModel extends ChangeNotifier {
       await _repo.markReminderFired(session.id, '25');
     }
 
-    // 50 % — "First Goal Reached" popup
-    if (progress >= 0.50 && !_ach50Shown) {
-      _ach50Shown = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('ach50_${session.id}', true);
-      await _repo.markReminderFired(session.id, '50');
-      onMilestone?.call(NutritionMilestone.half);
-    }
 
-    // 100 % — "Day Complete" popup
-    if (progress >= 1.0 && !_ach100Shown && !session.dayComplete) {
-      _ach100Shown = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('ach100_${session.id}', true);
-      await _repo.markDayComplete(session.id);
-      await _repo.markReminderFired(session.id, '100');
-      onMilestone?.call(NutritionMilestone.complete);
-      await loadData(); // refresh analytics tab
-    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -337,8 +320,33 @@ class NutritionViewModel extends ChangeNotifier {
       currentTimelineStep++;
     }
     notifyListeners();
+    
     if (_activeSession != null) {
-      await _repo.saveYesNoResponse(_activeSession!.id, 'no_$currentTimelineStep');
+      final session = _activeSession!;
+      await _repo.saveYesNoResponse(session.id, 'no_$currentTimelineStep');
+
+      // User manually completed the 2 PM goal (Step 2 -> 3)
+      if (currentTimelineStep == 3 && !_ach50Shown) {
+        _ach50Shown = true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('ach50_${session.id}', true);
+        await _repo.markReminderFired(session.id, '50');
+        onMilestone?.call(NutritionMilestone.half);
+      }
+
+      // User manually completed the 5 PM goal (Step 4 -> 5)
+      if (currentTimelineStep == 5 && !_ach100Shown) {
+        _ach100Shown = true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('ach100_${session.id}', true);
+        if (!session.dayComplete) {
+          await _repo.markDayComplete(session.id);
+        }
+        await _repo.markReminderFired(session.id, '100');
+        onMilestone?.call(NutritionMilestone.complete);
+        NotificationService.instance.showFastingCompleteNotification();
+        await loadData(); // refresh analytics tab
+      }
     }
   }
 

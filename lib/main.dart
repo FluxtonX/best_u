@@ -1,3 +1,4 @@
+import 'package:best_u/services/notification_service.dart';
 import 'package:best_u/services/password_reset_link_service.dart';
 import 'package:best_u/view/auth_screens/login_screen.dart';
 import 'package:best_u/view/auth_screens/welcome_screen.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await PasswordResetLinkService.instance.initialize(appNavigatorKey);
+  await NotificationService.instance.initialize();
   runApp(const MyApp());
 }
 

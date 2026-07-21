@@ -949,6 +949,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
             subtitle:
                 step > 4 ? '✓ Fast completed' : (step == 4 ? 'Active' : null),
             state: s4,
+            tag: 'Meal time',
+            tagBgColor: Colors.white.withOpacity(0.08),
+            tagTextColor: Colors.white.withOpacity(0.6),
             expandWidget: showPrompt5Pm ? _build11amExpand() : null,
             isLast: true,
           ),
