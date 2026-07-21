@@ -801,6 +801,51 @@ class ApiService {
         logsSnapshot.docs.map((doc) => doc.data()).toList()));
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> saveNotification({
+    required String title,
+    required String body,
+    required String type,
+  }) async {
+    try {
+      await _userRef.collection('notifications').add({
+        'title': title,
+        'body': body,
+        'type': type,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Error saving notification to Firebase: $e');
+    }
+  }
+
+  Stream<QuerySnapshot> getNotificationsStream() {
+    return _userRef
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  Future<void> markNotificationsAsRead() async {
+    try {
+      final snapshot = await _userRef
+          .collection('notifications')
+          .where('isRead', isEqualTo: false)
+          .get();
+      
+      final batch = _db.batch();
+      for (final doc in snapshot.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error marking notifications as read: $e');
+    }
+  }
+
   Future<ApiResponse> getSubscriptionStatus() async {
     final profile = await _ensureProfile();
     // paymentProcessed is only set to true when the user completes the

@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:best_u/services/api_service.dart';
 
 /// Singleton notification service for Best-U app.
 /// Handles 4 notification types: Welcome, Fasting Completion,
@@ -14,11 +15,12 @@ class NotificationService {
 
   // ── Android channel ────────────────────────────────────────────────────────
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'best_u_main',
+    'best_u_main_v2',
     'Best-U Notifications',
     description: 'Fitness & fasting milestone notifications for Best-U.',
     importance: Importance.max,
     playSound: true,
+    showBadge: true, // Force badge display for the channel
   );
 
   // ── Notification IDs ───────────────────────────────────────────────────────
@@ -31,8 +33,8 @@ class NotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Android settings — use the default app icon (@mipmap/launcher_icon)
-    const androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
+    // Android settings — use the transparent notification icon
+    const androidInit = AndroidInitializationSettings('@drawable/ic_notification');
 
     // iOS settings — request all permissions at init time
     const iosInit = DarwinInitializationSettings(
@@ -48,11 +50,14 @@ class NotificationService {
 
     await _plugin.initialize(initSettings);
 
+    final androidImplementation = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    
     // Create the Android notification channel
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_channel);
+    await androidImplementation?.createNotificationChannel(_channel);
+
+    // Request permissions for Android 13+
+    await androidImplementation?.requestNotificationsPermission();
 
     _initialized = true;
   }
@@ -68,6 +73,7 @@ class NotificationService {
       title: 'Welcome to Best-U! 🚀',
       body:
           'Your transformation journey starts today. Let\'s reach your fitness and fasting goals together!',
+      type: 'welcome',
     );
   }
 
@@ -79,6 +85,7 @@ class NotificationService {
       title: 'Fasting Goal Completed! 🏆',
       body:
           'Amazing discipline! You\'ve successfully completed today\'s fast. Time to nourish your body! 🥗',
+      type: 'fasting',
     );
   }
 
@@ -90,6 +97,7 @@ class NotificationService {
       title: 'Workout Crushed! 🏋️‍♂️',
       body:
           'Day completed! You are one step closer to achieving your weekly fitness targets.',
+      type: 'workout_daily',
     );
   }
 
@@ -101,6 +109,7 @@ class NotificationService {
       title: 'Week Completed! 🌟',
       body:
           'You\'ve successfully finished this week\'s workout program! Keep up the momentum for next week.',
+      type: 'workout_weekly',
     );
   }
 
@@ -109,9 +118,10 @@ class NotificationService {
     required int id,
     required String title,
     required String body,
+    required String type,
   }) async {
     const androidDetails = AndroidNotificationDetails(
-      'best_u_main',
+      'best_u_main_v2',
       'Best-U Notifications',
       channelDescription:
           'Fitness & fasting milestone notifications for Best-U.',
@@ -119,12 +129,15 @@ class NotificationService {
       priority: Priority.high,
       playSound: true,
       enableVibration: true,
+      icon: '@drawable/ic_notification',
+      number: 1, // This triggers the red badge counter on Android launchers
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      badgeNumber: 1,
     );
 
     const details = NotificationDetails(
@@ -132,6 +145,15 @@ class NotificationService {
       iOS: iosDetails,
     );
 
+    // Show local push notification
     await _plugin.show(id, title, body, details);
+
+    // Save to Firebase Firestore
+    try {
+      final apiService = ApiService();
+      await apiService.saveNotification(title: title, body: body, type: type);
+    } catch (e) {
+      // Ignored: User might not be authenticated yet or network issue
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:best_u/view/home_screen/nutrition_screen.dart';
+import 'package:best_u/view/home_screen/notification_screen.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -200,20 +201,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       // Notification / avatar badge
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.15),
+                      AppBounceAnimation(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const NotificationScreen()),
+                          );
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1A1A),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.15),
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: AppColors.primary,
-                          size: 22,
+                          child: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
                         ),
                       ),
                     ],
