@@ -82,7 +82,7 @@ class NutritionRepository {
   int _baseId(String sessionId) => sessionId.hashCode.abs() % 0xFFFFF;
 
   NotificationDetails get _notifDetails {
-    final android = AndroidNotificationDetails(
+    final android = const AndroidNotificationDetails(
       'fasting_channel',
       'Fasting reminders',
       channelDescription: 'Notifications for fasting milestones and reminders',
@@ -195,7 +195,7 @@ class NutritionRepository {
     if (level == 0) return; // Beginner — no hunger-check reminders
 
     final base = _baseId(sessionId);
-    final interval = const Duration(minutes: 90);
+    const interval = Duration(minutes: 90);
     final now = DateTime.now();
     var fireAt = startedAt.add(const Duration(hours: 1));
     int idx = 4; // IDs +4 through +23

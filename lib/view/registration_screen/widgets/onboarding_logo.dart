@@ -11,7 +11,7 @@ class OnboardingLogo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: TextSpan(
+          text: const TextSpan(
             style: TextStyle(fontFamily: 'Outfit', 
               fontSize: 32,
               fontWeight: FontWeight.w800,

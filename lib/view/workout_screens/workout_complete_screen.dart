@@ -305,7 +305,7 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
                       opacity: _headerFade,
                       child: SlideTransition(
                         position: _headerSlide,
-                        child: Column(
+                        child: const Column(
                           children: [
                             const Text(
                               'Workout Complete!',

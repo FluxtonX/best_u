@@ -14,11 +14,28 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await PasswordResetLinkService.instance.initialize(appNavigatorKey);
-  await NotificationService.instance.initialize();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // Firebase init failed — app will still launch, Firebase-dependent
+    // features will be unavailable. Log error for debugging.
+    debugPrint('Firebase init error: $e');
+  }
+
+  try {
+    await PasswordResetLinkService.instance.initialize(appNavigatorKey);
+  } catch (e) {
+    debugPrint('PasswordResetLinkService init error: $e');
+  }
+
+  try {
+    await NotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('NotificationService init error: $e');
+  }
 
   runApp(const MyApp());
 }
@@ -30,6 +47,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         navigatorKey: appNavigatorKey,
+        initialRoute: '/',
         theme: ThemeData(
           fontFamily: 'Outfit',
         ),
@@ -39,7 +57,7 @@ class MyApp extends StatelessWidget {
           '/registration': (context) => const OnboardingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
-          '/home': (context) =>  MainHomeScreen(),
+          '/home': (context) => MainHomeScreen(),
           '/workout': (context) => const WorkoutListScreen(),
         });
   }

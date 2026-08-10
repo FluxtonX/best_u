@@ -67,22 +67,22 @@ class AppSnackBar {
   static _SnackTheme _getTheme(AppSnackType type) {
     switch (type) {
       case AppSnackType.success:
-        return _SnackTheme(
+        return const _SnackTheme(
           borderColor: AppColors.primary,
           icon: Icons.check_circle_rounded,
         );
       case AppSnackType.error:
-        return _SnackTheme(
-          borderColor: const Color(0xFFEF4444),
+        return const _SnackTheme(
+          borderColor: Color(0xFFEF4444),
           icon: Icons.cancel_rounded,
         );
       case AppSnackType.warning:
-        return _SnackTheme(
-          borderColor: const Color(0xFFF59E0B),
+        return const _SnackTheme(
+          borderColor: Color(0xFFF59E0B),
           icon: Icons.warning_rounded,
         );
       case AppSnackType.info:
-        return _SnackTheme(
+        return const _SnackTheme(
           borderColor: AppColors.primary,
           icon: Icons.info_rounded,
         );

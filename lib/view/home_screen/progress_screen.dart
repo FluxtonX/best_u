@@ -700,7 +700,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'View All',
                       style: TextStyle(
                         fontFamily: 'Outfit',
@@ -709,8 +709,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 3),
-                    const Icon(
+                    SizedBox(width: 3),
+                    Icon(
                       Icons.chevron_right_rounded,
                       color: AppColors.primary,
                       size: 16,
