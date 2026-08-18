@@ -13,11 +13,17 @@ import '../services/nutrition_repository.dart';
 // MILESTONE EVENT ENUM
 // ─────────────────────────────────────────────────────────────────────────────
 enum NutritionMilestone {
-  /// 50 % of the fast window reached ("First Goal Reached" popup)
+  /// 50 % of the fast window reached
   half,
 
-  /// 100 % of the fast window reached ("Day Complete" popup)
+  /// Fast goal complete
   complete,
+
+  /// Level successfully completed & user promoted to next level
+  levelPromoted,
+
+  /// Morning check-in prompt
+  morningCheck,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,8 +40,9 @@ class NutritionViewModel extends ChangeNotifier {
   final ApiService _api;
 
   // ── Popup callback (wired by the screen) ────────────────────────────────
-  /// Fired when a trackable milestone is reached for the first time.
-  void Function(NutritionMilestone)? onMilestone;
+  /// Fired when a trackable milestone or level completion is reached.
+  void Function(NutritionMilestone milestone, {int? completedLevel, int? nextLevel})?
+      onMilestone;
 
   // ── Session ──────────────────────────────────────────────────────────────
   FastingSession? _activeSession;
@@ -48,33 +55,209 @@ class NutritionViewModel extends ChangeNotifier {
   String get currentWeight => (_profile?['weight'] ?? 82).toString();
   String get targetWeight => (_profile?['targetWeight'] ?? 75).toString();
 
-  // ── Level ────────────────────────────────────────────────────────────────
+  // ── Level: 0 = Beginner (12 PM), 1 = Intermediate (2 PM), 2 = Elite (4 PM) ─
   int _selectedLevel = 0;
   int get selectedLevel => _selectedLevel;
+
+  int get endFastHour {
+    switch (_selectedLevel) {
+      case 0:
+        return 12; // Beginner: 12:00 PM
+      case 1:
+        return 14; // Intermediate: 2:00 PM
+      case 2:
+        return 16; // Elite: 4:00 PM
+      default:
+        return 12;
+    }
+  }
+
+  String get fastGoalTimeText {
+    switch (_selectedLevel) {
+      case 0:
+        return "12 PM";
+      case 1:
+        return "2 PM";
+      case 2:
+        return "4 PM";
+      default:
+        return "12 PM";
+    }
+  }
+
+  String get levelName {
+    switch (_selectedLevel) {
+      case 0:
+        return "Beginner";
+      case 1:
+        return "Intermediate";
+      case 2:
+        return "Elite";
+      default:
+        return "Beginner";
+    }
+  }
+
+  int get maxTimelineStep {
+    switch (_selectedLevel) {
+      case 0:
+        return 2; // Step 0 (8 AM), Step 1 (10:30 AM), Step 2 (12 PM)
+      case 1:
+        return 2; // Step 0 (8 AM), Step 1 (11 AM), Step 2 (2 PM)
+      case 2:
+        return 3; // Step 0 (8 AM), Step 1 (11 AM), Step 2 (2 PM), Step 3 (4 PM)
+      default:
+        return 2;
+    }
+  }
 
   // ── Analytics / coach ────────────────────────────────────────────────────
   Map<String, dynamic>? _analytics;
   Map<String, dynamic>? get analytics => _analytics;
 
   String _coachMessage =
-      'Start your first fast today — every journey begins with a single step.';
+      'Start your fast today — every journey begins with a single step.';
   String get coachMessage => _coachMessage;
 
   // ── Meal ─────────────────────────────────────────────────────────────────
   bool get mealLogged => _activeSession?.mealLogged ?? false;
 
   int selectedProtein = 0;
-  int selectedFiber = 0;
   int selectedFat = 0;
 
-  // ── YES / NO prompt ──────────────────────────────────────────────────────
+  // ── YES / NO prompt & Deal state ──────────────────────────────────────────
   bool _showYesNoPrompt = true;
   bool get showYesNoPrompt => _showYesNoPrompt;
+
+  bool _answeredYes = false;
+  bool get answeredYes => _answeredYes;
 
   bool _answeredNo = false;
   bool get answeredNo => _answeredNo;
 
+  bool? _dealAccepted;
+  bool? get dealAccepted => _dealAccepted;
+
   int currentTimelineStep = 0;
+
+  // ── Real-Time Clock Step Unlocking ─────────────────────────────────────────
+  int getTargetHourForStep(int step) {
+    if (_selectedLevel == 0) {
+      // Beginner: 8 AM, 10:30 AM, 12 PM
+      switch (step) {
+        case 0:
+          return 8;
+        case 1:
+          return 10;
+        case 2:
+          return 12;
+        default:
+          return 8;
+      }
+    } else if (_selectedLevel == 1) {
+      // Intermediate: 8 AM, 11 AM, 2 PM
+      switch (step) {
+        case 0:
+          return 8;
+        case 1:
+          return 11;
+        case 2:
+          return 14;
+        default:
+          return 8;
+      }
+    } else {
+      // Elite: 8 AM, 11 AM, 2 PM, 4 PM
+      switch (step) {
+        case 0:
+          return 8;
+        case 1:
+          return 11;
+        case 2:
+          return 14;
+        case 3:
+          return 16;
+        default:
+          return 8;
+      }
+    }
+  }
+
+  String getTargetTimeStringForStep(int step) {
+    if (_selectedLevel == 0) {
+      switch (step) {
+        case 0:
+          return "8:00 AM";
+        case 1:
+          return "10:30 AM";
+        case 2:
+          return "12:00 PM";
+        default:
+          return "8:00 AM";
+      }
+    } else if (_selectedLevel == 1) {
+      switch (step) {
+        case 0:
+          return "8:00 AM";
+        case 1:
+          return "11:00 AM";
+        case 2:
+          return "2:00 PM";
+        default:
+          return "8:00 AM";
+      }
+    } else {
+      switch (step) {
+        case 0:
+          return "8:00 AM";
+        case 1:
+          return "11:00 AM";
+        case 2:
+          return "2:00 PM";
+        case 3:
+          return "4:00 PM";
+        default:
+          return "8:00 AM";
+      }
+    }
+  }
+
+  bool isStepUnlocked(int step) {
+    if (step == 0) return true; // Step 0 (8 AM) is always unlocked when active
+    final now = DateTime.now();
+    return now.hour >= getTargetHourForStep(step);
+  }
+
+  // ── Front page blurb banner ──────────────────────────────────────────────
+  bool _showBlurb = true;
+  bool get showBlurb => _showBlurb;
+  void toggleBlurb() {
+    _showBlurb = !_showBlurb;
+    notifyListeners();
+  }
+
+  // ── Exact Client Dialogue Texts ──────────────────────────────────────────
+  static const String blurbTitle = "Nutrition Coach";
+  static const String blurbContent =
+      "What this coach will do is track and motivate you daily so you can achieve your weight loss goals. The number one key to weight loss is controlled fasting.\n\n"
+      "No-one can go straight to a long fast. It is a step by step, day by day improvement. With this coach we help get you there.\n\n"
+      "Consistency over time creates results!";
+
+  String get currentQuestion => "Have you eaten yet?";
+
+  String get currentYesAdvice {
+    return "Ok. This is not ideal. The goal is to fast until $fastGoalTimeText. If you get hungry, have a coffee / tea with a small pour of cream or coconut cream. Let's try and do better tomorrow. Deal?";
+  }
+
+  String get currentNoMotivation {
+    return "Great, keep it up. Remember the goal is to make it to $fastGoalTimeText. If you get hungry, have a coffee / tea with a small pour of cream or coconut cream, it will push the hunger window out for two hours.";
+  }
+
+  static const String mealGuidance =
+      "Good work on reaching your fasting goal with no food! Remember, for this meal the goal is to eat Protein and Fat:\n\n"
+      "• Protein: Around 100 grams of meat / fish / tofu is ideal (~30g of actual protein per meal).\n"
+      "• Healthy Fat: Butter, cheese sauce, avocado, or nuts to satisfy hunger completely.\n\n"
+      "💡 Tip: The hunger satisfaction with healthy fats is the MOST important part. The plan does not work if you are still hungry. Adding healthy fats makes the fast sustainable and fuels your body.";
 
   // ── Progress ─────────────────────────────────────────────────────────────
   double get fastProgress {
@@ -90,7 +273,11 @@ class NutritionViewModel extends ChangeNotifier {
     return (now.difference(s.startedAt).inSeconds / total).clamp(0.0, 1.0);
   }
 
-  int get fastPercent => (currentTimelineStep * 20).clamp(0, 100);
+  int get fastPercent {
+    final maxStep = maxTimelineStep;
+    if (maxStep <= 0) return 0;
+    return ((currentTimelineStep / maxStep) * 100).round().clamp(0, 100);
+  }
 
   // ── Loading ───────────────────────────────────────────────────────────────
   bool _isLoading = true;
@@ -162,7 +349,7 @@ class NutritionViewModel extends ChangeNotifier {
     _ach50Shown = prefs.getBool('ach50_$sessionId') ?? false;
     _ach100Shown = prefs.getBool('ach100_$sessionId') ?? false;
 
-    // Also honour flags already written to Firestore (survives reinstall)
+    // Also honour flags already written to Firestore
     final fired = _activeSession?.remindersFired ?? [];
     if (fired.contains('25')) _ach25Shown = true;
     if (fired.contains('50')) _ach50Shown = true;
@@ -171,17 +358,34 @@ class NutritionViewModel extends ChangeNotifier {
 
   void _syncYesNoState() {
     final resp = _activeSession?.yesNoResponse;
-    if (resp == 'yes') {
+    if (resp == null) return;
+
+    if (resp.startsWith('step_')) {
+      final parsedStep = int.tryParse(resp.split('_')[1]);
+      if (parsedStep != null) {
+        currentTimelineStep = parsedStep;
+        _showYesNoPrompt = true;
+        _answeredYes = false;
+        _answeredNo = false;
+      }
+    } else if (resp.startsWith('yes_')) {
+      final parts = resp.split('_');
+      if (parts.length >= 3) {
+        final parsedStep = int.tryParse(parts[2]);
+        if (parsedStep != null) currentTimelineStep = parsedStep;
+      }
+      _answeredYes = true;
+      _answeredNo = false;
       _showYesNoPrompt = false;
+    } else if (resp.startsWith('no_')) {
+      final parts = resp.split('_');
+      if (parts.length >= 3) {
+        final parsedStep = int.tryParse(parts[2]);
+        if (parsedStep != null) currentTimelineStep = parsedStep;
+      }
       _answeredNo = true;
-    } else if (resp != null && resp.startsWith('no_')) {
-      currentTimelineStep = int.tryParse(resp.split('_')[1]) ?? 0;
-      _showYesNoPrompt = currentTimelineStep <= 4;
-      _answeredNo = false;
-    } else if (resp == 'no') {
-      currentTimelineStep = 1;
-      _showYesNoPrompt = true;
-      _answeredNo = false;
+      _answeredYes = false;
+      _showYesNoPrompt = false;
     }
   }
 
@@ -216,7 +420,7 @@ class NutritionViewModel extends ChangeNotifier {
     if (session == null || session.status != 'active') return;
     final progress = fastProgress;
 
-    // 25 % — tracked silently; UI handles the inline YES/NO prompt
+    // 25 % — tracked silently
     if (progress >= 0.25 && !_ach25Shown) {
       _ach25Shown = true;
       final prefs = await SharedPreferences.getInstance();
@@ -224,14 +428,36 @@ class NutritionViewModel extends ChangeNotifier {
       await _repo.markReminderFired(session.id, '25');
     }
 
-
+    // 50 % — tracked silently
+    if (progress >= 0.50 && !_ach50Shown) {
+      _ach50Shown = true;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('ach50_${session.id}', true);
+      await _repo.markReminderFired(session.id, '50');
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
   // ACTIONS — Session lifecycle
   // ─────────────────────────────────────────────────────────────────────────
 
+  bool get isTodayCompleted {
+    if (_activeSession == null) return false;
+    final s = _activeSession!;
+    if (s.dayComplete || s.status == 'completed') {
+      final startedDate =
+          DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
+      final today = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+      if (startedDate == todayDate) return true;
+    }
+    return false;
+  }
+
   Future<void> handleMainButton() async {
+    if (isTodayCompleted) {
+      return;
+    }
     if (_activeSession == null || _activeSession!.status == 'completed') {
       await startFast();
     } else if (_activeSession!.status == 'paused') {
@@ -243,12 +469,18 @@ class NutritionViewModel extends ChangeNotifier {
 
   Future<void> startFast() async {
     try {
-      int seconds = 60;
-      if (_selectedLevel == 1) seconds = 120;
-      if (_selectedLevel == 2) seconds = 180;
+      final now = DateTime.now();
+      DateTime targetEnd = DateTime(now.year, now.month, now.day, endFastHour);
+      if (now.isAfter(targetEnd)) {
+        targetEnd = targetEnd.add(const Duration(days: 1));
+      }
+      var duration = targetEnd.difference(now);
+      if (duration.inSeconds <= 0) {
+        duration = const Duration(hours: 4);
+      }
 
       final session = await _repo.startSession(
-        duration: Duration(seconds: seconds),
+        duration: duration,
         level: _selectedLevel,
       );
 
@@ -262,6 +494,10 @@ class NutritionViewModel extends ChangeNotifier {
 
       _ensureTicker();
       notifyListeners();
+
+      // Trigger morning check phone notification
+      NotificationService.instance
+          .showMorningCheckNotification(targetTime: fastGoalTimeText);
     } catch (e) {
       debugPrint('NutritionViewModel.startFast error: $e');
     }
@@ -292,50 +528,97 @@ class NutritionViewModel extends ChangeNotifier {
       _activeSession = null;
       _ticker?.cancel();
       notifyListeners();
+      await onFastCompletedForLevel();
       await loadData();
     } catch (e) {
       debugPrint('NutritionViewModel.completeFast error: $e');
     }
   }
 
+  /// Handles level completion and progression to next tier
+  Future<void> onFastCompletedForLevel() async {
+    final completed = _selectedLevel;
+    int nextLevel = completed;
+
+    if (completed == 0) {
+      nextLevel = 1; // Advance from Beginner to Intermediate (2 PM)
+      await setLevel(1);
+      await NotificationService.instance.showFastingCompleteNotification(
+        levelName: 'Beginner',
+        targetTime: '12 PM',
+        nextLevel: 'Intermediate (2 PM)',
+      );
+    } else if (completed == 1) {
+      nextLevel = 2; // Advance from Intermediate to Elite (4 PM)
+      await setLevel(2);
+      await NotificationService.instance.showFastingCompleteNotification(
+        levelName: 'Intermediate',
+        targetTime: '2 PM',
+        nextLevel: 'Elite (4 PM)',
+      );
+    } else {
+      nextLevel = 2; // Elite complete
+      await NotificationService.instance.showFastingCompleteNotification(
+        levelName: 'Elite',
+        targetTime: '4 PM',
+      );
+    }
+
+    onMilestone?.call(
+      NutritionMilestone.levelPromoted,
+      completedLevel: completed,
+      nextLevel: nextLevel,
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
-  // ACTIONS — YES / NO
+  // ACTIONS — YES / NO & DEAL
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> answerYes() async {
-    // User selected YES (they ate early) -> show advice card
+    _answeredYes = true;
+    _answeredNo = false;
     _showYesNoPrompt = false;
-    _answeredNo = true;
+    _dealAccepted = null;
     notifyListeners();
     if (_activeSession != null) {
-      await _repo.saveYesNoResponse(_activeSession!.id, 'yes');
+      await _repo.saveYesNoResponse(
+          _activeSession!.id, 'yes_step_$currentTimelineStep');
     }
   }
 
   Future<void> answerNo() async {
-    if (currentTimelineStep < 4) {
-      currentTimelineStep++;
-    } else {
-      _showYesNoPrompt = false;
+    _answeredYes = false;
+    _answeredNo = true;
+    _showYesNoPrompt = false;
+    notifyListeners();
+
+    if (_activeSession != null) {
+      await _repo.saveYesNoResponse(
+          _activeSession!.id, 'no_step_$currentTimelineStep');
+    }
+  }
+
+  Future<void> advanceTimelineStep() async {
+    final maxStep = maxTimelineStep;
+    if (currentTimelineStep < maxStep) {
       currentTimelineStep++;
     }
+
+    _answeredNo = false;
+    _answeredYes = false;
+    _showYesNoPrompt = true;
+    _dealAccepted = null;
     notifyListeners();
-    
+
     if (_activeSession != null) {
       final session = _activeSession!;
-      await _repo.saveYesNoResponse(session.id, 'no_$currentTimelineStep');
 
-      // User manually completed the 2 PM goal (Step 2 -> 3)
-      if (currentTimelineStep == 3 && !_ach50Shown) {
-        _ach50Shown = true;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('ach50_${session.id}', true);
-        await _repo.markReminderFired(session.id, '50');
-        onMilestone?.call(NutritionMilestone.half);
-      }
+      await _repo.saveYesNoResponse(
+          session.id, 'step_$currentTimelineStep');
 
-      // User manually completed the 5 PM goal (Step 4 -> 5)
-      if (currentTimelineStep == 5 && !_ach100Shown) {
+      // Final step reached for the level (12 PM Beginner, 2 PM Intermediate, 4 PM Elite)
+      if (currentTimelineStep >= maxStep && !_ach100Shown) {
         _ach100Shown = true;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('ach100_${session.id}', true);
@@ -343,37 +626,39 @@ class NutritionViewModel extends ChangeNotifier {
           await _repo.markDayComplete(session.id);
         }
         await _repo.markReminderFired(session.id, '100');
-        onMilestone?.call(NutritionMilestone.complete);
-        NotificationService.instance.showFastingCompleteNotification();
-        await loadData(); // refresh analytics tab
+        await onFastCompletedForLevel();
+        await loadData();
       }
     }
   }
 
   Future<void> answerYesDeal() async {
-    _showYesNoPrompt = false;
-    _answeredNo = false;
+    _dealAccepted = true;
     notifyListeners();
-    if (_activeSession != null) {
-      await completeFast();
-    }
   }
 
   void answerYesNotNow() {
-    _answeredNo = false;
+    _dealAccepted = false;
+    notifyListeners();
+  }
+
+  void resetPrompt() {
     _showYesNoPrompt = true;
+    _answeredYes = false;
+    _answeredNo = false;
+    _dealAccepted = null;
     notifyListeners();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ACTIONS — Meal logging
+  // ACTIONS — Meal logging (Protein and Fat)
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> logMeal() async {
     if (_activeSession == null) return;
     try {
       final label =
-          'Protein: ${_proteinLabel()}, Fiber: ${_fiberLabel()}, Fat: ${_fatLabel()}';
+          'Protein: ${_proteinLabel()}, Fat: ${_fatLabel()}';
       await _repo.saveMealCompletion(
         sessionId: _activeSession!.id,
         mealType: label,
@@ -387,14 +672,11 @@ class NutritionViewModel extends ChangeNotifier {
 
   String _proteinLabel() =>
       ['Chicken', 'Fish', 'Tofu'][selectedProtein.clamp(0, 2)];
-  String _fiberLabel() =>
-      ['Broccoli', 'Green Veg', 'Green Veg'][selectedFiber.clamp(0, 2)];
   String _fatLabel() =>
-      ['Butter', 'Cheese Sauce', 'Cheese Sauce'][selectedFat.clamp(0, 2)];
+      ['Butter', 'Cheese Sauce', 'Avocado'][selectedFat.clamp(0, 2)];
 
-  void setMealPicker({int? protein, int? fiber, int? fat}) {
+  void setMealPicker({int? protein, int? fat}) {
     if (protein != null) selectedProtein = protein;
-    if (fiber != null) selectedFiber = fiber;
     if (fat != null) selectedFat = fat;
     notifyListeners();
   }
@@ -426,6 +708,7 @@ class NutritionViewModel extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────────────────
 
   String get buttonLabel {
+    if (isTodayCompleted) return 'Day Complete ✓ (See You Tomorrow)';
     if (_activeSession == null) return 'Start Today';
     switch (_activeSession!.status) {
       case 'active':

@@ -78,14 +78,35 @@ class NotificationService {
   }
 
   // ── 2. Fasting Completion Notification ────────────────────────────────────
-  /// Fire when the 5 PM fasting goal (Day Complete) is reached.
-  Future<void> showFastingCompleteNotification() async {
+  /// Fire when the fasting goal for the current level is reached.
+  Future<void> showFastingCompleteNotification({
+    String levelName = 'Beginner',
+    String targetTime = '12 PM',
+    String? nextLevel,
+  }) async {
+    final nextLevelMsg = nextLevel != null
+        ? ' You\'ve unlocked $nextLevel level!'
+        : '';
     await _show(
       id: _idFastingComplete,
-      title: 'Fasting Goal Completed! 🏆',
+      title: '$levelName Fast Completed! 🏆',
       body:
-          'Amazing discipline! You\'ve successfully completed today\'s fast. Time to nourish your body! 🥗',
+          'Amazing discipline! You\'ve successfully completed your $targetTime fast.$nextLevelMsg Time for your Protein and Fat meal! 🥗',
       type: 'fasting',
+    );
+  }
+
+  // ── 2b. Morning Check Notification ────────────────────────────────────────
+  /// Fire for 8 AM / scheduled morning checks.
+  Future<void> showMorningCheckNotification({
+    String targetTime = '12 PM',
+  }) async {
+    await _show(
+      id: 5,
+      title: 'Morning Fasting Check 🌅',
+      body:
+          'Good morning! Have you eaten yet? Remember your fasting goal today is $targetTime.',
+      type: 'morning_check',
     );
   }
 

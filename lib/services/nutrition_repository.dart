@@ -184,33 +184,55 @@ class NutritionRepository {
     }
   }
 
-  /// Schedule hourly hunger-check reminders for Intermediate (16h) / Elite (20h).
-  /// These fire every 90 minutes after the first hour of fasting.
+  /// Schedule hunger-check reminders for Beginner (8am, 11am, 2pm, 3pm, 5pm)
+  /// as well as Intermediate (16h) / Elite (20h).
   Future<void> _scheduleHungerCheckReminders(
     String sessionId,
     DateTime startedAt,
     DateTime endsAt,
     int level,
   ) async {
-    if (level == 0) return; // Beginner — no hunger-check reminders
-
     final base = _baseId(sessionId);
-    const interval = Duration(minutes: 90);
     final now = DateTime.now();
-    var fireAt = startedAt.add(const Duration(hours: 1));
-    int idx = 4; // IDs +4 through +23
 
-    while (fireAt.isBefore(endsAt) && idx < 24) {
-      if (fireAt.isAfter(now)) {
-        await _safeZonedSchedule(
-          base + idx,
-          'Still going strong? 💧',
-          'Remember: water and black coffee are allowed during your fast.',
-          tz.TZDateTime.from(fireAt, tz.local),
-          _notifDetails,
-        );
+    List<(int, int, String, String)> checkTimes;
+    if (level == 0) {
+      // Beginner level (End fast time: 12 PM)
+      checkTimes = [
+        (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 12 PM!'),
+        (10, 30, 'Mid-Morning Check ☕', 'Have you eaten yet? Almost to 12 PM!'),
+        (12, 0, 'Beginner Fast Complete! 🏆', '12 PM reached! Time for your Protein and Fat meal.'),
+      ];
+    } else if (level == 1) {
+      // Intermediate level (End fast time: 2 PM)
+      checkTimes = [
+        (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 2 PM!'),
+        (11, 0, 'Mid-Morning Check ☕', 'Have you eaten yet? Keep going until 2 PM!'),
+        (14, 0, 'Intermediate Fast Complete! 🏆', '2 PM reached! Time for your Protein and Fat meal.'),
+      ];
+    } else {
+      // Elite level (End fast time: 4 PM)
+      checkTimes = [
+        (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 4 PM!'),
+        (11, 0, 'Mid-Morning Check ☕', 'Have you eaten yet?'),
+        (14, 0, 'Afternoon Check 🕒', 'Have you eaten yet? Push to 4 PM!'),
+        (16, 0, 'Elite Fast Complete! 🏆', '4 PM reached! Time for your Protein and Fat meal.'),
+      ];
+    }
+
+    int idx = 4;
+    for (final (hour, minute, title, body) in checkTimes) {
+      var scheduled = DateTime(now.year, now.month, now.day, hour, minute);
+      if (scheduled.isBefore(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
       }
-      fireAt = fireAt.add(interval);
+      await _safeZonedSchedule(
+        base + idx,
+        title,
+        body,
+        tz.TZDateTime.from(scheduled, tz.local),
+        _notifDetails,
+      );
       idx++;
     }
   }
