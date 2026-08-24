@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/local_workout_plan_service.dart';
+import 'package:best_u/view/widgets/book_download_button.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -229,6 +230,10 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // Book Download Banner
+                const BookDownloadButton(),
                 const SizedBox(height: 32),
 
                 // Weeks List
@@ -389,7 +394,10 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       bool isCurrent = false,
       bool isLockedToday = false}) {
     final bool isFutureLocked = !isCompleted && !isCurrent;
-    final bool isClickable = isCompleted || (isCurrent && !isLockedToday);
+    // Completed days are ALWAYS clickable for review.
+    // Locked-today (next pending day, already trained today) shows a soft message.
+    // Only truly future-locked days (beyond the current week) block navigation.
+    final bool isClickable = isCompleted || isCurrent || isLockedToday;
 
     Color iconBgColor;
     Widget iconWidget;
@@ -398,8 +406,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       iconBgColor = Colors.green.withOpacity(0.15);
       iconWidget = const Icon(Icons.check_rounded, color: Colors.green, size: 16);
     } else if (isLockedToday) {
-      iconBgColor = Colors.white.withOpacity(0.03);
-      iconWidget = Icon(Icons.lock_rounded, color: AppColors.white.withOpacity(0.2), size: 16);
+      iconBgColor = Colors.white.withOpacity(0.05);
+      iconWidget = Icon(Icons.lock_clock_rounded, color: AppColors.primary.withOpacity(0.5), size: 16);
     } else if (isFutureLocked) {
       iconBgColor = Colors.white.withOpacity(0.02);
       iconWidget = Icon(Icons.lock_outline_rounded, color: AppColors.white.withOpacity(0.15), size: 16);
@@ -415,8 +423,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
 
     if (isLockedToday) {
       subtitleText = 'Come back tomorrow 💪';
-      titleColor = AppColors.white.withOpacity(0.35);
-      subtitleColor = AppColors.primary.withOpacity(0.4);
+      titleColor = AppColors.white.withOpacity(0.7);
+      subtitleColor = AppColors.primary.withOpacity(0.6);
     } else if (isFutureLocked) {
       titleColor = AppColors.white.withOpacity(0.3);
       subtitleColor = AppColors.white.withOpacity(0.2);
@@ -424,17 +432,32 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
 
     return GestureDetector(
       onTap: !isClickable
-          ? null // Prevent tap if locked (today or future)
+          ? null
           : () {
+              // Soft informational message for locked-today days, but still
+              // allow navigation so the client can review/test the workout.
+              if (isLockedToday) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      '💪 Great work today! Come back tomorrow for your next session.',
+                      style: TextStyle(fontFamily: 'Outfit'),
+                    ),
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
               if (workoutId != null) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
                           WorkoutListScreen(workoutId: workoutId)),
-                ).then((_) => _fetchData()); // Refresh when returning
+                ).then((_) => _fetchData());
               } else {
-                // Demo/Mock navigation
                 Navigator.push(
                   context,
                   MaterialPageRoute(

@@ -46,7 +46,18 @@ class NutritionViewModel extends ChangeNotifier {
 
   // ── Session ──────────────────────────────────────────────────────────────
   FastingSession? _activeSession;
-  FastingSession? get activeSession => _activeSession;
+  final Map<int, FastingSession> _todaySessions = {};
+
+  /// Returns the active or completed session for the currently selected level.
+  /// This ensures completed levels remain completed today and do not restart.
+  FastingSession? get activeSession {
+    final sessionForLevel = _todaySessions[_selectedLevel];
+    if (sessionForLevel != null) return sessionForLevel;
+    if (_activeSession != null && _activeSession!.level == _selectedLevel) {
+      return _activeSession;
+    }
+    return null;
+  }
 
   // ── User profile ─────────────────────────────────────────────────────────
   Map<String, dynamic>? _profile;
@@ -120,7 +131,7 @@ class NutritionViewModel extends ChangeNotifier {
   String get coachMessage => _coachMessage;
 
   // ── Meal ─────────────────────────────────────────────────────────────────
-  bool get mealLogged => _activeSession?.mealLogged ?? false;
+  bool get mealLogged => activeSession?.mealLogged ?? false;
 
   int selectedProtein = 0;
   int selectedFat = 0;
@@ -261,8 +272,8 @@ class NutritionViewModel extends ChangeNotifier {
 
   // ── Progress ─────────────────────────────────────────────────────────────
   double get fastProgress {
-    if (_activeSession == null) return 0.0;
-    final s = _activeSession!;
+    final s = activeSession; // level-matched — no bleed-through
+    if (s == null) return 0.0;
     final now = DateTime.now();
     final end = s.endsAt ?? s.endedAt;
     if (end == null) return 0.0;
@@ -273,10 +284,37 @@ class NutritionViewModel extends ChangeNotifier {
     return (now.difference(s.startedAt).inSeconds / total).clamp(0.0, 1.0);
   }
 
+  bool isLevelCompletedToday(int level) {
+    final s = _todaySessions[level];
+    if (s == null) return false;
+    return s.dayComplete || s.status == 'completed';
+  }
+
   int get fastPercent {
-    final maxStep = maxTimelineStep;
-    if (maxStep <= 0) return 0;
-    return ((currentTimelineStep / maxStep) * 100).round().clamp(0, 100);
+    if (isLevelCompletedToday(2)) return 100;
+    if (isLevelCompletedToday(1)) {
+      final s = activeSession;
+      if (s != null && s.level == 2 && s.status == 'active') {
+        return (75 + (fastProgress * 25)).round().clamp(75, 100);
+      }
+      return 75;
+    }
+    if (isLevelCompletedToday(0)) {
+      final s = activeSession;
+      if (s != null && s.level == 1 && s.status == 'active') {
+        return (50 + (fastProgress * 25)).round().clamp(50, 75);
+      } else if (s != null && s.level == 2 && s.status == 'active') {
+        return (50 + (fastProgress * 50)).round().clamp(50, 100);
+      }
+      return 50;
+    }
+    final s = activeSession;
+    if (s != null && s.status == 'active') {
+      if (s.level == 0) return (fastProgress * 50).round().clamp(0, 50);
+      if (s.level == 1) return (fastProgress * 75).round().clamp(0, 75);
+      if (s.level == 2) return (fastProgress * 100).round().clamp(0, 100);
+    }
+    return 0;
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -331,7 +369,14 @@ class NutritionViewModel extends ChangeNotifier {
       _coachMessage = await _repo.generateCoachMessage();
       _selectedLevel = await _repo.getSavedLevel();
 
+      final todaySessions = await _repo.getTodaySessions();
+      _todaySessions.clear();
+      for (final s in todaySessions) {
+        _todaySessions[s.level] = s;
+      }
+
       if (_activeSession != null) {
+        _todaySessions[_activeSession!.level] = _activeSession!;
         await _loadMilestoneFlags(_activeSession!.id);
         _syncYesNoState();
       }
@@ -368,12 +413,11 @@ class NutritionViewModel extends ChangeNotifier {
         _answeredYes = false;
         _answeredNo = false;
       }
-    } else if (resp.startsWith('yes_')) {
+    } else if (resp.startsWith('yes_') || resp.startsWith('deal_accepted_') || resp.startsWith('deal_declined_')) {
       final parts = resp.split('_');
-      if (parts.length >= 3) {
-        final parsedStep = int.tryParse(parts[2]);
-        if (parsedStep != null) currentTimelineStep = parsedStep;
-      }
+      final lastPart = parts.last;
+      final parsedStep = int.tryParse(lastPart);
+      if (parsedStep != null) currentTimelineStep = parsedStep;
       _answeredYes = true;
       _answeredNo = false;
       _showYesNoPrompt = false;
@@ -394,7 +438,10 @@ class NutritionViewModel extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────────────────
   void _onSessionUpdate(FastingSession? session) {
     _activeSession = session;
-    if (session != null) _syncYesNoState();
+    if (session != null) {
+      _todaySessions[session.level] = session;
+      _syncYesNoState();
+    }
     _ensureTicker();
     notifyListeners();
   }
@@ -441,33 +488,22 @@ class NutritionViewModel extends ChangeNotifier {
   // ACTIONS — Session lifecycle
   // ─────────────────────────────────────────────────────────────────────────
 
-  bool get isTodayCompleted {
-    if (_activeSession == null) return false;
-    final s = _activeSession!;
-    if (s.dayComplete || s.status == 'completed') {
-      final startedDate =
-          DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
-      final today = DateTime.now();
-      final todayDate = DateTime(today.year, today.month, today.day);
-      if (startedDate == todayDate) return true;
-    }
-    return false;
-  }
+  bool get isTodayCompleted => isLevelCompletedToday(_selectedLevel);
 
   Future<void> handleMainButton() async {
-    if (isTodayCompleted) {
-      return;
-    }
-    if (_activeSession == null || _activeSession!.status == 'completed') {
+    if (isTodayCompleted) return;
+    final session = activeSession; // level-matched
+    if (session == null || session.status == 'completed') {
       await startFast();
-    } else if (_activeSession!.status == 'paused') {
+    } else if (session.status == 'paused') {
       await resumeFast();
-    } else if (_activeSession!.status == 'active') {
+    } else if (session.status == 'active') {
       await completeFast();
     }
   }
 
   Future<void> startFast() async {
+    if (isTodayCompleted) return;
     try {
       final now = DateTime.now();
       DateTime targetEnd = DateTime(now.year, now.month, now.day, endFastHour);
@@ -485,6 +521,7 @@ class NutritionViewModel extends ChangeNotifier {
       );
 
       _activeSession = session;
+      _todaySessions[_selectedLevel] = session;
       _ach25Shown = false;
       _ach50Shown = false;
       _ach100Shown = false;
@@ -522,9 +559,23 @@ class NutritionViewModel extends ChangeNotifier {
   }
 
   Future<void> completeFast() async {
-    if (_activeSession == null) return;
+    final session = activeSession; // level-matched guard
+    if (session == null) return;
     try {
-      await _repo.completeSession(_activeSession!.id);
+      await _repo.completeSession(session.id);
+      _todaySessions[_selectedLevel] = FastingSession(
+        id: session.id,
+        startedAt: session.startedAt,
+        endsAt: session.endsAt,
+        endedAt: DateTime.now(),
+        status: 'completed',
+        dayComplete: true,
+        level: session.level,
+        mealLogged: session.mealLogged,
+        remindersFired: session.remindersFired,
+        yesNoResponse: session.yesNoResponse,
+        meta: session.meta,
+      );
       _activeSession = null;
       _ticker?.cancel();
       notifyListeners();
@@ -541,16 +592,14 @@ class NutritionViewModel extends ChangeNotifier {
     int nextLevel = completed;
 
     if (completed == 0) {
-      nextLevel = 1; // Advance from Beginner to Intermediate (2 PM)
-      await setLevel(1);
+      nextLevel = 1; // Intermediate is unlocked
       await NotificationService.instance.showFastingCompleteNotification(
         levelName: 'Beginner',
         targetTime: '12 PM',
         nextLevel: 'Intermediate (2 PM)',
       );
     } else if (completed == 1) {
-      nextLevel = 2; // Advance from Intermediate to Elite (4 PM)
-      await setLevel(2);
+      nextLevel = 2; // Elite is unlocked
       await NotificationService.instance.showFastingCompleteNotification(
         levelName: 'Intermediate',
         targetTime: '2 PM',
@@ -601,13 +650,13 @@ class NutritionViewModel extends ChangeNotifier {
 
   Future<void> advanceTimelineStep() async {
     final maxStep = maxTimelineStep;
-    if (currentTimelineStep < maxStep) {
+    if (currentTimelineStep <= maxStep) {
       currentTimelineStep++;
     }
 
     _answeredNo = false;
     _answeredYes = false;
-    _showYesNoPrompt = true;
+    _showYesNoPrompt = currentTimelineStep <= maxStep;
     _dealAccepted = null;
     notifyListeners();
 
@@ -617,8 +666,8 @@ class NutritionViewModel extends ChangeNotifier {
       await _repo.saveYesNoResponse(
           session.id, 'step_$currentTimelineStep');
 
-      // Final step reached for the level (12 PM Beginner, 2 PM Intermediate, 4 PM Elite)
-      if (currentTimelineStep >= maxStep && !_ach100Shown) {
+      // Final step completed for the level (12 PM Beginner, 2 PM Intermediate, 4 PM Elite)
+      if (currentTimelineStep > maxStep && !_ach100Shown) {
         _ach100Shown = true;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('ach100_${session.id}', true);
@@ -626,6 +675,19 @@ class NutritionViewModel extends ChangeNotifier {
           await _repo.markDayComplete(session.id);
         }
         await _repo.markReminderFired(session.id, '100');
+        _todaySessions[_selectedLevel] = FastingSession(
+          id: session.id,
+          startedAt: session.startedAt,
+          endsAt: session.endsAt,
+          endedAt: session.endedAt ?? DateTime.now(),
+          status: 'completed',
+          dayComplete: true,
+          level: session.level,
+          mealLogged: session.mealLogged,
+          remindersFired: session.remindersFired,
+          yesNoResponse: session.yesNoResponse,
+          meta: session.meta,
+        );
         await onFastCompletedForLevel();
         await loadData();
       }
@@ -635,11 +697,21 @@ class NutritionViewModel extends ChangeNotifier {
   Future<void> answerYesDeal() async {
     _dealAccepted = true;
     notifyListeners();
+    if (_activeSession != null) {
+      await _repo.saveYesNoResponse(
+          _activeSession!.id, 'deal_accepted_step_$currentTimelineStep');
+    }
+    await advanceTimelineStep();
   }
 
-  void answerYesNotNow() {
+  Future<void> answerYesNotNow() async {
     _dealAccepted = false;
     notifyListeners();
+    if (_activeSession != null) {
+      await _repo.saveYesNoResponse(
+          _activeSession!.id, 'deal_declined_step_$currentTimelineStep');
+    }
+    await advanceTimelineStep();
   }
 
   void resetPrompt() {
@@ -687,6 +759,21 @@ class NutritionViewModel extends ChangeNotifier {
 
   Future<void> setLevel(int level) async {
     _selectedLevel = level;
+    final session = _todaySessions[level] ?? (_activeSession?.level == level ? _activeSession : null);
+    if (session != null) {
+      if (session.dayComplete || session.status == 'completed') {
+        currentTimelineStep = maxTimelineStep + 1; // Completed for today!
+        _showYesNoPrompt = false;
+      } else {
+        _syncYesNoState();
+      }
+    } else {
+      currentTimelineStep = 0;
+      _showYesNoPrompt = true;
+      _answeredYes = false;
+      _answeredNo = false;
+      _dealAccepted = null;
+    }
     notifyListeners();
     await _repo.saveLevel(level);
   }
@@ -709,8 +796,9 @@ class NutritionViewModel extends ChangeNotifier {
 
   String get buttonLabel {
     if (isTodayCompleted) return 'Day Complete ✓ (See You Tomorrow)';
-    if (_activeSession == null) return 'Start Today';
-    switch (_activeSession!.status) {
+    final session = activeSession; // level-matched
+    if (session == null) return 'Start Today';
+    switch (session.status) {
       case 'active':
         return 'End Fast';
       case 'paused':
@@ -725,8 +813,9 @@ class NutritionViewModel extends ChangeNotifier {
 
   /// True when fast is fully complete OR user answered YES.
   bool get fastEnded {
-    if (_activeSession == null) return false;
-    return _activeSession!.status == 'completed' || _activeSession!.dayComplete;
+    final session = activeSession; // level-matched
+    if (session == null) return false;
+    return session.status == 'completed' || session.dayComplete;
   }
 
   double get weightProgressFraction {

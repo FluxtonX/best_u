@@ -5,7 +5,9 @@ import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/nutrition_viewmodel.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/widgets/app_snack_bar.dart';
+import 'package:best_u/view/widgets/book_download_button.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/nutrition_repository.dart';
 
@@ -34,12 +36,16 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // ── ViewModel (single source of truth) ────────────────────────────────────
   late final NutritionViewModel _vm;
 
-  // tabs — match mockup exactly: Today | Analytics | Coach
+  // tabs — Today | Analytics | Coach | Meal Ideas
   int _selectedTab = 0;
-  final List<String> _tabs = ['Today', 'Analytics', 'Coach'];
+  final List<String> _tabs = ['Today', 'Analytics', 'Coach', 'Meal Ideas'];
+
+  // Tab-switch shimmer
+  bool _tabLoading = false;
 
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
+  late AnimationController _shimmerCtrl;
 
   // ── lifecycle ───────────────────────────────────────────────────────────────
   @override
@@ -48,6 +54,11 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     _fadeCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
+
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
 
     _vm = NutritionViewModel(
       repo: NutritionRepository(),
@@ -84,6 +95,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _shimmerCtrl.dispose();
     _vm.dispose();
     super.dispose();
   }
@@ -115,8 +127,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
-                  child: _vm.isLoading
-                      ? _buildSkeleton()
+                  child: _vm.isLoading || _tabLoading
+                      ? _buildTabSkeleton(_selectedTab)
                       : FadeTransition(
                           opacity: _fadeAnim,
                           child: _buildTabContent(),
@@ -150,7 +162,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TAB BAR  (Today | Analytics | Coach)
+  // TAB BAR  (Today | Analytics | Coach | Meal Ideas)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildTabBar() {
     return Container(
@@ -171,12 +183,28 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           final sel = _selectedTab == i;
           return Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedTab = i),
-              child: Container(
+              onTap: () {
+                if (_selectedTab == i) return;
+                setState(() {
+                  _selectedTab = i;
+                  _tabLoading = true;
+                  _fadeCtrl.reset();
+                });
+                // Show shimmer briefly then reveal content
+                Future.delayed(const Duration(milliseconds: 600), () {
+                  if (mounted) {
+                    setState(() => _tabLoading = false);
+                    _fadeCtrl.forward();
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeInOut,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: sel ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Text(
                   _tabs[i],
@@ -184,7 +212,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
                     fontFamily: 'Outfit',
                     color:
                         sel ? Colors.black : AppColors.white.withOpacity(0.55),
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -207,6 +235,8 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         return _buildAnalyticsTab();
       case 2:
         return _buildCoachTab();
+      case 3:
+        return _buildMealIdeasTab();
       default:
         return _buildTodayTab();
     }
@@ -226,6 +256,10 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           _buildBlurbCard(),
           const SizedBox(height: 18),
         ],
+
+        // ── SECTION: Free Book Banner ─────────────────────────────────
+        const BookDownloadButton(),
+        const SizedBox(height: 22),
 
         // ── SECTION: Track your fasting ───────────────────────────────
         _sectionLabel('Track your fasting'),
@@ -1062,33 +1096,39 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
     final step = _vm.currentTimelineStep;
     final session = _vm.activeSession;
     final level = _vm.selectedLevel;
+    final maxStep = _vm.maxTimelineStep;
+    final isDayComplete = session?.dayComplete == true || step > maxStep;
 
     final s0 = session == null
         ? _TLState.future
-        : (step > 0 ? _TLState.completed : _TLState.current);
+        : (step > 0 || isDayComplete ? _TLState.completed : _TLState.current);
 
     final s1 = session == null
         ? _TLState.future
-        : (step > 1
+        : (step > 1 || isDayComplete
             ? _TLState.completed
             : (step == 1 ? _TLState.current : _TLState.future));
 
     final s2 = session == null
         ? _TLState.future
-        : (step > 2
+        : (step > 2 || (maxStep == 2 && isDayComplete)
             ? _TLState.completed
-            : (step == 2 ? _TLState.current : _TLState.future));
+            : (step == 2 && !isDayComplete
+                ? _TLState.current
+                : _TLState.future));
 
     final s3 = session == null
         ? _TLState.future
-        : (step > 3
+        : (step > 3 || (maxStep == 3 && isDayComplete)
             ? _TLState.completed
-            : (step == 3 ? _TLState.current : _TLState.future));
+            : (step == 3 && !isDayComplete
+                ? _TLState.current
+                : _TLState.future));
 
-    final bool showPrompt0 = s0 == _TLState.current;
-    final bool showPrompt1 = s1 == _TLState.current;
-    final bool showPrompt2 = s2 == _TLState.current;
-    final bool showPrompt3 = s3 == _TLState.current;
+    final bool showPrompt0 = s0 == _TLState.current && !isDayComplete;
+    final bool showPrompt1 = s1 == _TLState.current && !isDayComplete;
+    final bool showPrompt2 = s2 == _TLState.current && !isDayComplete;
+    final bool showPrompt3 = s3 == _TLState.current && !isDayComplete;
 
     List<Widget> timelineRows = [];
 
@@ -1100,7 +1140,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Morning Check',
           subtitle: session == null
               ? null
-              : (step > 0 ? '✓ Fasting goal reached' : 'Active'),
+              : (step > 0 || isDayComplete
+                  ? '✓ Fasting goal reached'
+                  : 'Active'),
           state: s0,
           expandWidget: showPrompt0 ? _build11amExpand() : null,
           isLast: false,
@@ -1110,7 +1152,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Mid-Morning Check',
           subtitle: session == null
               ? null
-              : (step > 1
+              : (step > 1 || isDayComplete
                   ? '✓ Fasting goal reached'
                   : (step == 1 ? 'Active' : null)),
           state: s1,
@@ -1120,8 +1162,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _timelineRow(
           time: '12 PM',
           title: 'Beginner Goal Reached! 🏆',
-          subtitle:
-              step >= 2 ? '✓ Fast completed' : (step == 2 ? 'Active' : null),
+          subtitle: isDayComplete
+              ? '✓ Fast completed'
+              : (step == 2 ? 'Active' : null),
           state: s2,
           tag: 'Protein & Fat',
           tagBgColor: Colors.white.withOpacity(0.08),
@@ -1138,7 +1181,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Morning Check',
           subtitle: session == null
               ? null
-              : (step > 0 ? '✓ Fasting goal reached' : 'Active'),
+              : (step > 0 || isDayComplete
+                  ? '✓ Fasting goal reached'
+                  : 'Active'),
           state: s0,
           expandWidget: showPrompt0 ? _build11amExpand() : null,
           isLast: false,
@@ -1148,7 +1193,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Mid-Morning Check',
           subtitle: session == null
               ? null
-              : (step > 1
+              : (step > 1 || isDayComplete
                   ? '✓ Fasting goal reached'
                   : (step == 1 ? 'Active' : null)),
           state: s1,
@@ -1158,8 +1203,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _timelineRow(
           time: '2 PM',
           title: 'Intermediate Goal Reached! 🏆',
-          subtitle:
-              step >= 2 ? '✓ Fast completed' : (step == 2 ? 'Active' : null),
+          subtitle: isDayComplete
+              ? '✓ Fast completed'
+              : (step == 2 ? 'Active' : null),
           state: s2,
           tag: 'Protein & Fat',
           tagBgColor: Colors.white.withOpacity(0.08),
@@ -1176,7 +1222,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Morning Check',
           subtitle: session == null
               ? null
-              : (step > 0 ? '✓ Fasting goal reached' : 'Active'),
+              : (step > 0 || isDayComplete
+                  ? '✓ Fasting goal reached'
+                  : 'Active'),
           state: s0,
           expandWidget: showPrompt0 ? _build11amExpand() : null,
           isLast: false,
@@ -1186,7 +1234,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
           title: 'Mid-Morning Check',
           subtitle: session == null
               ? null
-              : (step > 1
+              : (step > 1 || isDayComplete
                   ? '✓ Fasting goal reached'
                   : (step == 1 ? 'Active' : null)),
           state: s1,
@@ -1196,7 +1244,7 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _timelineRow(
           time: '2 PM',
           title: 'Afternoon Check',
-          subtitle: step > 2
+          subtitle: (step > 2 || isDayComplete)
               ? '✓ Fasting goal reached'
               : (step == 2 ? 'Active' : null),
           state: s2,
@@ -1206,8 +1254,9 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
         _timelineRow(
           time: '4 PM',
           title: 'Elite Goal Reached! 👑',
-          subtitle:
-              step >= 3 ? '✓ Fast completed' : (step == 3 ? 'Active' : null),
+          subtitle: isDayComplete
+              ? '✓ Fast completed'
+              : (step == 3 ? 'Active' : null),
           state: s3,
           tag: 'Protein & Fat',
           tagBgColor: Colors.white.withOpacity(0.08),
@@ -2158,6 +2207,230 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // MEAL IDEAS TAB
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildMealIdeasTab() {
+    final categories = [
+      {
+        'emoji': '🥚',
+        'title': 'Keto Breakfast',
+        'subtitle': 'Eggs, bacon, avocado & more',
+        'url': 'https://www.ruled.me/keto-recipes/breakfast/',
+        'color': const Color(0xFFE8A020),
+      },
+      {
+        'emoji': '🥗',
+        'title': 'Keto Lunch',
+        'subtitle': 'Salads, wraps & bowls',
+        'url': 'https://www.ruled.me/keto-recipes/lunch/',
+        'color': const Color(0xFF4CAF50),
+      },
+      {
+        'emoji': '🥩',
+        'title': 'Keto Dinner',
+        'subtitle': 'Meat, fish & low-carb mains',
+        'url': 'https://www.ruled.me/keto-recipes/dinner/',
+        'color': AppColors.primary,
+      },
+      {
+        'emoji': '🧀',
+        'title': 'Keto Snacks',
+        'subtitle': 'Cheese, nuts & fat bombs',
+        'url': 'https://www.ruled.me/keto-recipes/snacks/',
+        'color': const Color(0xFF9C6BFF),
+      },
+      {
+        'emoji': '🍰',
+        'title': 'Keto Desserts',
+        'subtitle': 'Sweets without the sugar',
+        'url': 'https://www.ruled.me/keto-recipes/desserts/',
+        'color': const Color(0xFFE57373),
+      },
+      {
+        'emoji': '🥤',
+        'title': 'Keto Drinks',
+        'subtitle': 'Smoothies, shakes & coffee',
+        'url': 'https://www.ruled.me/keto-recipes/drinks/',
+        'color': const Color(0xFF29B6F6),
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        // Header description
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withOpacity(0.12),
+                Colors.transparent,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '🥑 Keto Meal Ideas',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Browse curated Keto recipes by category. Tap any card to open a full recipe collection.',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: AppColors.white.withOpacity(0.6),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Recipe category grid
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 130,
+          ),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final cat = categories[index];
+            final color = cat['color'] as Color;
+            return GestureDetector(
+              onTap: () => _launchUrl(cat['url'] as String),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151515),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: color.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      cat['emoji'] as String,
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      cat['title'] as String,
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      cat['subtitle'] as String,
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withOpacity(0.45),
+                        fontSize: 10,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          'Browse',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(Icons.arrow_forward_rounded,
+                            size: 11, color: color),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+
+        // Browse All button
+        GestureDetector(
+          onTap: () => _launchUrl('https://www.ruled.me/keto-recipes/'),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.3),
+              ),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.restaurant_menu_rounded,
+                    color: AppColors.primary, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Browse All Keto Recipes',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(Icons.open_in_new_rounded,
+                    color: AppColors.primary, size: 14),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $url');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // COACH TAB
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildCoachTab() {
@@ -2304,34 +2577,152 @@ class _NutritionScreenBodyState extends State<_NutritionScreenBody>
   // ═══════════════════════════════════════════════════════════════════════════
   // LOADING SKELETON
   // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SKELETON LOADING  (per-tab + shimmer sweep)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Returns the correct skeleton layout for the given tab index.
+  Widget _buildTabSkeleton(int tab) {
+    switch (tab) {
+      case 1:
+        return _buildAnalyticsSkeleton();
+      case 2:
+        return _buildCoachSkeleton();
+      case 3:
+        return _buildMealIdeasSkeleton();
+      default:
+        return _buildSkeleton(); // Today tab
+    }
+  }
+
   Widget _buildSkeleton() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 14),
+        _skeletonBox(20, 120), // Book banner label
+        const SizedBox(height: 8),
+        _skeletonBox(56, double.infinity), // Book banner
+        const SizedBox(height: 22),
+        _skeletonBox(20, 160), // Section label
         const SizedBox(height: 10),
-        _skeletonBox(36, 100),
+        _skeletonBox(130, double.infinity), // Fasting card
+        const SizedBox(height: 22),
+        _skeletonBox(20, 140),
         const SizedBox(height: 10),
-        _skeletonBox(180, double.infinity),
-        const SizedBox(height: 20),
-        _skeletonBox(36, 100),
+        _skeletonBox(110, double.infinity), // Goal card
+        const SizedBox(height: 22),
+        _skeletonBox(20, 150),
         const SizedBox(height: 10),
-        _skeletonBox(140, double.infinity),
-        const SizedBox(height: 20),
-        _skeletonBox(36, 120),
-        const SizedBox(height: 10),
-        _skeletonBox(280, double.infinity),
+        _skeletonBox(200, double.infinity), // Timeline card
       ],
     );
   }
 
+  Widget _buildAnalyticsSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 14),
+        _skeletonBox(20, 140),
+        const SizedBox(height: 10),
+        _skeletonBox(160, double.infinity),
+        const SizedBox(height: 20),
+        _skeletonBox(20, 120),
+        const SizedBox(height: 10),
+        _skeletonBox(120, double.infinity),
+        const SizedBox(height: 20),
+        _skeletonBox(20, 180),
+        const SizedBox(height: 10),
+        _skeletonBox(220, double.infinity),
+      ],
+    );
+  }
+
+  Widget _buildCoachSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 14),
+        _skeletonBox(100, double.infinity),
+        const SizedBox(height: 16),
+        _skeletonBox(20, 160),
+        const SizedBox(height: 10),
+        _skeletonBox(160, double.infinity),
+        const SizedBox(height: 16),
+        _skeletonBox(20, 130),
+        const SizedBox(height: 10),
+        _skeletonBox(80, double.infinity),
+        const SizedBox(height: 10),
+        _skeletonBox(80, double.infinity),
+      ],
+    );
+  }
+
+  Widget _buildMealIdeasSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        _skeletonBox(80, double.infinity), // header card
+        const SizedBox(height: 20),
+        // 2-col grid of 6 recipe cards
+        Row(
+          children: [
+            Expanded(child: _skeletonBox(130, double.infinity)),
+            const SizedBox(width: 12),
+            Expanded(child: _skeletonBox(130, double.infinity)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _skeletonBox(130, double.infinity)),
+            const SizedBox(width: 12),
+            Expanded(child: _skeletonBox(130, double.infinity)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _skeletonBox(130, double.infinity)),
+            const SizedBox(width: 12),
+            Expanded(child: _skeletonBox(130, double.infinity)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _skeletonBox(52, double.infinity), // Browse All button
+      ],
+    );
+  }
+
+  /// Animated shimmer box — sweeps a highlight across left-to-right.
   Widget _skeletonBox(double h, double w) {
-    return Container(
-      height: h,
-      width: w,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(14),
-      ),
+    return AnimatedBuilder(
+      animation: _shimmerCtrl,
+      builder: (context, _) {
+        return Container(
+          height: h,
+          width: w == double.infinity ? double.infinity : w,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: const [
+                Color(0xFF1E1E1E),
+                Color(0xFF2A2A2A),
+                Color(0xFF1E1E1E),
+              ],
+              stops: [
+                (_shimmerCtrl.value - 0.4).clamp(0.0, 1.0),
+                _shimmerCtrl.value.clamp(0.0, 1.0),
+                (_shimmerCtrl.value + 0.4).clamp(0.0, 1.0),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -3036,3 +3427,7 @@ class _FastingChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _FastingChartPainter oldDelegate) =>
       oldDelegate.values != values || oldDelegate.labels != labels;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MEAL IDEAS HELPERS (defined outside the class to avoid class-scope clutter)
+// ═══════════════════════════════════════════════════════════════════════════

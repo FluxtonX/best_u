@@ -253,22 +253,25 @@ class NutritionRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final id = prefs.getString(_kActiveSessionKey);
-      if (id == null) {
-        _sessionCtrl?.add(null);
+      if (id != null) {
+        final doc = await _sessionsRef.doc(id).get();
+        if (doc.exists) {
+          final session = FastingSession.fromDoc(doc);
+          _sessionCtrl?.add(session);
+          // Live listener for remote changes
+          _sessionsRef.doc(id).snapshots().listen((snap) {
+            _sessionCtrl?.add(FastingSession.fromDoc(snap));
+          });
+          return;
+        }
+      }
+      // If no active session key, check if there are sessions completed today
+      final todaySessions = await getTodaySessions();
+      if (todaySessions.isNotEmpty) {
+        _sessionCtrl?.add(todaySessions.last);
         return;
       }
-      final doc = await _sessionsRef.doc(id).get();
-      if (!doc.exists) {
-        await prefs.remove(_kActiveSessionKey);
-        _sessionCtrl?.add(null);
-        return;
-      }
-      final session = FastingSession.fromDoc(doc);
-      _sessionCtrl?.add(session);
-      // Live listener for remote changes
-      _sessionsRef.doc(id).snapshots().listen((snap) {
-        _sessionCtrl?.add(FastingSession.fromDoc(snap));
-      });
+      _sessionCtrl?.add(null);
     } catch (e) {
       debugPrint('Restore session error: $e');
       _sessionCtrl?.add(null);
@@ -489,6 +492,24 @@ class NutritionRepository {
 
   Future<void> saveLevel(int level) async {
     await _metaRef.set({'level': level}, SetOptions(merge: true));
+  }
+
+  /// Get all fasting sessions created or active today.
+  Future<List<FastingSession>> getTodaySessions() async {
+    try {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final snap = await _sessionsRef
+          .where('startedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .get();
+      return snap.docs
+          .map((d) => FastingSession.fromDoc(d))
+          .whereType<FastingSession>()
+          .toList();
+    } catch (e) {
+      debugPrint('NutritionRepository.getTodaySessions error: $e');
+      return [];
+    }
   }
 
   // ── Analytics ─────────────────────────────────────────────────────────────

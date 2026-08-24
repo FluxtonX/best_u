@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
@@ -8,6 +9,7 @@ import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:best_u/view/workout_screens/achievement_screen.dart';
 import 'package:best_u/view/workout_screens/workout_complete_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -60,24 +62,12 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   bool _isVideoInitialized = false;
   bool _showSetRoundAnimation = false;
 
-  // 3-second hold before advancing
-  bool _isHolding = false;
-  int _holdCountdown = 3;
-  Timer? _holdTimer;
-
-  // Hold countdown overlay animation
-  late final AnimationController _holdOverlayCtrl;
-  late final AnimationController _holdDigitCtrl;
-  late final AnimationController _holdRingCtrl;
-  late final Animation<double> _holdOverlayFade;
-  late final Animation<double> _holdDigitScale;
-  late final Animation<double> _holdDigitFade;
-  late final Animation<double> _holdRingScale;
-  late final Animation<double> _holdRingOpacity;
-
   // Last results fetched from Firestore (exerciseName -> list of {setNumber, reps, weight})
   Map<String, List<Map<String, dynamic>>> _lastResults = {};
   bool _lastResultsLoaded = false;
+
+  // Exercise descriptions from book
+  Map<String, String> _exerciseDescriptions = {};
 
   // Session improvements tracking for WorkoutCompleteScreen
   final Map<String, String> _sessionImprovements = {};
@@ -99,45 +89,9 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       _currentSetIndex = widget.resumeSetIndex!;
     }
 
-    // ── Hold overlay animations ───────────────────────────────
-    _holdOverlayCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-    _holdOverlayFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _holdOverlayCtrl, curve: Curves.easeOut),
-    );
-
-    // Per-digit bounce
-    _holdDigitCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _holdDigitScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.2), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.88), weight: 25),
-      TweenSequenceItem(tween: Tween(begin: 0.88, end: 1.0), weight: 25),
-    ]).animate(CurvedAnimation(parent: _holdDigitCtrl, curve: Curves.easeOut));
-    _holdDigitFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _holdDigitCtrl,
-          curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
-    );
-
-    // Pulsing ring
-    _holdRingCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _holdRingScale = Tween<double>(begin: 1.0, end: 1.18).animate(
-      CurvedAnimation(parent: _holdRingCtrl, curve: Curves.easeInOut),
-    );
-    _holdRingOpacity = Tween<double>(begin: 0.55, end: 0.0).animate(
-      CurvedAnimation(parent: _holdRingCtrl, curve: Curves.easeInOut),
-    );
-
     _initializeVideo();
     _loadLastResults();
+    _loadExerciseDescriptions();
   }
 
   @override
@@ -145,11 +99,104 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
     _weightController.dispose();
     _repsController.dispose();
     _videoController?.dispose();
-    _holdTimer?.cancel();
-    _holdOverlayCtrl.dispose();
-    _holdDigitCtrl.dispose();
-    _holdRingCtrl.dispose();
     super.dispose();
+  }
+
+  // ─── Exercise Descriptions Loading ─────────────────────────────────────────
+
+  Future<void> _loadExerciseDescriptions() async {
+    try {
+      final raw = await rootBundle.loadString(
+          'assets/data/exercise_descriptions.json');
+      final Map<String, dynamic> data = jsonDecode(raw);
+      if (mounted) {
+        setState(() {
+          _exerciseDescriptions =
+              data.map((k, v) => MapEntry(k, v.toString()));
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading exercise descriptions: $e');
+    }
+  }
+
+  void _showDescriptionSheet(String exerciseName) {
+    final description = _exerciseDescriptions[exerciseName];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+        decoration: const BoxDecoration(
+          color: Color(0xFF161616),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Row(
+              children: [
+                const Icon(Icons.menu_book_rounded,
+                    color: AppColors.primary, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    exerciseName,
+                    style: const TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'From the Best-U Book',
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.primary.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(color: Color(0xFF2A2A2A), height: 1),
+            const SizedBox(height: 16),
+            // Description text
+            Text(
+              description ?? 'No description available for this exercise yet.',
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: description != null
+                    ? AppColors.white.withOpacity(0.85)
+                    : AppColors.white.withOpacity(0.4),
+                fontSize: 15,
+                height: 1.65,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   // ─── Last Results Loading ───────────────────────────────────────────────────
@@ -571,38 +618,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   }
 
   void _onTapActionButton() {
-    if (_isHolding) return;
-
-    // Start 3-second hold countdown
-    setState(() {
-      _isHolding = true;
-      _holdCountdown = 3;
-    });
-
-    // Show overlay + first digit animation
-    _holdOverlayCtrl.forward(from: 0);
-    _holdDigitCtrl.forward(from: 0);
-    _holdRingCtrl.repeat(reverse: true);
-
-    _holdTimer?.cancel();
-    _holdTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_holdCountdown <= 1) {
-        timer.cancel();
-        _holdRingCtrl.stop();
-        _holdOverlayCtrl.reverse().then((_) {
-          if (mounted) setState(() => _isHolding = false);
-        });
-        _onCompleteExercise();
-      } else {
-        setState(() => _holdCountdown--);
-        // Animate the new digit
-        _holdDigitCtrl.forward(from: 0);
-      }
-    });
+    _onCompleteExercise();
   }
 
   void _onCompleteExercise() async {
@@ -702,7 +718,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
 
   String _currentSetLabel(Map<String, dynamic> exercise) {
     final setNumber = _currentSetDetails(exercise)['set'];
-    return 'Set ${setNumber ?? _currentSetIndex + 1}';
+    return 'SET ${setNumber ?? _currentSetIndex + 1}';
   }
 
   List<Map<String, dynamic>> _setDetailsFor(dynamic exercise) {
@@ -757,7 +773,6 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   }
 
   String _actionButtonText(Map<String, dynamic> exercise) {
-    if (_isHolding) return _holdCountdown.toString();
     final nextPosition = _nextWorkoutPosition();
     if (nextPosition == null) return 'COMPLETE WORKOUT';
     if (nextPosition.setIndex != _currentSetIndex) {
@@ -858,230 +873,177 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              Column(
-                children: [
-                  // Top Navigation & Progress
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Column(
+              // Top Navigation & Progress
+              Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(14, 4, 14, 4),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              onPressed: () async {
-                                await _updateSessionProgress(
-                                    isCompleted: false);
-                                await _saveSession();
-                                if (mounted) Navigator.pop(context);
-                              },
-                              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white, size: 20),
-                            ),
-                            Text(
-                              'Set $currentSetRound of $maxSetCount • Exercise ${_currentExerciseIndex + 1} of ${widget.exercises.length}',
-                              style: const TextStyle(
-                                fontFamily: 'Outfit',
-                                color: AppColors.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 40),
-                          ],
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () async {
+                            await _updateSessionProgress(
+                                isCompleted: false);
+                            await _saveSession();
+                            if (mounted) Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white, size: 18),
                         ),
-                        const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(2),
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(begin: 0, end: progress),
-                              duration: const Duration(milliseconds: 420),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, value, child) {
-                                return LinearProgressIndicator(
-                                  value: value,
-                                  minHeight: 3,
-                                  backgroundColor: const Color(0xFF1F1F1F),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                          AppColors.primary),
-                                );
-                              },
-                            ),
+                        Text(
+                          'Set $currentSetRound of $maxSetCount • Exercise ${_currentExerciseIndex + 1} of ${widget.exercises.length}',
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
-                          switchInCurve: Curves.easeOutBack,
-                          switchOutCurve: Curves.easeIn,
-                          child: _showSetRoundAnimation
-                              ? _buildSetRoundBanner(currentSetRound)
-                              : Text(
-                                  'Complete set $currentSetRound for every exercise before moving on.',
-                                  key: ValueKey('set-helper-$currentSetRound'),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: Colors.white.withValues(alpha: 0.46),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () async {
+                            await _updateSessionProgress(
+                                isCompleted: false);
+                            await _saveSession();
+                            if (mounted) Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.close_rounded,
+                              color: Colors.white, size: 20),
                         ),
                       ],
                     ),
-                  ),
-
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 320),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, animation) {
-                        final slideAnimation = Tween<Offset>(
-                          begin: const Offset(0.08, 0),
-                          end: Offset.zero,
-                        ).animate(animation);
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: slideAnimation,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: SizedBox.expand(
-                        key: ValueKey(
-                          'exercise-$_currentExerciseIndex-set-$_currentSetIndex',
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0, end: progress),
+                          duration: const Duration(milliseconds: 420),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return LinearProgressIndicator(
+                              value: value,
+                              minHeight: 3,
+                              backgroundColor: const Color(0xFF1F1F1F),
+                              valueColor:
+                                  const AlwaysStoppedAnimation<Color>(
+                                      AppColors.primary),
+                            );
+                          },
                         ),
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Exercise Demonstration Card
-                              Container(
-                                width: double.infinity,
-                                height: 210,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: Stack(
-                                    children: [
-                                      _isVideoInitialized &&
-                                              _videoController != null
-                                          ? Positioned.fill(
-                                              child: FittedBox(
-                                                fit: BoxFit.contain,
-                                                child: SizedBox(
-                                                  width: _videoController!
-                                                      .value.size.width,
-                                                  height: _videoController!
-                                                      .value.size.height,
-                                                  child: VideoPlayer(
-                                                      _videoController!),
-                                                ),
-                                              ),
-                                            )
-                                          : Center(
-                                              child: (exercise['videoUrl'] !=
-                                                          null &&
-                                                      exercise['videoUrl']
-                                                          .toString()
-                                                          .isNotEmpty)
-                                                  ? Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
+                      ),
+                    ),
+                    if (_showSetRoundAnimation) ...[
+                      const SizedBox(height: 6),
+                      _buildSetRoundBanner(currentSetRound),
+                    ],
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final slideAnimation = Tween<Offset>(
+                      begin: const Offset(0.08, 0),
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: slideAnimation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: SizedBox.expand(
+                    key: ValueKey(
+                      'exercise-$_currentExerciseIndex-set-$_currentSetIndex',
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Exercise Demonstration Card
+                          Container(
+                            width: double.infinity,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Stack(
+                                children: [
+                                  _isVideoInitialized &&
+                                          _videoController != null
+                                      ? Positioned.fill(
+                                          child: FittedBox(
+                                            fit: BoxFit.contain,
+                                            child: SizedBox(
+                                              width: _videoController!
+                                                  .value.size.width,
+                                              height: _videoController!
+                                                  .value.size.height,
+                                              child: VideoPlayer(
+                                                  _videoController!),
+                                            ),
+                                          ),
+                                        )
+                                      : Center(
+                                          child: (exercise['videoUrl'] !=
+                                                      null &&
+                                                  exercise['videoUrl']
+                                                      .toString()
+                                                      .isNotEmpty)
+                                              ? Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .center,
+                                                  children: [
+                                                    Stack(
+                                                      alignment:
+                                                          Alignment.center,
                                                       children: [
-                                                        Stack(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          children: [
-                                                            const SizedBox(
-                                                              width: 50,
-                                                              height: 50,
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                strokeWidth:
-                                                                    2.5,
-                                                                valueColor:
-                                                                    AlwaysStoppedAnimation<
-                                                                        Color>(
-                                                                  AppColors
-                                                                      .primary,
-                                                                ),
-                                                                backgroundColor:
-                                                                    Color(
-                                                                        0xFFEAEAEA),
-                                                              ),
-                                                            ),
-                                                            const Icon(
-                                                              Icons
-                                                                  .fitness_center_rounded,
-                                                              color: AppColors
-                                                                  .primary,
-                                                              size: 24,
-                                                            )
-                                                                .animate(
-                                                                    onPlay: (controller) =>
-                                                                        controller
-                                                                            .repeat())
-                                                                .shimmer(
-                                                                    duration:
-                                                                        1500.ms,
-                                                                    color: Colors
-                                                                        .white)
-                                                                .scale(
-                                                                    begin:
-                                                                        const Offset(
-                                                                            0.95,
-                                                                            0.95),
-                                                                    end: const Offset(1.05,
-                                                                        1.05),
-                                                                    duration:
-                                                                        1000.ms,
-                                                                    curve: Curves
-                                                                        .easeInOut)
-                                                                .then()
-                                                                .scale(
-                                                                    begin: const Offset(
-                                                                        1.05,
-                                                                        1.05),
-                                                                    end: const Offset(
-                                                                        0.95,
-                                                                        0.95),
-                                                                    duration:
-                                                                        1000.ms,
-                                                                    curve: Curves
-                                                                        .easeInOut),
-                                                          ],
-                                                        ),
                                                         const SizedBox(
-                                                            height: 18),
-                                                        Text(
-                                                          "Loading Video...",
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Outfit',
-                                                            color: Colors.black
-                                                                .withValues(
-                                                                    alpha: 0.6),
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            letterSpacing: 1.2,
+                                                          width: 40,
+                                                          height: 40,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            strokeWidth:
+                                                                2.5,
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                              AppColors
+                                                                  .primary,
+                                                            ),
+                                                            backgroundColor:
+                                                                Color(
+                                                                    0xFFEAEAEA),
                                                           ),
+                                                        ),
+                                                        const Icon(
+                                                          Icons
+                                                              .fitness_center_rounded,
+                                                          color: AppColors
+                                                              .primary,
+                                                          size: 20,
                                                         )
                                                             .animate(
                                                                 onPlay: (controller) =>
@@ -1089,268 +1051,266 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                                         .repeat())
                                                             .shimmer(
                                                                 duration:
-                                                                    2000.ms,
+                                                                    1500.ms,
                                                                 color: Colors
-                                                                    .black
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.3)),
-                                                      ],
-                                                    )
-                                                  : Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(20),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.black
-                                                                .withValues(
-                                                                    alpha:
-                                                                        0.04),
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                          child: Icon(
-                                                            Icons
-                                                                .videocam_off_rounded,
-                                                            color: Colors.black
-                                                                .withValues(
-                                                                    alpha: 0.3),
-                                                            size: 32,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 16),
-                                                        Text(
-                                                          "Video unavailable",
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Outfit',
-                                                            color: Colors.black
-                                                                .withValues(
-                                                                    alpha: 0.4),
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                            letterSpacing: 0.5,
-                                                          ),
-                                                        ),
+                                                                    .white)
+                                                            .scale(
+                                                                begin:
+                                                                    const Offset(
+                                                                        0.95,
+                                                                        0.95),
+                                                                end: const Offset(1.05,
+                                                                    1.05),
+                                                                duration:
+                                                                    1000.ms,
+                                                                curve: Curves
+                                                                    .easeInOut)
+                                                            .then()
+                                                            .scale(
+                                                                begin: const Offset(
+                                                                    1.05,
+                                                                    1.05),
+                                                                end: const Offset(
+                                                                    0.95,
+                                                                    0.95),
+                                                                duration:
+                                                                    1000.ms,
+                                                                curve: Curves
+                                                                    .easeInOut),
                                                       ],
                                                     ),
-                                            ),
-                                    ],
-                                  ),
-                                ),
+                                                    const SizedBox(
+                                                        height: 12),
+                                                    Text(
+                                                      "Loading Video...",
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Outfit',
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha: 0.6),
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 1.0,
+                                                      ),
+                                                    )
+                                                        .animate(
+                                                            onPlay: (controller) =>
+                                                                controller
+                                                                    .repeat())
+                                                        .shimmer(
+                                                            duration:
+                                                                2000.ms,
+                                                            color: Colors
+                                                                .black
+                                                                .withValues(
+                                                                    alpha:
+                                                                        0.3)),
+                                                  ],
+                                                )
+                                              : Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .center,
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets
+                                                              .all(14),
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha:
+                                                                    0.04),
+                                                        shape:
+                                                            BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons
+                                                            .videocam_off_rounded,
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha: 0.3),
+                                                        size: 28,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 10),
+                                                    Text(
+                                                      "Video unavailable",
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Outfit',
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha: 0.4),
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        letterSpacing: 0.5,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                        ),
+                                ],
                               ),
-                              const SizedBox(height: 14),
-
-                              // Exercise Name
-                              Text(
-                                exercise['name'],
-                                style: const TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-
-                              // Set label below exercise name
-                              Text(
-                                _currentSetLabel(exercise),
-                                style: const TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: AppColors.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-
-                              // Last Result | Goal boxes
-                              _buildLastResultAndGoal(exercise),
-                              const SizedBox(height: 14),
-
-                              // Log Section Header
-                              Text(
-                                "Log Your Result",
-                                style: TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-
-                              // Weight and Reps/Seconds Inputs
-                              if (hasWeightInput)
-                                Row(
-                                  children: [
-                                    _buildInputBox(
-                                      "Weight (kg)",
-                                      _weightController,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                              decimal: true),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    _buildInputBox(
-                                      isTimed
-                                          ? "Seconds Achieved"
-                                          : "Reps Completed",
-                                      _repsController,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ],
-                                )
-                              else
-                                Row(
-                                  children: [
-                                    _buildInputBox(
-                                      isTimed
-                                          ? "Seconds Achieved"
-                                          : "Reps Completed",
-                                      _repsController,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Action Button
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-                    child: AppBounceAnimation(
-                      onTap: _isHolding ? null : _onTapActionButton,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: double.infinity,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _isHolding
-                              ? AppColors.primary.withValues(alpha: 0.7)
-                              : AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 5),
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            _actionButtonText(exercise),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Exercise Name
+                          Text(
+                            exercise['name'],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: 'Outfit',
-                              color: Colors.black,
-                              fontSize: 12,
+                              color: Colors.white,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
                             ),
                           ),
+                          const SizedBox(height: 4),
+
+                          // Tappable Description link
+                          GestureDetector(
+                            onTap: () => _showDescriptionSheet(
+                                exercise['name']?.toString() ?? ''),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 13,
+                                  color: AppColors.primary.withOpacity(0.8),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Description',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: AppColors.primary.withOpacity(0.85),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor:
+                                        AppColors.primary.withOpacity(0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+
+                          // Set label below exercise name
+                          Text(
+                            _currentSetLabel(exercise),
+                            style: const TextStyle(
+                              fontFamily: 'Outfit',
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Last Result | Goal boxes
+                          _buildLastResultAndGoal(exercise),
+                          const SizedBox(height: 8),
+
+                          // Log Section Header
+                          Text(
+                            "Log Your Result",
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Weight and Reps/Seconds Inputs
+                          if (hasWeightInput)
+                            Row(
+                              children: [
+                                _buildInputBox(
+                                  "Weight (kg)",
+                                  _weightController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                ),
+                                const SizedBox(width: 10),
+                                _buildInputBox(
+                                  isTimed
+                                      ? "Seconds Achieved"
+                                      : "Reps Completed",
+                                  _repsController,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ],
+                            )
+                          else
+                            Row(
+                              children: [
+                                _buildInputBox(
+                                  isTimed
+                                      ? "Seconds Achieved"
+                                      : "Reps Completed",
+                                  _repsController,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Action Button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                child: AppBounceAnimation(
+                  onTap: _onTapActionButton,
+                  child: Container(
+                    width: double.infinity,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        _actionButtonText(exercise),
+                        style: const TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              // ── Hold Countdown Overlay ─────────────────────────
-              if (_isHolding)
-                FadeTransition(
-                  opacity: _holdOverlayFade,
-                  child: _buildHoldOverlay(),
                 ),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHoldOverlay() {
-    return AnimatedBuilder(
-      animation:
-          Listenable.merge([_holdDigitCtrl, _holdRingCtrl, _holdOverlayCtrl]),
-      builder: (_, __) {
-        return Container(
-          color: Colors.black.withValues(alpha: 0.72),
-          child: Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Outer pulsing ring
-                Transform.scale(
-                  scale: _holdRingScale.value,
-                  child: Container(
-                    width: 148,
-                    height: 148,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primary
-                            .withValues(alpha: _holdRingOpacity.value),
-                        width: 3,
-                      ),
-                    ),
-                  ),
-                ),
-                // Inner circle
-                Container(
-                  width: 118,
-                  height: 118,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF1B1B20),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.35),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.18),
-                        blurRadius: 28,
-                        spreadRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-                // Digit
-                FadeTransition(
-                  opacity: _holdDigitFade,
-                  child: Transform.scale(
-                    scale: _holdDigitScale.value,
-                    child: Text(
-                      '$_holdCountdown',
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: Colors.white,
-                        fontSize: 62,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -1359,7 +1319,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   Widget _buildSetRoundBanner(int setRound) {
     return Container(
       key: ValueKey('set-round-$setRound'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(8),
@@ -1371,15 +1331,15 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
           const Icon(
             Icons.repeat_rounded,
             color: AppColors.primary,
-            size: 16,
+            size: 14,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
             'Set $setRound round started',
             style: const TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.primary,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1401,7 +1361,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
           lastText,
           isGoal: false,
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         _buildStatBox(
           "GOAL",
           goalText,
@@ -1414,8 +1374,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
   Widget _buildStatBox(String label, String value, {bool isGoal = false}) {
     return Expanded(
       child: Container(
-        constraints: const BoxConstraints(minHeight: 66),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: const Color(0xFF1B1B20),
           borderRadius: BorderRadius.circular(8),
@@ -1427,18 +1387,19 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               label,
               style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               value,
               maxLines: 2,
@@ -1446,7 +1407,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
               style: TextStyle(
                 fontFamily: 'Outfit',
                 color: AppColors.primary,
-                fontSize: isGoal ? 13 : 16,
+                fontSize: isGoal ? 12 : 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1470,12 +1431,12 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
             style: TextStyle(
               fontFamily: 'Outfit',
               color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Container(
-            height: 42,
+            height: 38,
             decoration: BoxDecoration(
               color: const Color(0xFF1B1B20),
               borderRadius: BorderRadius.circular(8),
@@ -1493,11 +1454,12 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
               style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 hintText: '0',
                 hintStyle: TextStyle(
                   fontFamily: 'Outfit',

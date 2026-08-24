@@ -73,35 +73,32 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
   void _initControllers() {
     _headerCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
-    _headerFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOut));
-    _headerSlide = Tween<Offset>(
-            begin: const Offset(0, -0.3), end: Offset.zero)
+    _headerFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOut));
+    _headerSlide = Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOutCubic));
 
     _statsCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 550));
-    _statsFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut));
+    _statsFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut));
     _statsScale = Tween<double>(begin: 0.88, end: 1.0).animate(
         CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOutBack));
 
     _focusCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
-    _focusFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _focusCtrl, curve: Curves.easeOut));
-    _focusSlide = Tween<Offset>(
-            begin: const Offset(0, 0.3), end: Offset.zero)
+    _focusFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _focusCtrl, curve: Curves.easeOut));
+    _focusSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _focusCtrl, curve: Curves.easeOutCubic));
 
     _labelCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
-    _labelFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _labelCtrl, curve: Curves.easeOut));
-    _labelSlide = Tween<Offset>(
-            begin: const Offset(0, 0.4), end: Offset.zero)
+    _labelFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _labelCtrl, curve: Curves.easeOut));
+    _labelSlide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _labelCtrl, curve: Curves.easeOutCubic));
 
@@ -110,10 +107,9 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
 
     _buttonCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
-    _buttonFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _buttonCtrl, curve: Curves.easeOut));
-    _buttonSlide = Tween<Offset>(
-            begin: const Offset(0, 0.6), end: Offset.zero)
+    _buttonFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _buttonCtrl, curve: Curves.easeOut));
+    _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.6), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _buttonCtrl, curve: Curves.easeOutCubic));
 
@@ -128,8 +124,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
   }
 
   void _buildCardAnimations(int count) {
-    _cardsCtrl.duration =
-        Duration(milliseconds: 400 + count * 100);
+    _cardsCtrl.duration = Duration(milliseconds: 400 + count * 100);
 
     _cardFades = List.generate(count, (i) {
       final start = (i / count * 0.6).clamp(0.0, 1.0);
@@ -152,14 +147,13 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
     });
   }
 
-  void _buildCountAnimations(
-      int exercises, int minutes, int sets) {
-    _exerciseCount = IntTween(begin: 0, end: exercises).animate(
-        CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _minuteCount = IntTween(begin: 0, end: minutes).animate(
-        CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _setsCount = IntTween(begin: 0, end: sets).animate(
-        CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+  void _buildCountAnimations(int exercises, int minutes, int sets) {
+    _exerciseCount = IntTween(begin: 0, end: exercises)
+        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+    _minuteCount = IntTween(begin: 0, end: minutes)
+        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+    _setsCount = IntTween(begin: 0, end: sets)
+        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
   }
 
   Future<void> _runSequence() async {
@@ -276,9 +270,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
   void _applyWorkout(Map<String, dynamic> workout) {
     if (!mounted) return;
     final exercises = workout['exercises'] as List? ?? [];
-    final duration = workout['durationMinutes'] ??
-        workout['estimatedDurationMinutes'] ??
-        0;
+    final duration =
+        workout['durationMinutes'] ?? workout['estimatedDurationMinutes'] ?? 0;
     final sets = _getTotalSets(exercises);
 
     _buildCardAnimations(exercises.length);
@@ -293,8 +286,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
     _runSequence();
   }
 
-  List<Map<String, dynamic>> _withLocalExerciseVideos(
-      List<dynamic> exercises) {
+  List<Map<String, dynamic>> _withLocalExerciseVideos(List<dynamic> exercises) {
     final localPlanService = LocalWorkoutPlanService();
     return exercises
         .whereType<Map>()
@@ -579,8 +571,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                 child: AppBounceAnimation(
                   onTap: () async {
                     final workoutId = widget.workoutId ?? 'mock_workout_id';
-                    final saved = await ExerciseSessionScreen.getSavedSession(
-                        workoutId);
+                    final saved =
+                        await ExerciseSessionScreen.getSavedSession(workoutId);
                     if (!context.mounted) return;
                     if (saved != null) {
                       final resume = await showDialog<bool>(
@@ -635,7 +627,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                         final apiService = ApiService();
                         final docId = saved['id'] ?? saved['sessionDocId'];
                         if (docId != null) {
-                          await apiService.abandonWorkoutSession(docId.toString());
+                          await apiService
+                              .abandonWorkoutSession(docId.toString());
                         }
                       }
 
@@ -647,10 +640,14 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                                   exercises: exercises,
                                   workoutId: workoutId,
                                   resumeExerciseIndex: resume == true
-                                      ? ((saved['currentExerciseIndex'] ?? saved['exerciseIndex']) as num?)?.toInt()
+                                      ? ((saved['currentExerciseIndex'] ??
+                                              saved['exerciseIndex']) as num?)
+                                          ?.toInt()
                                       : null,
                                   resumeSetIndex: resume == true
-                                      ? ((saved['currentSetIndex'] ?? saved['setIndex']) as num?)?.toInt()
+                                      ? ((saved['currentSetIndex'] ??
+                                              saved['setIndex']) as num?)
+                                          ?.toInt()
                                       : null,
                                 )),
                       );
@@ -740,8 +737,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
           .map((set) => Map<String, dynamic>.from(set))
           .toList();
     }
-    final instructions =
-        exercise is Map ? exercise['setInstructions'] : null;
+    final instructions = exercise is Map ? exercise['setInstructions'] : null;
     if (instructions is List && instructions.isNotEmpty) {
       return instructions.asMap().entries.map((entry) {
         return {

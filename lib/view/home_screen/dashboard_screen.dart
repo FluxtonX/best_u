@@ -1,8 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:best_u/constant/app_theme_color.dart';
+import 'package:best_u/models/fasting_session.dart';
 import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/nutrition_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
 import 'package:best_u/view/home_screen/nutrition_screen.dart';
@@ -13,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,11 +27,13 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final NutritionRepository _nutritionRepo = NutritionRepository();
   Map<String, dynamic>? _summary;
+  bool _isLoading = true;
   Map<String, dynamic>? _quote;
   List<dynamic> _motivations = [];
   Timer? _quoteTimer;
-  bool _isLoading = true;
+  List<FastingSession> _todaySessions = [];
 
   @override
   void initState() {
@@ -43,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _startQuoteRotation() {
     _quoteTimer?.cancel();
     _quoteTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (_motivations.isNotEmpty) {
+      if (_motivations.isNotEmpty && mounted) {
         setState(() {
           final random = Random();
           _quote = _motivations[random.nextInt(_motivations.length)];
@@ -55,6 +62,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchDashboardData() async {
     try {
       final apiService = ApiService();
+      try {
+        _todaySessions = await _nutritionRepo.getTodaySessions();
+      } catch (_) {}
 
       final response = await apiService.getDashboardSummary();
       if (response.statusCode == 200) {
@@ -137,8 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isLoading ? 3 : (_summary?['weekStats']?['totalThisWeek'] ?? 3);
     final isDayLocked =
         _isLoading ? false : (_summary?['weekStats']?['isDayLocked'] ?? false);
-    final nextDay =
-        _isLoading ? 1 : (_summary?['weekStats']?['nextDay'] ?? 1);
+    final nextDay = _isLoading ? 1 : (_summary?['weekStats']?['nextDay'] ?? 1);
 
     final quote = _isLoading
         ? {
@@ -163,8 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: const Color(0xFF151515),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -207,7 +215,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const NotificationScreen()),
+                                builder: (context) =>
+                                    const NotificationScreen()),
                           );
                         },
                         child: Container(
@@ -226,7 +235,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               bool hasUnread = false;
                               if (snapshot.hasData) {
                                 for (var doc in snapshot.data!.docs) {
-                                  final data = doc.data() as Map<String, dynamic>;
+                                  final data =
+                                      doc.data() as Map<String, dynamic>;
                                   if (data['isRead'] == false) {
                                     hasUnread = true;
                                     break;
@@ -357,8 +367,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: const Border(
-                          left: BorderSide(
-                              color: AppColors.primary, width: 3),
+                          left: BorderSide(color: AppColors.primary, width: 3),
                         ),
                       ),
                       child: Column(
@@ -388,6 +397,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
+                  // ── BestU Website Link ──────────────────────────────
+                  GestureDetector(
+                    onTap: () async {
+                      final uri = Uri.parse('https://bestu.health/');
+                      await launchUrl(uri,
+                          mode: LaunchMode.externalApplication);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131313),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.07),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.language_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'BestU Health Website',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: AppColors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'bestu.health',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color:
+                                        AppColors.primary.withOpacity(0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.open_in_new_rounded,
+                            color: AppColors.white.withOpacity(0.3),
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -545,11 +621,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _workoutChip(
-                  '${todayWorkout['exercisesCount']} exercises', Icons.fitness_center_rounded),
+              _workoutChip('${todayWorkout['exercisesCount']} exercises',
+                  Icons.fitness_center_rounded),
               const SizedBox(width: 10),
-              _workoutChip(
-                  '${todayWorkout['durationMinutes']} min', Icons.timer_outlined),
+              _workoutChip('${todayWorkout['durationMinutes']} min',
+                  Icons.timer_outlined),
             ],
           ),
           const SizedBox(height: 18),
@@ -679,239 +755,310 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // NUTRITION STATUS CARD
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildNutritionStatusCard(BuildContext context) {
-    // Simple computed fast progress
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = today.add(const Duration(hours: 8));
-    final end = today.add(const Duration(hours: 14));
-    double progress;
-    if (now.isBefore(start)) {
-      progress = 0.0;
-    } else if (now.isAfter(end)) {
-      progress = 1.0;
-    } else {
-      progress =
-          (now.difference(start).inSeconds / end.difference(start).inSeconds)
-              .clamp(0.0, 1.0);
-    }
-    final percent = (progress * 100).round();
+    return StreamBuilder<FastingSession?>(
+      stream: _nutritionRepo.sessionStream,
+      builder: (context, snapshot) {
+        var session = snapshot.data;
+        if (session == null && _todaySessions.isNotEmpty) {
+          session = _todaySessions.last;
+        }
+        final now = DateTime.now();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF131313),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+        double progress = 0.0;
+        int percent = 0;
+        String timerText = '0h 00m';
+        String timerLabel = 'Not started yet';
+        String goalText = 'Goal: Reach 12 PM';
+        String timeRangeText = '8 AM → 12 PM';
+        String btnText = 'Start Nutrition';
+
+        if (session != null) {
+          final level = session.level;
+          if (level == 1) {
+            goalText = 'Goal: Reach 2 PM';
+            timeRangeText = '8 AM → 2 PM';
+          } else if (level == 2) {
+            goalText = 'Goal: Reach 4 PM';
+            timeRangeText = '8 AM → 4 PM';
+          } else {
+            goalText = 'Goal: Reach 12 PM';
+            timeRangeText = '8 AM → 12 PM';
+          }
+
+          if (session.status == 'completed' || session.dayComplete) {
+            if (level == 0) {
+              progress = 0.50;
+              percent = 50;
+              timerLabel = 'Beginner Fast Completed';
+              goalText = 'Beginner Reached (12 PM) 🏆';
+            } else if (level == 1) {
+              progress = 0.75;
+              percent = 75;
+              timerLabel = 'Intermediate Fast Completed';
+              goalText = 'Intermediate Reached (2 PM) 🏆';
+            } else {
+              progress = 1.0;
+              percent = 100;
+              timerLabel = 'Elite Fast Completed';
+              goalText = 'Elite Reached (4 PM) 👑';
+            }
+            final end = session.endedAt ?? session.endsAt ?? now;
+            final diff = end.difference(session.startedAt);
+            final h = diff.inHours;
+            final m = diff.inMinutes.remainder(60);
+            timerText = '${h}h ${m.toString().padLeft(2, '0')}m';
+            btnText = 'View Nutrition';
+          } else {
+            final start = session.startedAt;
+            final end = session.endsAt ?? now.add(const Duration(hours: 4));
+            if (now.isAfter(start)) {
+              final elapsed = now.difference(start);
+              final h = elapsed.inHours;
+              final m = elapsed.inMinutes.remainder(60);
+              timerText = '${h}h ${m.toString().padLeft(2, '0')}m';
+              timerLabel = 'Completed so far';
+            }
+
+            final totalSeconds = end.difference(start).inSeconds;
+            double elapsedProgress = 0.0;
+            if (totalSeconds > 0) {
+              elapsedProgress = (now.difference(start).inSeconds / totalSeconds)
+                  .clamp(0.0, 1.0);
+            }
+            if (level == 0) {
+              progress = elapsedProgress * 0.50;
+              percent = (elapsedProgress * 50).round();
+            } else if (level == 1) {
+              progress = 0.50 + (elapsedProgress * 0.25);
+              percent = (50 + (elapsedProgress * 25)).round();
+            } else {
+              progress = 0.75 + (elapsedProgress * 0.25);
+              percent = (75 + (elapsedProgress * 25)).round();
+            }
+            btnText = 'Continue Nutrition';
+          }
+        }
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF131313),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withOpacity(0.14)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'NUTRITION COACH',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.7,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Morning Fast',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
+              // Top row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          color: AppColors.white.withOpacity(0.5),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '8 AM → 2 PM',
+                        const Text(
+                          'NUTRITION COACH',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.6),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
                           ),
                         ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Morning Fast',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              color: AppColors.white.withOpacity(0.5),
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              timeRangeText,
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.white.withOpacity(0.6),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  // Circular progress
+                  SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 8,
+                            backgroundColor:
+                                AppColors.primary.withOpacity(0.12),
+                            valueColor:
+                                const AlwaysStoppedAnimation(AppColors.primary),
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$percent%',
+                              style: const TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.primary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              'done',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.white.withOpacity(0.55),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              // Timer + label
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: timerText,
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '  $timerLabel',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withOpacity(0.55),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
-              // Circular progress
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 8,
-                        backgroundColor: AppColors.primary.withOpacity(0.12),
-                        valueColor:
-                            const AlwaysStoppedAnimation(AppColors.primary),
+
+              const SizedBox(height: 12),
+
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  goalText,
+                  style: const TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Button
+              AppBounceAnimation(
+                onTap: () {
+                  // Switch bottom-nav to Nutrition tab if possible, else push
+                  final mainState = MainHomeScreen.mainKey.currentState;
+                  if (mainState != null) {
+                    mainState.switchToNutrition();
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const NutritionScreen()),
+                    );
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.30),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
                       ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$percent%',
-                          style: const TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        btnText,
+                        style: const TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.black,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
                         ),
-                        Text(
-                          'done',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.55),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chevron_right_rounded,
+                          color: Colors.black, size: 20),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 14),
-
-          // Timer + label
-          RichText(
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: '5h 18m',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                TextSpan(
-                  text: '  Completed so far',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.55),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Text(
-              'Goal: Reach 2 PM',
-              style: TextStyle(
-                fontFamily: 'Outfit',
-                color: AppColors.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Button
-          AppBounceAnimation(
-            onTap: () {
-              // Switch bottom-nav to Nutrition tab if possible, else push
-              final mainState = MainHomeScreen.mainKey.currentState;
-              if (mainState != null) {
-                mainState.switchToNutrition();
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const NutritionScreen()),
-                );
-              }
-            },
-            child: Container(
-              width: double.infinity,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.30),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Continue Nutrition',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: Colors.black,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded,
-                      color: Colors.black, size: 20),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
