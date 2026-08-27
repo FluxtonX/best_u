@@ -26,7 +26,7 @@ class OnboardingProgressHeader extends StatelessWidget {
               'Step $currentStep of $totalSteps',
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.primary.withOpacity(0.5),
+                color: AppColors.primary.withValues(alpha: 0.5),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -35,7 +35,7 @@ class OnboardingProgressHeader extends StatelessWidget {
               '$percentage%',
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.primary.withOpacity(0.5),
+                color: AppColors.primary.withValues(alpha: 0.5),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -49,7 +49,7 @@ class OnboardingProgressHeader extends StatelessWidget {
               height: 4,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.1),
+                color: AppColors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

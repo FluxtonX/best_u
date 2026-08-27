@@ -179,7 +179,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           shape: BoxShape.circle,
                           color: const Color(0xFF151515),
                           border: Border.all(
-                              color: Colors.white.withOpacity(0.05), width: 1),
+                              color: Colors.white.withValues(alpha: 0.05), width: 1),
                         ),
                         child: ClipOval(
                           child: _imagePath != null
@@ -211,7 +211,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   'Tap to change photo',
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: AppColors.primary.withOpacity(0.8),
+                    color: AppColors.primary.withValues(alpha: 0.8),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -291,7 +291,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                              color: AppColors.primary.withOpacity(0.3)),
+                              color: AppColors.primary.withValues(alpha: 0.3)),
                         ),
                         child: const Center(
                           child: Text(
@@ -319,7 +319,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 5),
                             ),
@@ -401,7 +401,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF151515),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: TextField(
             controller: controller,
@@ -433,7 +433,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color:
-                isSelected ? AppColors.primary : Colors.white.withOpacity(0.05),
+                isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.05),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -465,7 +465,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : Colors.white.withOpacity(0.05),
+                  : Colors.white.withValues(alpha: 0.05),
               width: isSelected ? 1.5 : 1,
             ),
           ),

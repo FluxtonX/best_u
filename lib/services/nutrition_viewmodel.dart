@@ -41,8 +41,8 @@ class NutritionViewModel extends ChangeNotifier {
 
   // ── Popup callback (wired by the screen) ────────────────────────────────
   /// Fired when a trackable milestone or level completion is reached.
-  void Function(NutritionMilestone milestone, {int? completedLevel, int? nextLevel})?
-      onMilestone;
+  void Function(NutritionMilestone milestone,
+      {int? completedLevel, int? nextLevel})? onMilestone;
 
   // ── Session ──────────────────────────────────────────────────────────────
   FastingSession? _activeSession;
@@ -106,6 +106,20 @@ class NutritionViewModel extends ChangeNotifier {
         return "Elite";
       default:
         return "Beginner";
+    }
+  }
+
+  /// Target fasting duration in hours based on chosen tier
+  int get targetHoursForLevel {
+    switch (_selectedLevel) {
+      case 0:
+        return 12; // Beginner (12h)
+      case 1:
+        return 14; // Intermediate (14h)
+      case 2:
+        return 16; // Elite (16h)
+      default:
+        return 12;
     }
   }
 
@@ -270,18 +284,61 @@ class NutritionViewModel extends ChangeNotifier {
       "• Healthy Fat: Butter, cheese sauce, avocado, or nuts to satisfy hunger completely.\n\n"
       "💡 Tip: The hunger satisfaction with healthy fats is the MOST important part. The plan does not work if you are still hungry. Adding healthy fats makes the fast sustainable and fuels your body.";
 
-  // ── Progress ─────────────────────────────────────────────────────────────
-  double get fastProgress {
-    final s = activeSession; // level-matched — no bleed-through
-    if (s == null) return 0.0;
+  // ── Real-Time Duration & Progress Calculations ───────────────────────────
+
+  /// Total target seconds for current fast (e.g. 12h = 43,200s, 14h = 50,400s, 16h = 57,600s)
+  int get totalTargetSeconds {
+    final s = activeSession;
+    if (s != null && s.endsAt != null) {
+      final diff = s.endsAt!.difference(s.startedAt).inSeconds;
+      if (diff > 0) return diff;
+    }
+    return targetHoursForLevel * 3600;
+  }
+
+  /// Exact seconds elapsed since fasting started
+  int get elapsedSeconds {
+    final s = activeSession;
+    if (s == null) return 0;
     final now = DateTime.now();
-    final end = s.endsAt ?? s.endedAt;
-    if (end == null) return 0.0;
-    if (now.isBefore(s.startedAt)) return 0.0;
-    if (now.isAfter(end)) return 1.0;
-    final total = end.difference(s.startedAt).inSeconds;
+    if (now.isBefore(s.startedAt)) return 0;
+    final end =
+        (s.status == 'completed' || s.dayComplete) ? (s.endedAt ?? now) : now;
+    final elapsed = end.difference(s.startedAt).inSeconds;
+    return elapsed >= 0 ? elapsed : 0;
+  }
+
+  /// Exact seconds remaining until target duration is fulfilled
+  int get remainingSeconds {
+    final s = activeSession;
+    if (s == null) return totalTargetSeconds;
+    if (s.status == 'completed' || s.dayComplete) return 0;
+    final total = totalTargetSeconds;
+    final elapsed = elapsedSeconds;
+    final rem = total - elapsed;
+    return rem > 0 ? rem : 0;
+  }
+
+  /// Normalized progress from 0.0 to 1.0 (never 1.0 until elapsed >= target)
+  double get fastProgress {
+    final s = activeSession;
+    if (s == null) return 0.0;
+    if (s.status == 'completed' || s.dayComplete) return 1.0;
+    final total = totalTargetSeconds;
     if (total <= 0) return 0.0;
-    return (now.difference(s.startedAt).inSeconds / total).clamp(0.0, 1.0);
+    return (elapsedSeconds / total).clamp(0.0, 1.0);
+  }
+
+  /// Standard Intermittent Fasting progress percentage (0 to 100%)
+  /// Formula: min(100, (elapsedSeconds / totalTargetSeconds) * 100)
+  int get fastPercent {
+    final s = activeSession;
+    if (s == null) return 0;
+    if (s.status == 'completed' || s.dayComplete) return 100;
+    final total = totalTargetSeconds;
+    if (total <= 0) return 0;
+    final double pct = (elapsedSeconds / total) * 100;
+    return pct.clamp(0.0, 100.0).round();
   }
 
   bool isLevelCompletedToday(int level) {
@@ -290,31 +347,25 @@ class NutritionViewModel extends ChangeNotifier {
     return s.dayComplete || s.status == 'completed';
   }
 
-  int get fastPercent {
-    if (isLevelCompletedToday(2)) return 100;
-    if (isLevelCompletedToday(1)) {
-      final s = activeSession;
-      if (s != null && s.level == 2 && s.status == 'active') {
-        return (75 + (fastProgress * 25)).round().clamp(75, 100);
-      }
-      return 75;
-    }
-    if (isLevelCompletedToday(0)) {
-      final s = activeSession;
-      if (s != null && s.level == 1 && s.status == 'active') {
-        return (50 + (fastProgress * 25)).round().clamp(50, 75);
-      } else if (s != null && s.level == 2 && s.status == 'active') {
-        return (50 + (fastProgress * 50)).round().clamp(50, 100);
-      }
-      return 50;
-    }
+  String get formattedElapsedTime {
+    final sec = elapsedSeconds;
+    final h = (sec ~/ 3600).toString().padLeft(2, '0');
+    final m = ((sec % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (sec % 60).toString().padLeft(2, '0');
+    return '${h}h ${m}m ${s}s';
+  }
+
+  String get formattedRemainingTime {
+    if (isTodayCompleted) return 'Goal Reached ✓';
     final s = activeSession;
-    if (s != null && s.status == 'active') {
-      if (s.level == 0) return (fastProgress * 50).round().clamp(0, 50);
-      if (s.level == 1) return (fastProgress * 75).round().clamp(0, 75);
-      if (s.level == 2) return (fastProgress * 100).round().clamp(0, 100);
-    }
-    return 0;
+    if (s == null) return 'Ready to start';
+    if (s.status == 'completed' || s.dayComplete) return 'Completed';
+    final sec = remainingSeconds;
+    if (sec <= 0) return 'Goal Reached! 🏆';
+    final h = (sec ~/ 3600).toString().padLeft(2, '0');
+    final m = ((sec % 3600) ~/ 60).toString().padLeft(2, '0');
+    final sc = (sec % 60).toString().padLeft(2, '0');
+    return '${h}h ${m}m ${sc}s left';
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -413,7 +464,9 @@ class NutritionViewModel extends ChangeNotifier {
         _answeredYes = false;
         _answeredNo = false;
       }
-    } else if (resp.startsWith('yes_') || resp.startsWith('deal_accepted_') || resp.startsWith('deal_declined_')) {
+    } else if (resp.startsWith('yes_') ||
+        resp.startsWith('deal_accepted_') ||
+        resp.startsWith('deal_declined_')) {
       final parts = resp.split('_');
       final lastPart = parts.last;
       final parsedStep = int.tryParse(lastPart);
@@ -460,14 +513,14 @@ class NutritionViewModel extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // MILESTONE DETECTION
+  // MILESTONE DETECTION & AUTO-COMPLETION
   // ─────────────────────────────────────────────────────────────────────────
   Future<void> _checkMilestones() async {
     final session = _activeSession;
     if (session == null || session.status != 'active') return;
     final progress = fastProgress;
 
-    // 25 % — tracked silently
+    // 25 % — milestone tracked
     if (progress >= 0.25 && !_ach25Shown) {
       _ach25Shown = true;
       final prefs = await SharedPreferences.getInstance();
@@ -475,12 +528,21 @@ class NutritionViewModel extends ChangeNotifier {
       await _repo.markReminderFired(session.id, '25');
     }
 
-    // 50 % — tracked silently
+    // 50 % — milestone tracked
     if (progress >= 0.50 && !_ach50Shown) {
       _ach50Shown = true;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('ach50_${session.id}', true);
       await _repo.markReminderFired(session.id, '50');
+    }
+
+    // 100 % — Goal target duration reached!
+    if (progress >= 1.0 && !_ach100Shown) {
+      _ach100Shown = true;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('ach100_${session.id}', true);
+      await _repo.markReminderFired(session.id, '100');
+      await completeFast();
     }
   }
 
@@ -505,15 +567,7 @@ class NutritionViewModel extends ChangeNotifier {
   Future<void> startFast() async {
     if (isTodayCompleted) return;
     try {
-      final now = DateTime.now();
-      DateTime targetEnd = DateTime(now.year, now.month, now.day, endFastHour);
-      if (now.isAfter(targetEnd)) {
-        targetEnd = targetEnd.add(const Duration(days: 1));
-      }
-      var duration = targetEnd.difference(now);
-      if (duration.inSeconds <= 0) {
-        duration = const Duration(hours: 4);
-      }
+      final duration = Duration(hours: targetHoursForLevel);
 
       final session = await _repo.startSession(
         duration: duration,
@@ -527,6 +581,8 @@ class NutritionViewModel extends ChangeNotifier {
       _ach100Shown = false;
       _showYesNoPrompt = true;
       _answeredNo = false;
+      _answeredYes = false;
+      _dealAccepted = null;
       currentTimelineStep = 0;
 
       _ensureTicker();
@@ -562,12 +618,13 @@ class NutritionViewModel extends ChangeNotifier {
     final session = activeSession; // level-matched guard
     if (session == null) return;
     try {
+      final now = DateTime.now();
       await _repo.completeSession(session.id);
       _todaySessions[_selectedLevel] = FastingSession(
         id: session.id,
         startedAt: session.startedAt,
         endsAt: session.endsAt,
-        endedAt: DateTime.now(),
+        endedAt: now,
         status: 'completed',
         dayComplete: true,
         level: session.level,
@@ -662,35 +719,7 @@ class NutritionViewModel extends ChangeNotifier {
 
     if (_activeSession != null) {
       final session = _activeSession!;
-
-      await _repo.saveYesNoResponse(
-          session.id, 'step_$currentTimelineStep');
-
-      // Final step completed for the level (12 PM Beginner, 2 PM Intermediate, 4 PM Elite)
-      if (currentTimelineStep > maxStep && !_ach100Shown) {
-        _ach100Shown = true;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('ach100_${session.id}', true);
-        if (!session.dayComplete) {
-          await _repo.markDayComplete(session.id);
-        }
-        await _repo.markReminderFired(session.id, '100');
-        _todaySessions[_selectedLevel] = FastingSession(
-          id: session.id,
-          startedAt: session.startedAt,
-          endsAt: session.endsAt,
-          endedAt: session.endedAt ?? DateTime.now(),
-          status: 'completed',
-          dayComplete: true,
-          level: session.level,
-          mealLogged: session.mealLogged,
-          remindersFired: session.remindersFired,
-          yesNoResponse: session.yesNoResponse,
-          meta: session.meta,
-        );
-        await onFastCompletedForLevel();
-        await loadData();
-      }
+      await _repo.saveYesNoResponse(session.id, 'step_$currentTimelineStep');
     }
   }
 
@@ -729,8 +758,7 @@ class NutritionViewModel extends ChangeNotifier {
   Future<void> logMeal() async {
     if (_activeSession == null) return;
     try {
-      final label =
-          'Protein: ${_proteinLabel()}, Fat: ${_fatLabel()}';
+      final label = 'Protein: ${_proteinLabel()}, Fat: ${_fatLabel()}';
       await _repo.saveMealCompletion(
         sessionId: _activeSession!.id,
         mealType: label,
@@ -759,7 +787,8 @@ class NutritionViewModel extends ChangeNotifier {
 
   Future<void> setLevel(int level) async {
     _selectedLevel = level;
-    final session = _todaySessions[level] ?? (_activeSession?.level == level ? _activeSession : null);
+    final session = _todaySessions[level] ??
+        (_activeSession?.level == level ? _activeSession : null);
     if (session != null) {
       if (session.dayComplete || session.status == 'completed') {
         currentTimelineStep = maxTimelineStep + 1; // Completed for today!

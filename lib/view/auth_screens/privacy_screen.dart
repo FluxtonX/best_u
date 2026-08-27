@@ -36,7 +36,7 @@ class PrivacyScreen extends StatelessWidget {
           'This is the Privacy Policy for Best-U.\n\nWe care about your privacy...',
           style: TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white.withOpacity(0.8),
+            color: AppColors.white.withValues(alpha: 0.8),
             fontSize: 16,
             height: 1.5,
           ),

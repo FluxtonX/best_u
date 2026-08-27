@@ -8,12 +8,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 
 class MainHomeScreen extends StatefulWidget {
-  /// Static key — assign this when creating the widget so external code can
-  /// call [_MainHomeScreenState.switchToNutrition].
-  static final GlobalKey<_MainHomeScreenState> mainKey =
-      GlobalKey<_MainHomeScreenState>();
+  const MainHomeScreen({super.key});
 
-  MainHomeScreen({Key? key}) : super(key: key ?? mainKey);
+  /// Static callback that active MainHomeScreen registers to switch tabs
+  static void Function()? onSwitchToNutrition;
+  static void switchToNutritionTab() {
+    onSwitchToNutrition?.call();
+  }
 
   @override
   State<MainHomeScreen> createState() => _MainHomeScreenState();
@@ -21,6 +22,20 @@ class MainHomeScreen extends StatefulWidget {
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    MainHomeScreen.onSwitchToNutrition = switchToNutrition;
+  }
+
+  @override
+  void dispose() {
+    if (MainHomeScreen.onSwitchToNutrition == switchToNutrition) {
+      MainHomeScreen.onSwitchToNutrition = null;
+    }
+    super.dispose();
+  }
 
   /// Switch bottom-nav to the Nutrition tab (index 2).
   void switchToNutrition() => setState(() => _currentIndex = 2);
@@ -136,8 +151,8 @@ class _BottomNavItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        splashColor: const Color(0xFFF2B84B).withOpacity(0.06),
-        highlightColor: const Color(0xFFF2B84B).withOpacity(0.03),
+        splashColor: const Color(0xFFF2B84B).withValues(alpha: 0.06),
+        highlightColor: const Color(0xFFF2B84B).withValues(alpha: 0.03),
         child: SizedBox(
           height: double.infinity,
           child: Column(

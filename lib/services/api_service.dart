@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:best_u/services/local_workout_plan_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class ApiResponse {
@@ -92,7 +95,8 @@ class ApiService {
     };
   }
 
-  Future<ApiResponse> onboarding(Map<String, dynamic> userData) async {
+  Future<ApiResponse> onboarding(Map<String, dynamic> userData,
+      {bool markCompleted = true}) async {
     final currentWeight = userData['currentWeight'] ?? userData['weight'];
     final goal = userData['goal'] ??
         ((userData['goals'] is List && (userData['goals'] as List).isNotEmpty)
@@ -106,7 +110,7 @@ class ApiService {
       'goal': goal,
       'goals': userData['goals'] ?? [goal ?? 'Weight Loss'],
       'experienceLevel': userData['fitnessLevel'] ?? 'Beginner',
-      'onboardingCompleted': true,
+      'onboardingCompleted': markCompleted,
       'subscriptionStatus': 'active',
       'currentWeek': 1,
       'currentDay': 1,
@@ -856,14 +860,17 @@ class ApiService {
 
   Future<ApiResponse> getSubscriptionStatus() async {
     final profile = await _ensureProfile();
-    // paymentProcessed is only set to true when the user completes the
-    // in-app payment sheet — NOT during onboarding.
-    final paymentProcessed = profile['paymentProcessed'] == true;
+    final isVerified =
+        (profile['verificationStatus'] as String?)?.toLowerCase().trim() ==
+            'verified';
+    final isSubscribed = isVerified;
     final priceId = profile['selectedPriceId'] as String?;
     return _ok({
-      'status': paymentProcessed ? 'active' : 'inactive',
-      'isActive': paymentProcessed,
-      'priceId': paymentProcessed ? priceId : null,
+      'status': isSubscribed ? 'active' : 'inactive',
+      'isActive': isSubscribed,
+      'isVerified': isVerified,
+      'verificationStatus': profile['verificationStatus'] ?? 'none',
+      'priceId': isSubscribed ? priceId : null,
     });
   }
 
@@ -1039,4 +1046,226 @@ class ApiService {
   }
 
   String _localWorkoutId(int week, int day) => 'local_w${week}_d$day';
+
+  // ── Strength Level ───────────────────────────────────────────────────────────
+  Future<ApiResponse> getStrengthLevel() async {
+    try {
+      final snap = await _userRef.get();
+      final level = snap.data()?['strengthLevel'] as String? ?? 'beginner';
+      return _ok({'strengthLevel': level});
+    } catch (e) {
+      return _message('Error fetching strength level: $e', statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse> setStrengthLevel(String level) async {
+    try {
+      await _userRef.set({'strengthLevel': level, 'updatedAt': FieldValue.serverTimestamp()},
+          SetOptions(merge: true));
+      return _message('Strength level updated');
+    } catch (e) {
+      return _message('Error updating strength level: $e', statusCode: 500);
+    }
+  }
+
+  // ── Image Upload Helper (Firebase Storage with Base64 Fallback) ────────────
+  Future<String> uploadImageFile({
+    required String path,
+    dynamic fileOrBytes,
+    String? base64Data,
+  }) async {
+    // 1. Try Firebase Storage with 4-second timeout
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child(path);
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+      );
+
+      UploadTask uploadTask;
+      if (fileOrBytes is File) {
+        uploadTask = storageRef.putFile(fileOrBytes, metadata);
+      } else if (fileOrBytes is Uint8List) {
+        uploadTask = storageRef.putData(fileOrBytes, metadata);
+      } else if (base64Data != null && base64Data.isNotEmpty) {
+        String cleanBase64 = base64Data;
+        if (cleanBase64.contains(',')) {
+          cleanBase64 = cleanBase64.split(',').last;
+        }
+        final bytes = base64Decode(cleanBase64);
+        uploadTask = storageRef.putData(bytes, metadata);
+      } else {
+        return '';
+      }
+
+      final snapshot = await uploadTask.timeout(const Duration(seconds: 4));
+      final downloadUrl = await snapshot.ref
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 3));
+      if (downloadUrl.isNotEmpty) {
+        debugPrint('Firebase Storage upload success: $downloadUrl');
+        return downloadUrl;
+      }
+    } catch (storageError) {
+      debugPrint('FirebaseStorage upload note: $storageError');
+    }
+
+    // 2. Fast Fallback: optimized data URI safely saved directly in Firestore
+    try {
+      if (base64Data != null && base64Data.isNotEmpty) {
+        return base64Data.startsWith('data:')
+            ? base64Data
+            : 'data:image/jpeg;base64,$base64Data';
+      } else if (fileOrBytes is File) {
+        final bytes = await fileOrBytes.readAsBytes();
+        return 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      } else if (fileOrBytes is Uint8List) {
+        return 'data:image/jpeg;base64,${base64Encode(fileOrBytes)}';
+      }
+    } catch (e) {
+      debugPrint('Fallback base64 encoding error: $e');
+    }
+    return '';
+  }
+
+  // ── Before / After Photos ─────────────────────────────────────────────────
+  Future<ApiResponse> uploadBeforePhoto(dynamic photo) async {
+    try {
+      final user = _currentUser;
+      String url = '';
+      if (photo is String && photo.startsWith('http')) {
+        url = photo;
+      } else if (photo is File) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/before_photo.jpg',
+          fileOrBytes: photo,
+        );
+      } else if (photo is Uint8List) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/before_photo.jpg',
+          fileOrBytes: photo,
+        );
+      } else if (photo is String) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/before_photo.jpg',
+          base64Data: photo,
+        );
+      }
+
+      await _userRef.set({
+        'beforePhotoUrl': url,
+        'beforePhotoUploadedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      return _message('Before photo saved');
+    } catch (e) {
+      return _message('Error saving before photo: $e', statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse> uploadAfterPhoto(dynamic photo) async {
+    try {
+      final user = _currentUser;
+      String url = '';
+      if (photo is String && photo.startsWith('http')) {
+        url = photo;
+      } else if (photo is File) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/after_photo.jpg',
+          fileOrBytes: photo,
+        );
+      } else if (photo is Uint8List) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/after_photo.jpg',
+          fileOrBytes: photo,
+        );
+      } else if (photo is String) {
+        url = await uploadImageFile(
+          path: 'users/${user.uid}/after_photo.jpg',
+          base64Data: photo,
+        );
+      }
+
+      await _userRef.set({
+        'afterPhotoUrl': url,
+        'afterPhotoUploadedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      return _message('After photo saved');
+    } catch (e) {
+      return _message('Error saving after photo: $e', statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse> getTransformationPhotos() async {
+    try {
+      final snap = await _userRef.get();
+      final data = snap.data() ?? {};
+      return _ok({
+        'beforePhotoUrl': data['beforePhotoUrl'],
+        'afterPhotoUrl': data['afterPhotoUrl'],
+        'beforePhotoUploadedAt': data['beforePhotoUploadedAt'],
+        'afterPhotoUploadedAt': data['afterPhotoUploadedAt'],
+      });
+    } catch (e) {
+      return _message('Error fetching photos: $e', statusCode: 500);
+    }
+  }
+
+  // ── Verification Request ─────────────────────────────────────────────────
+  Future<ApiResponse> submitVerificationRequest({
+    required String type,
+    required String idNumber,
+    dynamic idPhoto,
+    String? idPhotoUrl,
+  }) async {
+    try {
+      final user = _currentUser;
+      String? finalPhotoUrl = idPhotoUrl;
+
+      if (idPhoto != null) {
+        finalPhotoUrl = await uploadImageFile(
+          path:
+              'users/${user.uid}/verification_id_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          fileOrBytes: idPhoto is File || idPhoto is Uint8List ? idPhoto : null,
+          base64Data: idPhoto is String ? idPhoto : null,
+        );
+      }
+
+      final requestData = {
+        'type': type,
+        'idNumber': idNumber,
+        'idPhotoUrl': finalPhotoUrl,
+        'submittedAt': FieldValue.serverTimestamp(),
+        'reviewedAt': null,
+        'reviewNote': null,
+      };
+      await _userRef
+          .collection('verificationRequest')
+          .doc('current')
+          .set(requestData);
+      await _userRef.set({
+        'verificationStatus': 'pending',
+        'verificationType': type,
+        'idNumber': idNumber,
+        'idPhotoUrl': finalPhotoUrl,
+        'verificationSubmittedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      debugPrint('Verification request submitted for ${user.uid}');
+      return _message('Verification request submitted');
+    } catch (e) {
+      return _message('Error submitting verification: $e', statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse> getVerificationStatus() async {
+    try {
+      final snap = await _userRef.get();
+      final status = snap.data()?['verificationStatus'] as String? ?? 'none';
+      return _ok({'verificationStatus': status});
+    } catch (e) {
+      return _message('Error fetching verification status: $e', statusCode: 500);
+    }
+  }
 }
+

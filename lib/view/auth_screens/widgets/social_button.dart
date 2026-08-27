@@ -24,10 +24,10 @@ class SocialButton extends StatelessWidget {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),

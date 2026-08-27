@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/view/widgets/app_snack_bar.dart';
+import 'package:best_u/view/registration_screen/before_photo_step.dart';
+import 'package:best_u/view/registration_screen/verification_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:best_u/view/registration_screen/widgets/custom_text_field.dart';
 import 'package:best_u/view/registration_screen/widgets/onboarding_button.dart';
@@ -21,6 +24,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Selection States
   String? _selectedGoal;
+  String _selectedLevel = 'beginner';
+
+  // Step 3 is the Before Photo — it manages its own upload internally
 
   // Controllers
   final TextEditingController _nameController = TextEditingController();
@@ -31,15 +37,81 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadExistingProfile();
+  }
+
+  Future<void> _loadExistingProfile() async {
+    try {
+      final res = await ApiService().getProfile();
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body)['data'];
+        if (data != null && mounted) {
+          setState(() {
+            if (data['name'] != null &&
+                (data['name'] as String).isNotEmpty &&
+                data['name'] != 'User') {
+              _nameController.text = data['name'];
+            }
+            if (data['age'] != null && data['age'] != 0) {
+              _ageController.text = data['age'].toString();
+            }
+            if (data['weight'] != null && data['weight'] != 0) {
+              _weightController.text = data['weight'].toString();
+            }
+            if (data['bmi'] != null) {
+              _heightController.text = data['bmi'].toString();
+            }
+            if (data['goal'] != null) {
+              _selectedGoal = data['goal'];
+            }
+            if (data['strengthLevel'] != null) {
+              _selectedLevel = data['strengthLevel'];
+            }
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveOnboardingData() async {
+  Future<void> _completeOnboarding() async {
+    setState(() => _isLoading = true);
+    try {
+      final apiService = ApiService();
+      await apiService.updateProfile({'onboardingCompleted': true});
+      await apiService.checkout('price_best_u_default');
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const VerificationScreen(isFromOnboarding: true),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const VerificationScreen(isFromOnboarding: true),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveOnboardingData({bool thenGoToPhotoStep = false}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -48,37 +120,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       final apiService = ApiService();
 
-      // Step 1: Save onboarding profile
+      // Step 1: Save onboarding profile without prematurely completing
       final response = await apiService.onboarding({
         'name': _nameController.text.trim(),
         'currentWeight': double.tryParse(_weightController.text.trim()) ?? 0.0,
         'targetWeight':
             (double.tryParse(_weightController.text.trim()) ?? 0.0) -
                 5, // Placeholder
-        'fitnessLevel': 'Beginner', // Placeholder
+        'fitnessLevel': _selectedLevel == 'advanced' ? 'Advanced' : 'Beginner',
+        'strengthLevel': _selectedLevel,
         'goals': [_selectedGoal ?? 'Weight Loss'],
         'age': int.tryParse(_ageController.text.trim()) ?? 0,
         'bmi': double.tryParse(_heightController.text.trim()),
-      });
+      }, markCompleted: !thenGoToPhotoStep);
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw 'Failed to save onboarding data. Status: ${response.statusCode}';
       }
 
-      // Step 2: Auto-activate subscription (static — no payment required)
-      await apiService.checkout('price_best_u_default');
+      // Step 2: Save the strength level
+      await apiService.setStrengthLevel(_selectedLevel);
 
       if (!mounted) return;
 
-      // Step 3: Go directly to home — subscription screen bypassed
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      if (thenGoToPhotoStep) {
+        // Go to the Before Photo step (step 3)
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() {
+          _currentStep = 3;
+          _isLoading = false;
+        });
+      } else {
+        await _completeOnboarding();
+      }
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.show(context, 'Error saving data: $e',
           type: AppSnackType.error);
     } finally {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -98,9 +181,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             type: AppSnackType.warning);
         return;
       }
+      // Save onboarding data after step 2, then go to photo step
+      _saveOnboardingData(thenGoToPhotoStep: true);
+      return;
     }
 
-    if (_currentStep < 2) {
+    if (_currentStep < 3) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -108,8 +194,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       setState(() {
         _currentStep++;
       });
-    } else {
-      _saveOnboardingData();
     }
   }
 
@@ -131,7 +215,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: 20),
                     OnboardingProgressHeader(
                       currentStep: _currentStep,
-                      totalSteps: 2,
+                      totalSteps: 3,
                     ),
                     const SizedBox(height: 32),
                     // Logo / Title Section
@@ -179,15 +263,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: [
                           _buildStep1(),
                           _buildStep2(),
+                          _buildStep3(),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
-                    OnboardingButton(
-                      text: _currentStep == 2 ? 'Complete Profile' : 'Continue',
-                      isLoading: _isLoading,
-                      onPressed: _isLoading ? () {} : _nextStep,
-                    ),
+                    // Hide the main button on step 3 — BeforePhotoStep manages its own buttons
+                    if (_currentStep < 3)
+                      OnboardingButton(
+                        text: _currentStep == 2 ? 'Continue' : 'Continue',
+                        isLoading: _isLoading,
+                        onPressed: _isLoading ? () {} : _nextStep,
+                      ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -220,7 +307,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             "Tell us about yourself",
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: AppColors.white.withOpacity(0.5),
+              color: AppColors.white.withValues(alpha: 0.5),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -305,7 +392,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             "Choose your primary fitness objective",
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: AppColors.white.withOpacity(0.5),
+              color: AppColors.white.withValues(alpha: 0.5),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -321,8 +408,99 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onTap: () => setState(() => _selectedGoal = goal['title']),
                 ),
               )),
+          const SizedBox(height: 20),
+          // Strength Level selector (part of step 2)
+          Text(
+            'Experience Level',
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              color: AppColors.white.withValues(alpha: 0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _levelCard(
+                  emoji: '🏃',
+                  label: 'Beginner',
+                  value: 'beginner',
+                  desc: 'Weights + bodyweight',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _levelCard(
+                  emoji: '💪',
+                  label: 'Advanced',
+                  value: 'advanced',
+                  desc: 'Weights only',
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _levelCard({
+    required String emoji,
+    required String label,
+    required String value,
+    required String desc,
+  }) {
+    final selected = _selectedLevel == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedLevel = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        decoration: BoxDecoration(
+          color:
+              selected ? AppColors.primary.withValues(alpha: 0.1) : const Color(0xFF151515),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.white.withValues(alpha: 0.07),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: selected ? AppColors.primary : AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              desc,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withValues(alpha: 0.35),
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // STEP 3: Before Photo
+  Widget _buildStep3() {
+    return BeforePhotoStep(
+      onSkip: _completeOnboarding,
+      onComplete: _completeOnboarding,
     );
   }
 }

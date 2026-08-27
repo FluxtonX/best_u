@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/view/home_screen/all_personal_bests_screen.dart';
+import 'package:best_u/view/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class ProgressScreen extends StatefulWidget {
@@ -19,6 +22,7 @@ class _ProgressScreenState extends State<ProgressScreen>
   List<Map<String, dynamic>> _weightHistory = [];
   List<Map<String, dynamic>> _weeklyWorkouts = [];
   List<Map<String, dynamic>> _personalBests = [];
+  Map<String, dynamic>? _transformationPhotos;
   bool _isLoading = true;
   late final AnimationController _graphController;
   late final Animation<double> _graphAnimation;
@@ -56,11 +60,13 @@ class _ProgressScreenState extends State<ProgressScreen>
         apiService.getProgressSummary(),
         apiService.getWeightHistory(),
         apiService.getPersonalBests(),
+        apiService.getTransformationPhotos(),
       ]);
 
       final summaryData = _responseData(responses[0]);
       final weightData = _responseData(responses[1]);
       final personalBestData = _responseData(responses[2]);
+      final photosData = _responseData(responses[3]);
 
       if (!mounted) return;
       setState(() {
@@ -68,6 +74,7 @@ class _ProgressScreenState extends State<ProgressScreen>
         _weightHistory = _asMapList(weightData);
         _weeklyWorkouts = _asMapList(_summary?['weeklyWorkouts']);
         _personalBests = _asMapList(personalBestData);
+        _transformationPhotos = _asMap(photosData);
         _isLoading = false;
       });
       _graphController
@@ -150,8 +157,8 @@ class _ProgressScreenState extends State<ProgressScreen>
           child: Skeletonizer(
             enabled: _isLoading,
             effect: ShimmerEffect(
-              baseColor: Colors.white.withOpacity(0.04),
-              highlightColor: Colors.white.withOpacity(0.12),
+              baseColor: Colors.white.withValues(alpha: 0.04),
+              highlightColor: Colors.white.withValues(alpha: 0.12),
               duration: const Duration(milliseconds: 1000),
             ),
             child: RefreshIndicator(
@@ -168,6 +175,8 @@ class _ProgressScreenState extends State<ProgressScreen>
                       padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
                       child: Column(
                         children: [
+                          _buildTransformationPhotoCard(),
+                          const SizedBox(height: 16),
                           _buildKpiRow(),
                           const SizedBox(height: 16),
                           _buildWeightProgressCard(),
@@ -232,6 +241,289 @@ class _ProgressScreenState extends State<ProgressScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildTransformationPhotoCard() {
+    final beforeUrl = _transformationPhotos?['beforePhotoUrl'] as String?;
+    final afterUrl = _transformationPhotos?['afterPhotoUrl'] as String?;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _stroke),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Text('📸', style: TextStyle(fontSize: 18)),
+                  SizedBox(width: 8),
+                  Text(
+                    'TRANSFORMATION',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+              if (beforeUrl != null && afterUrl != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _green.withValues(alpha: 0.3)),
+                  ),
+                  child: const Text(
+                    'Complete 🔥',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: _green,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (beforeUrl == null && afterUrl == null)
+            // No photos yet — invite user to upload
+            GestureDetector(
+              onTap: () => _pickAndUploadPhoto(isBefore: true),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1F2026),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    style: BorderStyle.solid,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.add_a_photo_rounded,
+                          color: AppColors.primary, size: 22),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Add Your Starting Photo',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Take your Day 1 photo to track your physical progress',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withValues(alpha: 0.4),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                // Before Photo
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _photoBox(
+                        url: beforeUrl,
+                        label: 'BEFORE',
+                        sublabel: 'Day 1',
+                        onTap: beforeUrl == null
+                            ? () => _pickAndUploadPhoto(isBefore: true)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // After Photo
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _photoBox(
+                        url: afterUrl,
+                        label: 'AFTER',
+                        sublabel: 'Week 8',
+                        isPending: afterUrl == null,
+                        onTap: () => _pickAndUploadPhoto(isBefore: false),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _photoBox({
+    String? url,
+    required String label,
+    required String sublabel,
+    bool isPending = false,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 170,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1F2026),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: url != null
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+          image: url != null
+              ? DecorationImage(
+                  image: url.startsWith('data:')
+                      ? MemoryImage(base64Decode(url.split(',').last))
+                          as ImageProvider
+                      : NetworkImage(url),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: Stack(
+          children: [
+            if (url == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPending
+                            ? Icons.hourglass_top_rounded
+                            : Icons.add_a_photo_outlined,
+                        color: AppColors.white.withValues(alpha: 0.3),
+                        size: 26,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        isPending ? 'Unlocks Week 8' : 'Tap to add',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white.withValues(alpha: 0.4),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Badges
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  sublabel,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.white.withValues(alpha: 0.7),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadPhoto({required bool isBefore}) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1080,
+      imageQuality: 80,
+    );
+    if (picked != null) {
+      final file = File(picked.path);
+      final api = ApiService();
+      if (isBefore) {
+        await api.uploadBeforePhoto(file);
+      } else {
+        await api.uploadAfterPhoto(file);
+      }
+      if (mounted) {
+        _fetchData();
+        AppSnackBar.show(
+          context,
+          isBefore ? 'Starting photo saved! 📸' : 'After photo saved! 🔥',
+          type: AppSnackType.success,
+        );
+      }
+    }
   }
 
   Widget _buildKpiRow() {
@@ -375,8 +667,6 @@ class _ProgressScreenState extends State<ProgressScreen>
       },
     );
   }
-
-
 
   Widget _buildWeeklyWorkoutsCard() {
     return AnimatedBuilder(
@@ -729,7 +1019,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   'No personal records logged yet',
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 14,
                   ),
                 ),
@@ -792,11 +1082,12 @@ class _ProgressScreenState extends State<ProgressScreen>
                             ][index],
                             size: 19,
                           )
-                    : Icon(
-                        item['icon'] as IconData? ?? Icons.fitness_center_rounded,
-                        color: AppColors.primary,
-                        size: 19,
-                      ),
+                        : Icon(
+                            item['icon'] as IconData? ??
+                                Icons.fitness_center_rounded,
+                            color: AppColors.primary,
+                            size: 19,
+                          ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -924,7 +1215,8 @@ class _BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final values =
         items.map((item) => (item['value'] as num?)?.toDouble() ?? 0).toList();
-    final double computedMaxValue = maxValue ?? values.fold<double>(1, (max, v) => v > max ? v : max);
+    final double computedMaxValue =
+        maxValue ?? values.fold<double>(1, (max, v) => v > max ? v : max);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -935,12 +1227,11 @@ class _BarChart extends StatelessWidget {
 
         // Done bars animate to real height; empty bars show a tiny dim stub
         final double barHeight = isDone
-            ? (value / computedMaxValue * maxBarHeight * progress).clamp(4.0, maxBarHeight)
+            ? (value / computedMaxValue * maxBarHeight * progress)
+                .clamp(4.0, maxBarHeight)
             : 4.0;
 
-        final Color barColor = isDone
-            ? color
-            : color.withOpacity(0.15);
+        final Color barColor = isDone ? color : color.withValues(alpha: 0.15);
 
         return Expanded(
           child: Column(
@@ -964,7 +1255,7 @@ class _BarChart extends StatelessWidget {
                   fontFamily: 'Outfit',
                   color: isDone
                       ? _ProgressScreenState._muted
-                      : _ProgressScreenState._muted.withOpacity(0.4),
+                      : _ProgressScreenState._muted.withValues(alpha: 0.4),
                   fontSize: 10,
                 ),
               ),
@@ -1011,7 +1302,7 @@ class _LineChartPainter extends CustomPainter {
         final date = now.subtract(Duration(days: 4 - i));
         final dayLabel = _dayLabel(date);
         final x = (size.width / 4) * i;
-        
+
         canvas.drawCircle(Offset(x, chartHeight + 5), 5, dotPaint);
 
         final textPainter = TextPainter(

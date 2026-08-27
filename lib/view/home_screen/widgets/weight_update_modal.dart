@@ -11,7 +11,7 @@ class WeightUpdateModal extends StatefulWidget {
   static Future<void> show(BuildContext context, String currentWeight) {
     return showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (context) => WeightUpdateModal(currentWeight: currentWeight),
     );
   }
@@ -74,7 +74,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
         decoration: BoxDecoration(
           color: const Color(0xFF151515),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -137,7 +137,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
               ),
               child: TextField(
                 style: const TextStyle(
@@ -173,7 +173,7 @@ class _WeightUpdateModalState extends State<WeightUpdateModal> {
                         boxShadow: [
                           BoxShadow(
                             // ignore: deprecated_member_use
-                            color: AppColors.primary.withOpacity(0.3),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 5),
                           ),

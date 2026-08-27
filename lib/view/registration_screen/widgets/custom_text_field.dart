@@ -27,7 +27,7 @@ class CustomTextField extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white.withOpacity(0.5),
+            color: AppColors.white.withValues(alpha: 0.5),
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
@@ -40,7 +40,7 @@ class CustomTextField extends StatelessWidget {
             color: const Color(0xFF1A1A1A),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: AppColors.white.withOpacity(0.05),
+              color: AppColors.white.withValues(alpha: 0.05),
               width: 1,
             ),
           ),
@@ -56,7 +56,7 @@ class CustomTextField extends StatelessWidget {
               hintText: hintText,
               hintStyle: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.white.withOpacity(0.2),
+                color: AppColors.white.withValues(alpha: 0.2),
                 fontSize: 14,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

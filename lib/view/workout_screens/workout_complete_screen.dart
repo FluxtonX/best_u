@@ -3,6 +3,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/notification_service.dart';
 import 'package:best_u/view/home_screen/main_home_screen.dart';
+import 'package:best_u/view/home_screen/widgets/after_photo_prompt_dialog.dart';
 import 'package:best_u/view/home_screen/widgets/weight_update_modal.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
@@ -104,10 +105,9 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _headerFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOut));
-    _headerSlide = Tween<Offset>(
-            begin: const Offset(0, 0.35), end: Offset.zero)
+    _headerFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOut));
+    _headerSlide = Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOutCubic));
 
@@ -121,20 +121,18 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
       (i) => Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _cardsCtrl,
-          curve: Interval(i * 0.22, 0.55 + i * 0.22,
-              curve: Curves.easeOut),
+          curve: Interval(i * 0.22, 0.55 + i * 0.22, curve: Curves.easeOut),
         ),
       ),
     );
     _cardSlides = List.generate(
       3,
-      (i) => Tween<Offset>(
-              begin: const Offset(0, 0.5), end: Offset.zero)
-          .animate(
+      (i) =>
+          Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
         CurvedAnimation(
           parent: _cardsCtrl,
-          curve: Interval(i * 0.22, 0.55 + i * 0.22,
-              curve: Curves.easeOutCubic),
+          curve:
+              Interval(i * 0.22, 0.55 + i * 0.22, curve: Curves.easeOutCubic),
         ),
       ),
     );
@@ -144,12 +142,11 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
       vsync: this,
       duration: const Duration(milliseconds: 550),
     );
-    _progressFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _progressCtrl, curve: Curves.easeOut));
-    _progressSlide = Tween<Offset>(
-            begin: const Offset(0, 0.4), end: Offset.zero)
-        .animate(CurvedAnimation(
-            parent: _progressCtrl, curve: Curves.easeOutCubic));
+    _progressFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _progressCtrl, curve: Curves.easeOut));
+    _progressSlide =
+        Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
+            CurvedAnimation(parent: _progressCtrl, curve: Curves.easeOutCubic));
 
     // ── Improvement rows ──────────────────────────────────────
     final rowCount = widget.improvements.length.clamp(1, 20);
@@ -169,8 +166,7 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
     _rowSlides = List.generate(rowCount, (i) {
       final start = (i / rowCount * 0.7).clamp(0.0, 1.0);
       final end = (start + 0.4).clamp(0.0, 1.0);
-      return Tween<Offset>(
-              begin: const Offset(0.25, 0), end: Offset.zero)
+      return Tween<Offset>(begin: const Offset(0.25, 0), end: Offset.zero)
           .animate(
         CurvedAnimation(
             parent: _rowsCtrl,
@@ -183,10 +179,9 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
       vsync: this,
       duration: const Duration(milliseconds: 550),
     );
-    _bottomFade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _bottomCtrl, curve: Curves.easeOut));
-    _bottomSlide = Tween<Offset>(
-            begin: const Offset(0, 0.4), end: Offset.zero)
+    _bottomFade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _bottomCtrl, curve: Curves.easeOut));
+    _bottomSlide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
         .animate(
             CurvedAnimation(parent: _bottomCtrl, curve: Curves.easeOutCubic));
 
@@ -225,8 +220,25 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
               await WeightUpdateModal.show(context, currentWeight);
             }
           }
+          // If this is the final week 8 workout (e.g. local_w8_d3), prompt for the After Photo!
+          if (widget.workoutId.contains('w8') ||
+              widget.workoutId.contains('week8')) {
+            final photoRes = await apiService.getTransformationPhotos();
+            String? beforeUrl;
+            if (photoRes.statusCode == 200) {
+              final pData = jsonDecode(photoRes.body);
+              beforeUrl = pData['data']?['beforePhotoUrl'] as String?;
+            }
+            if (mounted) {
+              await Future.delayed(const Duration(milliseconds: 400));
+              if (mounted) {
+                await AfterPhotoPromptDialog.show(context,
+                    beforePhotoUrl: beforeUrl);
+              }
+            }
+          }
         } catch (e) {
-          debugPrint('Error getting profile for weekly weight update trigger: $e');
+          debugPrint('Error in weekly completion triggers: $e');
           if (mounted) {
             await WeightUpdateModal.show(context, '70.0');
           }
@@ -241,7 +253,8 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
       final soundEnabled = prefs.getBool('soundEffectsEnabled') ?? true;
       if (!soundEnabled) return;
 
-      _audioController = VideoPlayerController.asset('assets/sound/celeberation.mp3');
+      _audioController =
+          VideoPlayerController.asset('assets/sound/celeberation.mp3');
       await _audioController!.initialize();
       await _audioController!.play();
     } catch (e) {
@@ -417,7 +430,7 @@ class _WorkoutCompleteScreenState extends State<WorkoutCompleteScreen>
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>  MainHomeScreen(),
+                          builder: (context) => MainHomeScreen(),
                         ),
                         (route) => false,
                       );

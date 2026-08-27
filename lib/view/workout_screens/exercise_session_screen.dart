@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
@@ -106,13 +105,12 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
 
   Future<void> _loadExerciseDescriptions() async {
     try {
-      final raw = await rootBundle.loadString(
-          'assets/data/exercise_descriptions.json');
+      final raw =
+          await rootBundle.loadString('assets/data/exercise_descriptions.json');
       final Map<String, dynamic> data = jsonDecode(raw);
       if (mounted) {
         setState(() {
-          _exerciseDescriptions =
-              data.map((k, v) => MapEntry(k, v.toString()));
+          _exerciseDescriptions = data.map((k, v) => MapEntry(k, v.toString()));
         });
       }
     } catch (e) {
@@ -143,7 +141,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -172,7 +170,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
               'From the Best-U Book',
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.primary.withOpacity(0.7),
+                color: AppColors.primary.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -186,8 +184,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
               style: TextStyle(
                 fontFamily: 'Outfit',
                 color: description != null
-                    ? AppColors.white.withOpacity(0.85)
-                    : AppColors.white.withOpacity(0.4),
+                    ? AppColors.white.withValues(alpha: 0.85)
+                    : AppColors.white.withValues(alpha: 0.4),
                 fontSize: 15,
                 height: 1.65,
               ),
@@ -607,12 +605,11 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
           : '';
 
       if (last == null) {
-        _sessionImprovements[exerciseName] = '${loggedReps} reps$wStr';
+        _sessionImprovements[exerciseName] = '$loggedReps reps$wStr';
       } else {
         final wDiffStr = weightDiff > 0 ? ' (+$weightDiff kg)' : '';
         final repSign = repDiff >= 0 ? '+' : '';
-        _sessionImprovements[exerciseName] =
-            '${repSign}${repDiff} reps$wDiffStr';
+        _sessionImprovements[exerciseName] = '$repSign$repDiff reps$wDiffStr';
       }
     }
   }
@@ -877,8 +874,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
             children: [
               // Top Navigation & Progress
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(14, 4, 14, 4),
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
                 child: Column(
                   children: [
                     Row(
@@ -888,8 +884,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () async {
-                            await _updateSessionProgress(
-                                isCompleted: false);
+                            await _updateSessionProgress(isCompleted: false);
                             await _saveSession();
                             if (mounted) Navigator.pop(context);
                           },
@@ -909,8 +904,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () async {
-                            await _updateSessionProgress(
-                                isCompleted: false);
+                            await _updateSessionProgress(isCompleted: false);
                             await _saveSession();
                             if (mounted) Navigator.pop(context);
                           },
@@ -933,9 +927,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                               value: value,
                               minHeight: 3,
                               backgroundColor: const Color(0xFF1F1F1F),
-                              valueColor:
-                                  const AlwaysStoppedAnimation<Color>(
-                                      AppColors.primary),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary),
                             );
                           },
                         ),
@@ -1013,8 +1006,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                       .isNotEmpty)
                                               ? Column(
                                                   mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .center,
+                                                      MainAxisAlignment.center,
                                                   children: [
                                                     Stack(
                                                       alignment:
@@ -1025,13 +1017,11 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                           height: 40,
                                                           child:
                                                               CircularProgressIndicator(
-                                                            strokeWidth:
-                                                                2.5,
+                                                            strokeWidth: 2.5,
                                                             valueColor:
                                                                 AlwaysStoppedAnimation<
                                                                     Color>(
-                                                              AppColors
-                                                                  .primary,
+                                                              AppColors.primary,
                                                             ),
                                                             backgroundColor:
                                                                 Color(
@@ -1041,8 +1031,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                         const Icon(
                                                           Icons
                                                               .fitness_center_rounded,
-                                                          color: AppColors
-                                                              .primary,
+                                                          color:
+                                                              AppColors.primary,
                                                           size: 20,
                                                         )
                                                             .animate(
@@ -1055,12 +1045,10 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                                 color: Colors
                                                                     .white)
                                                             .scale(
-                                                                begin:
-                                                                    const Offset(
-                                                                        0.95,
-                                                                        0.95),
-                                                                end: const Offset(1.05,
-                                                                    1.05),
+                                                                begin: const Offset(
+                                                                    0.95, 0.95),
+                                                                end: const Offset(
+                                                                    1.05, 1.05),
                                                                 duration:
                                                                     1000.ms,
                                                                 curve: Curves
@@ -1068,24 +1056,22 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                             .then()
                                                             .scale(
                                                                 begin: const Offset(
-                                                                    1.05,
-                                                                    1.05),
-                                                                end: const Offset(
-                                                                    0.95,
-                                                                    0.95),
+                                                                    1.05, 1.05),
+                                                                end:
+                                                                    const Offset(
+                                                                        0.95,
+                                                                        0.95),
                                                                 duration:
                                                                     1000.ms,
                                                                 curve: Curves
                                                                     .easeInOut),
                                                       ],
                                                     ),
-                                                    const SizedBox(
-                                                        height: 12),
+                                                    const SizedBox(height: 12),
                                                     Text(
                                                       "Loading Video...",
                                                       style: TextStyle(
-                                                        fontFamily:
-                                                            'Outfit',
+                                                        fontFamily: 'Outfit',
                                                         color: Colors.black
                                                             .withValues(
                                                                 alpha: 0.6),
@@ -1096,14 +1082,13 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                       ),
                                                     )
                                                         .animate(
-                                                            onPlay: (controller) =>
-                                                                controller
-                                                                    .repeat())
+                                                            onPlay:
+                                                                (controller) =>
+                                                                    controller
+                                                                        .repeat())
                                                         .shimmer(
-                                                            duration:
-                                                                2000.ms,
-                                                            color: Colors
-                                                                .black
+                                                            duration: 2000.ms,
+                                                            color: Colors.black
                                                                 .withValues(
                                                                     alpha:
                                                                         0.3)),
@@ -1111,21 +1096,17 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                 )
                                               : Column(
                                                   mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .center,
+                                                      MainAxisAlignment.center,
                                                   children: [
                                                     Container(
                                                       padding:
-                                                          const EdgeInsets
-                                                              .all(14),
-                                                      decoration:
-                                                          BoxDecoration(
+                                                          const EdgeInsets.all(
+                                                              14),
+                                                      decoration: BoxDecoration(
                                                         color: Colors.black
                                                             .withValues(
-                                                                alpha:
-                                                                    0.04),
-                                                        shape:
-                                                            BoxShape.circle,
+                                                                alpha: 0.04),
+                                                        shape: BoxShape.circle,
                                                       ),
                                                       child: Icon(
                                                         Icons
@@ -1136,13 +1117,11 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                                         size: 28,
                                                       ),
                                                     ),
-                                                    const SizedBox(
-                                                        height: 10),
+                                                    const SizedBox(height: 10),
                                                     Text(
                                                       "Video unavailable",
                                                       style: TextStyle(
-                                                        fontFamily:
-                                                            'Outfit',
+                                                        fontFamily: 'Outfit',
                                                         color: Colors.black
                                                             .withValues(
                                                                 alpha: 0.4),
@@ -1185,19 +1164,21 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                                 Icon(
                                   Icons.info_outline_rounded,
                                   size: 13,
-                                  color: AppColors.primary.withOpacity(0.8),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.8),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Description',
                                   style: TextStyle(
                                     fontFamily: 'Outfit',
-                                    color: AppColors.primary.withOpacity(0.85),
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.85),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
-                                    decorationColor:
-                                        AppColors.primary.withOpacity(0.5),
+                                    decorationColor: AppColors.primary
+                                        .withValues(alpha: 0.5),
                                   ),
                                 ),
                               ],
@@ -1459,7 +1440,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
               ),
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 hintText: '0',
                 hintStyle: TextStyle(
                   fontFamily: 'Outfit',

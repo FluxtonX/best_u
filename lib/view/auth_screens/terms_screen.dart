@@ -36,7 +36,7 @@ class TermsScreen extends StatelessWidget {
           'These are the Terms of Service for Best-U.\n\nPlease read them carefully...',
           style: TextStyle(
             fontFamily: 'Outfit',
-            color: AppColors.white.withOpacity(0.8),
+            color: AppColors.white.withValues(alpha: 0.8),
             fontSize: 16,
             height: 1.5,
           ),

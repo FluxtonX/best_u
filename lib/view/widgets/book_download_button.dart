@@ -82,15 +82,15 @@ class _BookDownloadButtonState extends State<BookDownloadButton> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.primary.withOpacity(0.12),
-              AppColors.primary.withOpacity(0.05),
+              AppColors.primary.withValues(alpha: 0.12),
+              AppColors.primary.withValues(alpha: 0.05),
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             width: 1,
           ),
         ),
@@ -100,7 +100,7 @@ class _BookDownloadButtonState extends State<BookDownloadButton> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.15),
+                color: AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -129,7 +129,7 @@ class _BookDownloadButtonState extends State<BookDownloadButton> {
                     'Tap to read your complete guide',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.white.withOpacity(0.5),
+                      color: AppColors.white.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),

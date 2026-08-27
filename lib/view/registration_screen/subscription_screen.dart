@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:best_u/constant/app_theme_color.dart';
-import 'package:best_u/services/api_service.dart';
+import 'package:best_u/services/entitlement_service.dart';
+import 'package:best_u/view/registration_screen/verification_screen.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/material.dart';
 
@@ -14,14 +14,9 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
   int _currentPage = 0;
-  bool _isLoading = false;
   bool _isCheckingStatus = true;
 
-  // Active plan after purchase (null = no plan yet)
-  Map<String, dynamic>? _activePlan;
-
   // ─── Plan definitions ─────────────────────────────────────────────────────
-
   final List<Map<String, dynamic>> _plans = [
     {
       'title': 'Best-U Lose Weight',
@@ -32,23 +27,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'Structured 8-week workout plan',
         'Performance tracking for every exercise',
         'Progress analytics and insights',
-        'Exercise guidance and form tips',
+        'Exercise guidance and video demos',
         'Personal best celebrations',
-        'Weekly progress reports',
+        'Nutrition & fasting guidelines',
       ],
     },
     {
-      'title': 'Best-U Gain Weight',
+      'title': 'Best-U Gain Strength',
       'price': '9.99',
       'period': 'month',
       'priceId': 'price_gain_weight_monthly',
       'features': [
         'Mass building workout protocols',
         'Strength progression tracking',
-        'Nutrition guidelines for bulking',
-        'Exercise form analysis',
-        'Weekly weight tracking',
-        'Community support access',
+        'Exercise form & technique guide',
+        'Hypertrophy nutrition protocols',
+        'Personal record analytics',
+        'Coach milestone tracking',
       ],
     },
     {
@@ -57,186 +52,137 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       'period': 'month',
       'priceId': 'price_combo_monthly',
       'features': [
-        'Full access to all programs',
-        'Advanced analytics dashboard',
-        'Priority coach support',
-        'Exclusive nutrition plans',
-        'Custom workout generator',
-        'Offline mode access',
+        'Full access to all workout programs',
+        'Advanced body composition tracker',
+        'Custom meal ideas & macro plans',
+        'Video exercises & audio cues',
+        'Priority feature updates',
+        'Full transformation suite',
       ],
     },
   ];
 
-  // Reverse lookup: priceId → plan data
-  Map<String, dynamic>? _planByPriceId(String priceId) {
-    try {
-      return _plans.firstWhere((p) => p['priceId'] == priceId);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
-    _checkExistingSubscription();
+    _loadStatus();
   }
 
-  /// Check Firestore for an existing active plan on screen open.
-  Future<void> _checkExistingSubscription() async {
-    try {
-      final apiService = ApiService();
-      final response = await apiService.getSubscriptionStatus();
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final isActive = data['data']?['isActive'] == true;
-        final priceId = data['data']?['priceId'] as String?;
-        if (isActive && priceId != null) {
-          final plan = _planByPriceId(priceId);
-          if (mounted) {
-            setState(() {
-              _activePlan = plan;
-              _isCheckingStatus = false;
-            });
-            return;
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Subscription check error: $e');
-    }
-    if (mounted) setState(() => _isCheckingStatus = false);
-  }
-
-  // ─── Payment helpers ──────────────────────────────────────────────────────
-
-  Future<void> _showPaymentSheet(Map<String, dynamic> plan) async {
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _PaymentSheet(plan: plan),
-    );
-
-    if (confirmed == true) {
-      await _processPayment(plan['priceId'] as String, plan);
+  Future<void> _loadStatus() async {
+    final entitlement = EntitlementService();
+    await entitlement.refreshStatus();
+    if (mounted) {
+      setState(() => _isCheckingStatus = false);
     }
   }
 
-  /// Saves subscription to Firebase and updates UI to show the active plan card.
-  Future<void> _processPayment(
-      String priceId, Map<String, dynamic> plan) async {
-    setState(() => _isLoading = true);
-    try {
-      final apiService = ApiService();
-      final response = await apiService.checkout(priceId);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        setState(() {
-          _activePlan = plan;
-          _isLoading = false;
-        });
-        _showSuccessSnackbar(plan['title'] as String);
-      } else {
-        throw 'Payment failed. Please try again.';
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Error: $e'),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _showSuccessSnackbar(String planTitle) {
+  void _showComingSoonSnackbar() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('✅ "$planTitle" activated successfully!'),
-        backgroundColor: Colors.green.shade700,
+        content: const Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: Colors.black, size: 20),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '💳 Paid subscriptions are coming soon! Students and gym members get 100% free access via verification.',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
-
-  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: _isCheckingStatus
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary))
-          : _activePlan != null
-              ? _buildActivePlanView(_activePlan!)
-              : _buildPlanSelector(),
+    final entitlement = EntitlementService();
+
+    return AnimatedBuilder(
+      animation: entitlement,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: AppColors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              'Best-U Membership',
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.white,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          body: _isCheckingStatus
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary))
+              : entitlement.isVerified
+                  ? _buildVerifiedActiveView(entitlement)
+                  : _buildPlanSelector(entitlement),
+        );
+      },
     );
   }
 
-  // ─── Active Plan View (shown after purchase) ──────────────────────────────
-
-  Widget _buildActivePlanView(Map<String, dynamic> plan) {
+  // ─── Active Verified View (Shown when Admin has approved user) ────────────
+  Widget _buildVerifiedActiveView(EntitlementService entitlement) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         children: [
-          // Active badge
+          // Active Badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.15),
+              color: const Color(0xFF22C55E).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.4)),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'ACTIVE PLAN',
+                Icon(Icons.check_circle_rounded, color: Color(0xFF22C55E), size: 16),
+                SizedBox(width: 8),
+                Text(
+                  'COMPLIMENTARY ACCESS ACTIVE',
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: Colors.green,
+                    color: Color(0xFF22C55E),
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
 
           // Crown icon
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
             ),
             child: const Icon(
               Icons.workspace_premium_rounded,
@@ -244,178 +190,203 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               size: 52,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Plan title
-          Text(
-            plan['title'],
+          // Title
+          const Text(
+            'Best-U Pro Activated',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Outfit',
               color: AppColors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            '8 Week Transformation Program',
-            style: TextStyle(
+            '${entitlement.verificationType == 'student' ? 'Student' : 'Gym Partner'} Verification Approved ✓',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
               fontFamily: 'Outfit',
-              color: AppColors.primary.withOpacity(0.8),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
 
-          // Price card
+          // Verification Info Box
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
             child: Column(
               children: [
-                RichText(
-                  text: TextSpan(
+                if (entitlement.idNumber != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextSpan(
-                        text: '\$${plan['price']}',
-                        style: const TextStyle(
-                          fontFamily: 'Outfit',
-                          color: AppColors.primary,
-                          fontSize: 48,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '/${plan['period']}',
+                      Text(
+                        'Verified ID Number',
                         style: TextStyle(
                           fontFamily: 'Outfit',
-                          color: AppColors.primary.withOpacity(0.5),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
+                          color: AppColors.white.withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        entitlement.idNumber!,
+                        style: const TextStyle(
+                          fontFamily: 'Outfit',
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13.5,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Cancel anytime, no commitment',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.primary.withOpacity(0.4),
-                    fontSize: 14,
-                  ),
+                  const SizedBox(height: 12),
+                  Divider(color: Colors.white.withValues(alpha: 0.06)),
+                  const SizedBox(height: 12),
+                ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Access Entitlement',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withValues(alpha: 0.5),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const Text(
+                      '100% Free Pro Tier',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: Color(0xFF22C55E),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
 
-          // Features
+          // Features List
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(24),
-              border:
-                  Border.all(color: AppColors.white.withOpacity(0.03)),
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "What's Included",
+                  "Included with Best-U Pro",
                   style: TextStyle(
                     fontFamily: 'Outfit',
                     color: AppColors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 16),
-                ...(plan['features'] as List<String>)
-                    .map((feature) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: AppColors.primary,
-                                  size: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  feature,
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: AppColors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Cancel info note
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: BorderRadius.circular(16),
-              border:
-                  Border.all(color: Colors.white.withOpacity(0.06)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    color: AppColors.white.withOpacity(0.4), size: 18),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'To cancel or change your plan, contact support.',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: AppColors.white.withOpacity(0.4),
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
+                _featureRow('All 8-week guided workout programs'),
+                _featureRow('All HD exercise videos & audio coaching'),
+                _featureRow('Custom meal plans & nutrition tools'),
+                _featureRow('Performance analytics & personal bests'),
               ],
             ),
           ),
           const SizedBox(height: 32),
+
+          // Continue button
+          AppBounceAnimation(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, Color(0xFFFF8C42)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  'Continue Training 🚀',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  // ─── Plan Selector (no active plan) ──────────────────────────────────────
+  Widget _featureRow(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check, color: AppColors.primary, size: 12),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withValues(alpha: 0.8),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildPlanSelector() {
+  // ─── Plan Selector View (Shown when user is not verified) ─────────────────
+  Widget _buildPlanSelector(EntitlementService entitlement) {
     return Column(
       children: [
+        // Top Status Alert Bar based on Verification State
+        _buildVerificationStatusBanner(entitlement),
+
+        // Carousel of Plans
         Expanded(
           child: PageView.builder(
             controller: _pageController,
@@ -427,7 +398,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             },
           ),
         ),
-        const SizedBox(height: 20),
+
+        const SizedBox(height: 16),
+
         // Page Indicator
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -441,26 +414,136 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 borderRadius: BorderRadius.circular(4),
                 color: _currentPage == index
                     ? AppColors.primary
-                    : AppColors.white.withOpacity(0.2),
+                    : AppColors.white.withValues(alpha: 0.2),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 16),
+
+        // Student / Gym Member verification CTA Banner
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const VerificationScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🎓', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      entitlement.isPending
+                          ? 'ID Verification In Review (Tap to Update)'
+                          : entitlement.isRejected
+                              ? 'Verification Not Approved (Tap to Re-submit)'
+                              : 'Student or Gym Member? Claim Free Access',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 11, color: AppColors.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
       ],
     );
+  }
+
+  Widget _buildVerificationStatusBanner(EntitlementService entitlement) {
+    if (entitlement.isPending) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Your verification request is currently under review by the Best-U Team.',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: Color(0xFFF59E0B),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (entitlement.isRejected) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Verification was not approved. Please tap below to re-submit your ID card.',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: Color(0xFFEF4444),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildPlanCard(Map<String, dynamic> plan) {
     return SingleChildScrollView(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        padding: const EdgeInsets.all(24),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           color: const Color(0xFF151515),
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: AppColors.white.withOpacity(0.05),
+            color: AppColors.white.withValues(alpha: 0.05),
             width: 1,
           ),
         ),
@@ -468,49 +551,49 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           children: [
             // Crown Icon
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.15),
+                color: AppColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.workspace_premium_rounded,
                 color: AppColors.primary,
-                size: 44,
+                size: 38,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
             Text(
               plan['title'],
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Outfit',
                 color: AppColors.white,
-                fontSize: 32,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               '8 Week Transformation Program',
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: AppColors.primary.withOpacity(0.8),
-                fontSize: 16,
+                color: AppColors.primary.withValues(alpha: 0.8),
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 32),
-            // Pricing
+            const SizedBox(height: 22),
+            // Pricing Box
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(24),
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                 ),
               ),
               child: Column(
@@ -523,7 +606,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           style: const TextStyle(
                             fontFamily: 'Outfit',
                             color: AppColors.primary,
-                            fontSize: 48,
+                            fontSize: 40,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -531,8 +614,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           text: '/${plan['period']}',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.primary.withOpacity(0.5),
-                            fontSize: 20,
+                            color: AppColors.primary.withValues(alpha: 0.5),
+                            fontSize: 18,
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -541,63 +624,58 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Cancel anytime, no commitment',
+                    'Cancel anytime • No commitment',
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.primary.withOpacity(0.4),
-                      fontSize: 14,
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // ── Start Monthly Plan button → opens payment sheet ────────────
+            const SizedBox(height: 20),
+
+            // Start Monthly Plan button → Shows Coming Soon
             AppBounceAnimation(
-              onTap: _isLoading ? () {} : () => _showPaymentSheet(plan),
+              onTap: _showComingSoonSnackbar,
               child: Container(
                 width: double.infinity,
-                height: 60,
+                height: 54,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              color: Colors.black, strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Start Monthly Plan',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                child: const Center(
+                  child: Text(
+                    'Select Plan (Coming Soon)',
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-            // Features
+            const SizedBox(height: 24),
+
+            // Features List
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.black.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.white.withOpacity(0.03),
+                  color: AppColors.white.withValues(alpha: 0.03),
                 ),
               ),
               child: Column(
@@ -608,287 +686,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       color: AppColors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   ...(plan['features'] as List<String>)
-                      .map((feature) => Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.check,
-                                    color: AppColors.primary,
-                                    size: 12,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Text(
-                                    feature,
-                                    style: TextStyle(
-                                      fontFamily: 'Outfit',
-                                      color: AppColors.white.withOpacity(0.8),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )),
+                      .map((feature) => _featureRow(feature)),
                 ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                'By subscribing, you agree to our Terms of Service and Privacy Policy',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.primary.withOpacity(0.4),
-                  fontSize: 10,
-                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Payment Confirmation Bottom Sheet
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _PaymentSheet extends StatefulWidget {
-  final Map<String, dynamic> plan;
-
-  const _PaymentSheet({required this.plan});
-
-  @override
-  State<_PaymentSheet> createState() => _PaymentSheetState();
-}
-
-class _PaymentSheetState extends State<_PaymentSheet> {
-  bool _isProcessing = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final plan = widget.plan;
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF111111),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 32,
-        top: 24,
-        left: 24,
-        right: 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Title
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Secure Payment',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Order summary card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.07)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Order Summary',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        plan['title'],
-                        style: const TextStyle(
-                          fontFamily: 'Outfit',
-                          color: AppColors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '\$${plan['price']}/${plan['period']}',
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Divider(color: Colors.white.withOpacity(0.07)),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total today',
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.6),
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      '\$${plan['price']}',
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppColors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Security note
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.verified_user_outlined,
-                  color: Colors.green.shade400, size: 15),
-              const SizedBox(width: 6),
-              Text(
-                '256-bit SSL encryption • Cancel anytime',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.4),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Confirm Pay button
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: ElevatedButton(
-              onPressed: _isProcessing
-                  ? null
-                  : () {
-                      setState(() => _isProcessing = true);
-                      Navigator.pop(context, true); // return confirmed = true
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-              child: _isProcessing
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                          color: Colors.black, strokeWidth: 2.5),
-                    )
-                  : Text(
-                      'Pay \$${plan['price']}',
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Cancel
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                fontFamily: 'Outfit',
-                color: AppColors.white.withOpacity(0.4),
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

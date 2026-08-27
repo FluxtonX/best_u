@@ -60,7 +60,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Outfit',
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
               ),
@@ -87,7 +87,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 24.0),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.8),
+                    color: Colors.redAccent.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
@@ -114,11 +114,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF151515),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),
             child: Icon(
               Icons.notifications_off_outlined,
-              color: AppColors.primary.withOpacity(0.5),
+              color: AppColors.primary.withValues(alpha: 0.5),
               size: 48,
             ),
           ),
@@ -137,7 +137,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             'Your milestones and updates will appear here.',
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
           ),
@@ -189,8 +189,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isRead 
-              ? Colors.white.withOpacity(0.05) 
-              : AppColors.primary.withOpacity(0.3),
+              ? Colors.white.withValues(alpha: 0.05) 
+              : AppColors.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -199,7 +199,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(iconData, color: iconColor, size: 20),
@@ -239,7 +239,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   body,
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -249,7 +249,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   timeString,
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),

@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.white.withOpacity(0.05),
+              color: AppColors.white.withValues(alpha: 0.05),
             ),
             child: IconButton(
               icon: const Icon(Icons.chevron_left, color: AppColors.white, size: 28),
@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Sign in to continue your journey',
                       style: TextStyle(
                         fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withValues(alpha: 0.5),
                         fontSize: 16,
                         height: 1.5,
                       ),
@@ -241,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           "Don't have an account? ",
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.5),
+                            color: AppColors.white.withValues(alpha: 0.5),
                             fontSize: 15,
                           ),
                         ),
@@ -267,14 +267,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       children: [
                         Expanded(
-                            child: Divider(color: AppColors.white.withOpacity(0.1))),
+                            child: Divider(color: AppColors.white.withValues(alpha: 0.1))),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'OR',
                             style: TextStyle(
                               fontFamily: 'Outfit',
-                              color: AppColors.white.withOpacity(0.3),
+                              color: AppColors.white.withValues(alpha: 0.3),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
@@ -282,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         Expanded(
-                            child: Divider(color: AppColors.white.withOpacity(0.1))),
+                            child: Divider(color: AppColors.white.withValues(alpha: 0.1))),
                       ],
                     ),
                     const SizedBox(height: 32),

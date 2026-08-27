@@ -3,6 +3,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/local_workout_plan_service.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
+import 'package:best_u/view/widgets/pro_access_modal.dart';
 import 'package:best_u/view/workout_screens/exercise_session_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -570,6 +571,12 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                 padding: const EdgeInsets.all(24),
                 child: AppBounceAnimation(
                   onTap: () async {
+                    final hasAccess = await ProAccessModal.checkAccess(
+                      context,
+                      featureName: _workout?['name'] ?? 'Workout Session',
+                    );
+                    if (!hasAccess || !context.mounted) return;
+
                     final workoutId = widget.workoutId ?? 'mock_workout_id';
                     final saved =
                         await ExerciseSessionScreen.getSavedSession(workoutId);

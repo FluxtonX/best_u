@@ -8,8 +8,9 @@ import 'package:best_u/view/home_screen/widgets/weight_update_modal.dart';
 import 'package:best_u/view/widgets/app_bounce_animation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:best_u/services/entitlement_service.dart';
 import 'package:best_u/view/registration_screen/subscription_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -85,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -95,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF151515),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -104,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -130,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 14,
                     height: 1.4,
                   ),
@@ -147,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               width: 1,
                             ),
                           ),
@@ -180,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -213,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showDeleteAccountDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (BuildContext dialogContext) {
         bool isDeleting = false;
         return StatefulBuilder(builder: (context, setState) {
@@ -225,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF151515),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -234,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -260,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
                       height: 1.4,
                     ),
@@ -283,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.1),
+                                      color: Colors.white.withValues(alpha: 0.1),
                                       width: 1,
                                     ),
                                   ),
@@ -309,7 +310,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isDeleting = true;
                                   });
                                   try {
-                                    final user = FirebaseAuth.instance.currentUser;
+                                    final user =
+                                        FirebaseAuth.instance.currentUser;
                                     if (user != null) {
                                       await FirebaseFirestore.instance
                                           .collection('users')
@@ -318,9 +320,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       await user.delete();
                                     }
                                     if (!context.mounted) return;
-                                    Navigator.pop(dialogContext); // Close dialog
+                                    Navigator.pop(
+                                        dialogContext); // Close dialog
                                     _authService.logout();
-                                    Navigator.pushReplacementNamed(context, '/login');
+                                    Navigator.pushReplacementNamed(
+                                        context, '/login');
                                   } on FirebaseAuthException catch (e) {
                                     if (!context.mounted) return;
                                     setState(() {
@@ -328,14 +332,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     });
                                     Navigator.pop(dialogContext);
                                     if (e.code == 'requires-recent-login') {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(
-                                          content: Text('Please log out and log back in before deleting your account.'),
+                                          content: Text(
+                                              'Please log out and log back in before deleting your account.'),
                                           backgroundColor: Colors.redAccent,
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                           content: Text('Error: ${e.message}'),
                                           backgroundColor: Colors.redAccent,
@@ -363,7 +370,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.redAccent.withOpacity(0.2),
+                                        color:
+                                            Colors.redAccent.withValues(alpha: 0.2),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -427,312 +435,331 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String bmi = _profile!['bmi']?.toString() ?? 'Not set';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Skeletonizer(
-          enabled: _isLoading,
-          effect: ShimmerEffect(
-            baseColor: Colors.white.withOpacity(0.04),
-            highlightColor: Colors.white.withOpacity(0.12),
-            duration: const Duration(milliseconds: 1000),
-          ),
-          child: RefreshIndicator(
-            onRefresh: _fetchProfile,
-            color: AppColors.primary,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                const Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Manage your account settings',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 32),
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Skeletonizer(
+            enabled: _isLoading,
+            effect: ShimmerEffect(
+              baseColor: Colors.white.withValues(alpha: 0.04),
+              highlightColor: Colors.white.withValues(alpha: 0.12),
+              duration: const Duration(milliseconds: 1000),
+            ),
+            child: RefreshIndicator(
+              onRefresh: _fetchProfile,
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    const Text(
+                      'Profile',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Manage your account settings',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                // User Info Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFC6934A).withValues(alpha: 0.15),
-                        const Color(0xFF151515),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: const Color(0xFFC6934A).withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
+                    // User Info Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFC6934A).withValues(alpha: 0.15),
+                            const Color(0xFF151515),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: const Color(0xFFC6934A).withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Column(
                         children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.primary,
-                                width: 2,
+                          Row(
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                  color: const Color(0xFF151515),
+                                ),
+                                child: ClipOval(
+                                  child: _imagePath != null
+                                      ? Image.file(
+                                          File(_imagePath!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : const Icon(
+                                          Icons.person_outline_rounded,
+                                          color: AppColors.primary,
+                                          size: 40,
+                                        ),
+                                ),
                               ),
-                              color: const Color(0xFF151515),
-                            ),
-                            child: ClipOval(
-                              child: _imagePath != null
-                                  ? Image.file(
-                                      File(_imagePath!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : const Icon(
-                                      Icons.person_outline_rounded,
-                                      color: AppColors.primary,
-                                      size: 40,
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontFamily: 'Outfit',
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
-                            ),
+                                    Text(
+                                      '$experience • $goal',
+                                      style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  '$experience • $goal',
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.8,
-                                    ),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildStatItem('Age', age),
+                              _buildVerticalDivider(),
+                              _buildStatItem('Weight', '$weight kg'),
+                              _buildVerticalDivider(),
+                              _buildStatItem('BMI', bmi),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildStatItem('Age', age),
-                          _buildVerticalDivider(),
-                          _buildStatItem('Weight', '$weight kg'),
-                          _buildVerticalDivider(),
-                          _buildStatItem('BMI', bmi),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // PROFILE Section
-                _buildSectionLabel('PROFILE'),
-                _buildMenuCard(
-                  icon: Icons.person_outline_rounded,
-                  title: 'Edit Profile',
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen(),
-                      ),
-                    );
-                    _fetchProfile();
-                    _loadLocalImage();
-                  },
-                ),
-                _buildMenuCard(
-                  icon: Icons.monitor_weight_outlined,
-                  title: 'Update Weight',
-                  trailing: Text(
-                    '$weight kg',
-                    style: const TextStyle(
-                      fontFamily: 'Outfit',
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
                     ),
-                  ),
-                  onTap: () async {
-                    await WeightUpdateModal.show(context, weight);
-                    _fetchProfile();
-                  },
-                ),
+                    const SizedBox(height: 40),
 
-                const SizedBox(height: 32),
-                // APP SETTINGS Section
-                _buildSectionLabel('APP SETTINGS'),
-                _buildSwitchCard(
-                  icon: Icons.notifications_none_rounded,
-                  title: 'Notifications',
-                  value: true,
-                  onChanged: (v) {},
-                ),
-                _buildSwitchCard(
-                  icon: Icons.volume_up_outlined,
-                  title: 'Sound Effects',
-                  subtitle: 'Celebration sounds',
-                  value: _soundEffectsEnabled,
-                  onChanged: _updateSoundEffects,
-                ),
-
-                const SizedBox(height: 32),
-                // SUBSCRIPTION Section
-                _buildSectionLabel('SUBSCRIPTION'),
-                _buildMenuCard(
-                  icon: Icons.workspace_premium_outlined,
-                  title: 'Manage Subscription',
-                  subtitle: 'Premium Plan • \$9.99/week',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SubscriptionScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 40),
-                // Log Out Button
-                AppBounceAnimation(
-                  onTap: () => _showLogoutDialog(context),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
+                    // PROFILE Section
+                    _buildSectionLabel('PROFILE'),
+                    _buildMenuCard(
+                      icon: Icons.person_outline_rounded,
+                      title: 'Edit Profile',
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfileScreen(),
+                          ),
+                        );
+                        _fetchProfile();
+                        _loadLocalImage();
+                      },
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.logout_rounded,
+                    _buildMenuCard(
+                      icon: Icons.monitor_weight_outlined,
+                      title: 'Update Weight',
+                      trailing: Text(
+                        '$weight kg',
+                        style: const TextStyle(
+                          fontFamily: 'Outfit',
                           color: AppColors.primary,
-                          size: 20,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Log Out',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: AppColors.primary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                      ),
+                      onTap: () async {
+                        await WeightUpdateModal.show(context, weight);
+                        _fetchProfile();
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+                    // APP SETTINGS Section
+                    _buildSectionLabel('APP SETTINGS'),
+                    _buildSwitchCard(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Notifications',
+                      value: true,
+                      onChanged: (v) {},
+                    ),
+                    _buildSwitchCard(
+                      icon: Icons.volume_up_outlined,
+                      title: 'Sound Effects',
+                      subtitle: 'Celebration sounds',
+                      value: _soundEffectsEnabled,
+                      onChanged: _updateSoundEffects,
+                    ),
+
+                    const SizedBox(height: 32),
+                    // SUBSCRIPTION Section
+                    _buildSectionLabel('SUBSCRIPTION & ACCESS'),
+                    AnimatedBuilder(
+                      animation: EntitlementService(),
+                      builder: (context, _) {
+                        final entitlement = EntitlementService();
+                        String subtitle;
+                        if (entitlement.isVerified) {
+                          subtitle = 'Best-U Pro • Complimentary Active ✓';
+                        } else if (entitlement.isPending) {
+                          subtitle = 'Verification Request In Review ⏳';
+                        } else if (entitlement.isRejected) {
+                          subtitle = 'Verification Action Required ⚠️';
+                        } else {
+                          subtitle = 'Claim Free Student / Gym Access 🎓';
+                        }
+
+                        return _buildMenuCard(
+                          icon: Icons.workspace_premium_outlined,
+                          title: 'Membership & Verification',
+                          subtitle: subtitle,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SubscriptionScreen(),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 40),
+                    // Log Out Button
+                    AppBounceAnimation(
+                      onTap: () => _showLogoutDialog(context),
+                      child: Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.5),
+                            width: 1.5,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-                
-                // Delete Account Button
-                AppBounceAnimation(
-                  onTap: () => _showDeleteAccountDialog(context),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.5),
-                        width: 1.5,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.logout_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Log Out',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: AppColors.primary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.redAccent,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Delete Account',
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            color: Colors.redAccent.withOpacity(0.9),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+
+                    const SizedBox(height: 16),
+
+                    // Delete Account Button
+                    AppBounceAnimation(
+                      onTap: () => _showDeleteAccountDialog(context),
+                      child: Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.5),
+                            width: 1.5,
                           ),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Delete Account',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                color: Colors.redAccent.withValues(alpha: 0.9),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 24),
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        'Best-U Version 1.0.0',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Colors.white.withValues(alpha: 0.2),
-                          fontSize: 11,
-                        ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Best-U Version 1.0.0',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: Colors.white.withValues(alpha: 0.2),
+                              fontSize: 11,
+                            ),
+                          ),
+                          Text(
+                            '© 2026 Best-U Fitness',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: Colors.white.withValues(alpha: 0.2),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '© 2026 Best-U Fitness',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Colors.white.withValues(alpha: 0.2),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    ));
+        ));
   }
 
   Widget _buildSectionLabel(String label) {
@@ -792,8 +819,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 )
               : null,
-          trailing:
-              trailing ??
+          trailing: trailing ??
               const Icon(
                 Icons.chevron_right_rounded,
                 color: Colors.white24,

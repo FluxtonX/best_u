@@ -24,14 +24,14 @@ class WorkoutInputBlock extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.darkGrey,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.white.withOpacity(0.05)),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.05)),
           ),
           child: Column(
             children: [
               Text(
                 label.toUpperCase(),
                 style: TextStyle(fontFamily: 'Outfit', 
-                  color: AppColors.white.withOpacity(0.4),
+                  color: AppColors.white.withValues(alpha: 0.4),
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,

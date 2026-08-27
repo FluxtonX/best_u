@@ -39,7 +39,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
         Text(
           widget.label,
           style: TextStyle(fontFamily: 'Outfit', 
-            color: AppColors.white.withOpacity(0.9),
+            color: AppColors.white.withValues(alpha: 0.9),
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -51,7 +51,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
             color: AppColors.darkGrey,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -68,13 +68,13 @@ class _AuthTextFieldState extends State<AuthTextField> {
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle: TextStyle(fontFamily: 'Outfit', 
-                color: AppColors.white.withOpacity(0.3),
+                color: AppColors.white.withValues(alpha: 0.3),
                 fontSize: 14,
               ),
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
-                      color: AppColors.white.withOpacity(0.5),
+                      color: AppColors.white.withValues(alpha: 0.5),
                       size: 20,
                     )
                   : null,
@@ -82,7 +82,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                   ? IconButton(
                       icon: Icon(
                         _obscureText ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withValues(alpha: 0.5),
                         size: 20,
                       ),
                       onPressed: () {

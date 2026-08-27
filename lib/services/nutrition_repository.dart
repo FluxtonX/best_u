@@ -82,7 +82,7 @@ class NutritionRepository {
   int _baseId(String sessionId) => sessionId.hashCode.abs() % 0xFFFFF;
 
   NotificationDetails get _notifDetails {
-    final android = const AndroidNotificationDetails(
+    const android = AndroidNotificationDetails(
       'fasting_channel',
       'Fasting reminders',
       channelDescription: 'Notifications for fasting milestones and reminders',
@@ -90,7 +90,7 @@ class NutritionRepository {
       priority: Priority.high,
     );
     const ios = DarwinNotificationDetails();
-    return NotificationDetails(android: android, iOS: ios);
+    return const NotificationDetails(android: android, iOS: ios);
   }
 
   Future<void> _safeZonedSchedule(
@@ -201,14 +201,29 @@ class NutritionRepository {
       checkTimes = [
         (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 12 PM!'),
         (10, 30, 'Mid-Morning Check ☕', 'Have you eaten yet? Almost to 12 PM!'),
-        (12, 0, 'Beginner Fast Complete! 🏆', '12 PM reached! Time for your Protein and Fat meal.'),
+        (
+          12,
+          0,
+          'Beginner Fast Complete! 🏆',
+          '12 PM reached! Time for your Protein and Fat meal.'
+        ),
       ];
     } else if (level == 1) {
       // Intermediate level (End fast time: 2 PM)
       checkTimes = [
         (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 2 PM!'),
-        (11, 0, 'Mid-Morning Check ☕', 'Have you eaten yet? Keep going until 2 PM!'),
-        (14, 0, 'Intermediate Fast Complete! 🏆', '2 PM reached! Time for your Protein and Fat meal.'),
+        (
+          11,
+          0,
+          'Mid-Morning Check ☕',
+          'Have you eaten yet? Keep going until 2 PM!'
+        ),
+        (
+          14,
+          0,
+          'Intermediate Fast Complete! 🏆',
+          '2 PM reached! Time for your Protein and Fat meal.'
+        ),
       ];
     } else {
       // Elite level (End fast time: 4 PM)
@@ -216,7 +231,12 @@ class NutritionRepository {
         (8, 0, 'Morning Check-in ⏰', 'Have you eaten yet? Your goal is 4 PM!'),
         (11, 0, 'Mid-Morning Check ☕', 'Have you eaten yet?'),
         (14, 0, 'Afternoon Check 🕒', 'Have you eaten yet? Push to 4 PM!'),
-        (16, 0, 'Elite Fast Complete! 🏆', '4 PM reached! Time for your Protein and Fat meal.'),
+        (
+          16,
+          0,
+          'Elite Fast Complete! 🏆',
+          '4 PM reached! Time for your Protein and Fat meal.'
+        ),
       ];
     }
 
@@ -264,8 +284,24 @@ class NutritionRepository {
           });
           return;
         }
+      } else {
+        // Fallback: check if an active session exists in Firestore
+        final activeSnap = await _sessionsRef
+            .where('status', isEqualTo: 'active')
+            .limit(1)
+            .get();
+        if (activeSnap.docs.isNotEmpty) {
+          final doc = activeSnap.docs.first;
+          final session = FastingSession.fromDoc(doc);
+          await prefs.setString(_kActiveSessionKey, doc.id);
+          _sessionCtrl?.add(session);
+          _sessionsRef.doc(doc.id).snapshots().listen((snap) {
+            _sessionCtrl?.add(FastingSession.fromDoc(snap));
+          });
+          return;
+        }
       }
-      // If no active session key, check if there are sessions completed today
+      // If no active session, check if there are sessions completed today
       final todaySessions = await getTodaySessions();
       if (todaySessions.isNotEmpty) {
         _sessionCtrl?.add(todaySessions.last);
@@ -316,8 +352,16 @@ class NutritionRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kActiveSessionKey, doc.id);
 
-    // Persist level on meta doc
+    // Persist level on meta doc and top-level user document
     await _metaRef.set({'level': level}, SetOptions(merge: true));
+    await _profileRef.set({
+      'fastingStartTime': Timestamp.fromDate(now),
+      'fastingEndsAt': Timestamp.fromDate(endsAt),
+      'selectedLevel': level,
+      'isFastingActive': true,
+      'lastFastingSessionId': doc.id,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
     // Push to stream and start live listener
     _sessionCtrl?.add(session);
@@ -339,6 +383,10 @@ class NutritionRepository {
       'pausedAt': Timestamp.fromDate(now),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    await _profileRef.set({
+      'isFastingActive': false,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await cancelAllSessionNotifications(sessionId);
   }
 
@@ -355,6 +403,10 @@ class NutritionRepository {
       await _sessionsRef
           .doc(sessionId)
           .set({'status': 'active'}, SetOptions(merge: true));
+      await _profileRef.set({
+        'isFastingActive': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       return;
     }
 
@@ -373,6 +425,12 @@ class NutritionRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
+    await _profileRef.set({
+      'isFastingActive': true,
+      'fastingEndsAt': Timestamp.fromDate(newEnds),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
     // Re-schedule notifications from the shifted start
     await _scheduleMilestoneNotifications(sessionId, newStart, newEnds);
     await _scheduleHungerCheckReminders(sessionId, newStart, newEnds, level);
@@ -384,6 +442,11 @@ class NutritionRepository {
       'status': 'completed',
       'endedAt': Timestamp.fromDate(now),
       'dayComplete': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _profileRef.set({
+      'isFastingActive': false,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
@@ -500,7 +563,8 @@ class NutritionRepository {
       final now = DateTime.now();
       final startOfDay = DateTime(now.year, now.month, now.day);
       final snap = await _sessionsRef
-          .where('startedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('startedAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .get();
       return snap.docs
           .map((d) => FastingSession.fromDoc(d))
@@ -645,13 +709,13 @@ class NutritionRepository {
     final sessionsCount = (analytics['sessionsCount'] as int?) ?? 0;
 
     if (streak >= 7 && pct > 80) {
-      return "You're on fire — ${streak}-day streak! Keep the momentum!";
+      return "You're on fire — $streak-day streak! Keep the momentum!";
     }
     if (pct > 80 && hours > 30) {
       return "Outstanding work — your consistency is paying off. Stay the course.";
     }
     if (streak >= 3) {
-      return "${streak}-day streak! Good consistency — focus on sustainable progress.";
+      return "$streak-day streak! Good consistency — focus on sustainable progress.";
     }
     if (pct > 50) {
       return "Good consistency — focus on sustainable progress. You've got this!";

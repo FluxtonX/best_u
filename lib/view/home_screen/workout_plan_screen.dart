@@ -3,6 +3,7 @@ import 'package:best_u/constant/app_theme_color.dart';
 import 'package:best_u/services/api_service.dart';
 import 'package:best_u/services/local_workout_plan_service.dart';
 import 'package:best_u/view/widgets/book_download_button.dart';
+import 'package:best_u/view/widgets/pro_access_modal.dart';
 import 'package:best_u/view/workout_screens/workout_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -18,11 +19,30 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
   Map<String, dynamic>? _activeProgram;
   double _overallProgress = 0.0;
   bool _isLoading = true;
+  String _strengthLevel = 'beginner'; // 'beginner' | 'advanced'
 
   @override
   void initState() {
     super.initState();
+    _loadStrengthLevel();
     _fetchData();
+  }
+
+  Future<void> _loadStrengthLevel() async {
+    try {
+      final res = await ApiService().getStrengthLevel();
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (mounted) {
+          setState(() => _strengthLevel = data['data']?['strengthLevel'] ?? 'beginner');
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _setStrengthLevel(String level) async {
+    setState(() => _strengthLevel = level);
+    await ApiService().setStrengthLevel(level);
   }
 
   Future<void> _fetchData() async {
@@ -136,8 +156,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
         child: Skeletonizer(
           enabled: _isLoading,
           effect: ShimmerEffect(
-            baseColor: Colors.white.withOpacity(0.04),
-            highlightColor: Colors.white.withOpacity(0.12),
+            baseColor: Colors.white.withValues(alpha: 0.04),
+            highlightColor: Colors.white.withValues(alpha: 0.12),
             duration: const Duration(milliseconds: 1000),
           ),
           child: RefreshIndicator(
@@ -165,11 +185,76 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                   'Your transformation journey',
                   style: TextStyle(
                     fontFamily: 'Outfit',
-                    color: AppColors.white.withOpacity(0.5),
+                    color: AppColors.white.withValues(alpha: 0.5),
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
+
+                // ── Beginner / Advanced toggle ─────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF151515),
+                    borderRadius: BorderRadius.circular(16),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                  ),
+                  child: Row(
+                    children: [
+                      _levelTab('🏃 Beginner', 'beginner'),
+                      _levelTab('💪 Advanced', 'advanced'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Coming Soon banner for Advanced
+                if (_strengthLevel == 'advanced')
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1500),
+                      borderRadius: BorderRadius.circular(16),
+                      border:
+                          Border.all(color: const Color(0xFFFFAA00).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🔒', style: TextStyle(fontSize: 22)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Advanced Plan — Coming Soon!',
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: Color(0xFFFFAA00),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Weights-only program is being prepared. You\'ll be notified when it\'s ready.',
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: AppColors.white.withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
 
                 // Overall Progress Card
                 Container(
@@ -178,7 +263,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF151515),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                   ),
                   child: Column(
                     children: [
@@ -189,7 +274,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                             'OVERALL PROGRESS',
                             style: TextStyle(
                               fontFamily: 'Outfit',
-                              color: AppColors.white.withOpacity(0.5),
+                              color: AppColors.white.withValues(alpha: 0.5),
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
@@ -211,7 +296,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
                           value: overallProgress,
-                          backgroundColor: Colors.white.withOpacity(0.05),
+                          backgroundColor: Colors.white.withValues(alpha: 0.05),
                           valueColor: const AlwaysStoppedAnimation<Color>(
                               AppColors.primary),
                           minHeight: 8,
@@ -222,7 +307,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                         '$completedCount of $totalWorkouts workouts completed',
                         style: TextStyle(
                           fontFamily: 'Outfit',
-                          color: AppColors.white.withOpacity(0.4),
+                          color: AppColors.white.withValues(alpha: 0.4),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -244,7 +329,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                       child: Text(
                         'No weeks data available yet',
                         style:
-                            TextStyle(color: AppColors.white.withOpacity(0.5)),
+                            TextStyle(color: AppColors.white.withValues(alpha: 0.5)),
                       ),
                     ),
                   )
@@ -296,8 +381,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isCurrent
-              ? AppColors.primary.withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
+              ? AppColors.primary.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -311,8 +396,8 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: isCompleted
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.05),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -325,7 +410,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                   ? Colors.green
                   : (isCurrent
                       ? AppColors.primary
-                      : AppColors.white.withOpacity(0.3)),
+                      : AppColors.white.withValues(alpha: 0.3)),
               size: 18,
             ),
           ),
@@ -344,7 +429,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                 status,
                 style: TextStyle(
                   fontFamily: 'Outfit',
-                  color: AppColors.white.withOpacity(0.4),
+                  color: AppColors.white.withValues(alpha: 0.4),
                   fontSize: 13,
                 ),
               ),
@@ -354,7 +439,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
@@ -372,7 +457,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
           ),
           trailing: Icon(
             isLocked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             size: 20,
           ),
           children: days != null
@@ -403,37 +488,43 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
     Widget iconWidget;
 
     if (isCompleted) {
-      iconBgColor = Colors.green.withOpacity(0.15);
+      iconBgColor = Colors.green.withValues(alpha: 0.15);
       iconWidget = const Icon(Icons.check_rounded, color: Colors.green, size: 16);
     } else if (isLockedToday) {
-      iconBgColor = Colors.white.withOpacity(0.05);
-      iconWidget = Icon(Icons.lock_clock_rounded, color: AppColors.primary.withOpacity(0.5), size: 16);
+      iconBgColor = Colors.white.withValues(alpha: 0.05);
+      iconWidget = Icon(Icons.lock_clock_rounded, color: AppColors.primary.withValues(alpha: 0.5), size: 16);
     } else if (isFutureLocked) {
-      iconBgColor = Colors.white.withOpacity(0.02);
-      iconWidget = Icon(Icons.lock_outline_rounded, color: AppColors.white.withOpacity(0.15), size: 16);
+      iconBgColor = Colors.white.withValues(alpha: 0.02);
+      iconWidget = Icon(Icons.lock_outline_rounded, color: AppColors.white.withValues(alpha: 0.15), size: 16);
     } else {
       // Active / Current
-      iconBgColor = Colors.white.withOpacity(0.05);
+      iconBgColor = Colors.white.withValues(alpha: 0.05);
       iconWidget = const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 16);
     }
 
     String subtitleText = type;
     Color titleColor = AppColors.white;
-    Color subtitleColor = AppColors.white.withOpacity(0.4);
+    Color subtitleColor = AppColors.white.withValues(alpha: 0.4);
 
     if (isLockedToday) {
       subtitleText = 'Come back tomorrow 💪';
-      titleColor = AppColors.white.withOpacity(0.7);
-      subtitleColor = AppColors.primary.withOpacity(0.6);
+      titleColor = AppColors.white.withValues(alpha: 0.7);
+      subtitleColor = AppColors.primary.withValues(alpha: 0.6);
     } else if (isFutureLocked) {
-      titleColor = AppColors.white.withOpacity(0.3);
-      subtitleColor = AppColors.white.withOpacity(0.2);
+      titleColor = AppColors.white.withValues(alpha: 0.3);
+      subtitleColor = AppColors.white.withValues(alpha: 0.2);
     }
 
     return GestureDetector(
       onTap: !isClickable
           ? null
-          : () {
+          : () async {
+              final hasAccess = await ProAccessModal.checkAccess(
+                context,
+                featureName: '$day - $type',
+              );
+              if (!hasAccess || !context.mounted) return;
+
               // Soft informational message for locked-today days, but still
               // allow navigation so the client can review/test the workout.
               if (isLockedToday) {
@@ -470,12 +561,12 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
         margin: const EdgeInsets.only(top: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2),
+          color: Colors.black.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isCurrent && !isLockedToday
-                ? AppColors.primary.withOpacity(0.3)
-                : Colors.white.withOpacity(0.03),
+                ? AppColors.primary.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.03),
           ),
         ),
         child: Row(
@@ -521,4 +612,33 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       ),
     );
   }
+
+  Widget _levelTab(String label, String value) {
+    final selected = _strengthLevel == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _setStrengthLevel(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: selected ? Colors.white : AppColors.white.withValues(alpha: 0.45),
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+

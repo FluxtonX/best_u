@@ -44,7 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.white.withOpacity(0.05),
+              color: AppColors.white.withValues(alpha: 0.05),
             ),
             child: IconButton(
               icon: const Icon(
@@ -80,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       'Join Best-U and start your transformation',
                       style: TextStyle(
                         fontFamily: 'Outfit',
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withValues(alpha: 0.5),
                         fontSize: 16,
                         height: 1.5,
                       ),
@@ -109,10 +109,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.03),
+                        color: AppColors.white.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.white.withOpacity(0.05),
+                          color: AppColors.white.withValues(alpha: 0.05),
                         ),
                       ),
                       child: Column(
@@ -122,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             'PASSWORD REQUIREMENTS',
                             style: TextStyle(
                               fontFamily: 'Outfit',
-                              color: AppColors.white.withOpacity(0.3),
+                              color: AppColors.white.withValues(alpha: 0.3),
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.2,
@@ -163,7 +163,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               const VisualDensity(horizontal: -4, vertical: -4),
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           side: BorderSide(
-                            color: AppColors.white.withOpacity(0.5),
+                            color: AppColors.white.withValues(alpha: 0.5),
                             width: 1.5,
                           ),
                           shape: RoundedRectangleBorder(
@@ -176,7 +176,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             text: TextSpan(
                               style: TextStyle(
                                 fontFamily: 'Outfit',
-                                color: AppColors.white.withOpacity(0.7),
+                                color: AppColors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
                                 height: 1.5,
                               ),
@@ -241,7 +241,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           'Already have an account? ',
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            color: AppColors.white.withOpacity(0.5),
+                            color: AppColors.white.withValues(alpha: 0.5),
                             fontSize: 15,
                           ),
                         ),
@@ -268,7 +268,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Divider(color: AppColors.white.withOpacity(0.1)),
+                          child: Divider(color: AppColors.white.withValues(alpha: 0.1)),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -276,7 +276,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             'OR',
                             style: TextStyle(
                               fontFamily: 'Outfit',
-                              color: AppColors.white.withOpacity(0.3),
+                              color: AppColors.white.withValues(alpha: 0.3),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
@@ -284,7 +284,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         Expanded(
-                          child: Divider(color: AppColors.white.withOpacity(0.1)),
+                          child: Divider(color: AppColors.white.withValues(alpha: 0.1)),
                         ),
                       ],
                     ),
@@ -445,7 +445,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           Icon(
             isMet ? Icons.check_circle_rounded : Icons.close_rounded,
-            color: isMet ? Colors.green : AppColors.primary.withOpacity(0.5),
+            color: isMet ? Colors.green : AppColors.primary.withValues(alpha: 0.5),
             size: 16,
           ),
           const SizedBox(width: 10),
@@ -453,7 +453,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             text,
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: isMet ? Colors.green : AppColors.primary.withOpacity(0.5),
+              color: isMet ? Colors.green : AppColors.primary.withValues(alpha: 0.5),
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),

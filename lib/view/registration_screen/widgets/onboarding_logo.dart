@@ -33,7 +33,7 @@ class OnboardingLogo extends StatelessWidget {
         Text(
           '8 Week Transformation Program',
           style: TextStyle(fontFamily: 'Outfit', 
-            color: AppColors.white.withOpacity(0.5),
+            color: AppColors.white.withValues(alpha: 0.5),
             fontSize: 12,
             fontWeight: FontWeight.w400,
           ),

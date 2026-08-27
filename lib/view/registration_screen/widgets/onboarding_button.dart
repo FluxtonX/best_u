@@ -33,13 +33,13 @@ class OnboardingButton extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 // ignore: deprecated_member_use
-                color: isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.3),
+                color: isEnabled ? AppColors.primary : AppColors.primary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(isLoading ? 28 : 14),
                 boxShadow: isEnabled && !isLoading
                     ? [
                         BoxShadow(
                           // ignore: deprecated_member_use
-                          color: AppColors.primary.withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 5),
                         )
