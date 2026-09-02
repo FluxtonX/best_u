@@ -136,18 +136,22 @@ class _SplashScreenState extends State<SplashScreen>
           final data = jsonDecode(response.body)['data'];
           if (data != null && data['onboardingCompleted'] == true) {
             if (!mounted) return;
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home', (route) => false);
           } else {
             if (!mounted) return;
-            Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/registration', (route) => false);
           }
         } else {
           if (!mounted) return;
-          Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
+          Navigator.pushNamedAndRemoveUntil(
+              context, '/registration', (route) => false);
         }
       } catch (_) {
         if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(context, '/registration', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, '/registration', (route) => false);
       }
     } else {
       if (!mounted) return;
@@ -253,16 +257,16 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildOverlay() {
     return Positioned.fill(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+        filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.2),
-                Colors.black.withValues(alpha: 0.45),
-                Colors.black.withValues(alpha: 0.82),
+                Colors.black.withValues(alpha: 0.25),
+                Colors.black.withValues(alpha: 0.50),
+                Colors.black.withValues(alpha: 0.85),
               ],
             ),
           ),

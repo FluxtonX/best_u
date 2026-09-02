@@ -1,0 +1,3247 @@
+{
+  "planName": "Best-U 8 Week Advanced Workout Plan",
+  "durationWeeks": 8,
+  "daysPerWeek": 3,
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Max Test",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "Max Test",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 16-40kg"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 16-40kg"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Plank",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10-60 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-60 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "Max Test",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 8-40kg"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 8-40kg"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Plank",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10-60 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-60 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "Max Test",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x Reps"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 x Reps"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-4 Reps x 12-40kg"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Plank",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10-60 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-60 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "90 Degree Strength Holding",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 3 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Russian Twists",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Flat Bench Lateral Raise",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Kickbacks",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-20 Reps"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Shrugs",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-16kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 3 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 12-18kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 12-18kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 5-10kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Reverse Lunges",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 12-18kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 3 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "90 Degree Strength Holding",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Russian Twists",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 2-5kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "5-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 3 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "90 Degree Endurance Holding",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 2-5kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 10 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 10 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "focus": "Hypertrophy (Muscle Growth)",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 2-5kg"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "90 Degree Strength Holding",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Incline Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Incline Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 12-18kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "5-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Dumbell Pullover",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Shrugs",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Incline Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 2-5kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 80% max/kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "90 Degree Strength Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 14-20kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 14-20kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 14-20kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "5-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 14-20kg x 3 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 3 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "90 Degree Endurance Holding",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 2-5kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 5 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 2-5kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Incline Dumbbell Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 10 sec"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "90 Degree Endurance Holding",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "5-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "3-6 Reps x 60% max/kg x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-6 Reps x 10 sec"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "1-10 Reps x 10 sec"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "focus": "Hypertrophy (Muscle Growth)",
+      "days": [
+        {
+          "day": 1,
+          "title": "Chest / Bicep",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Incline Bench Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bicep Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Incline Dumbbell Flys",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 10-14kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Hammer Curls",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "5-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Clock Push Up",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Cross Body Hammer Curl",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "title": "Shoulder and Tris",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Shoulder Press",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 6-10kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "Bench Dips",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Weighted Sit Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Front Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Incline Tricep Extension",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Weighted Leg Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 2-5kg"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Lateral Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 Reps x 4-8kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Clock Push Ups",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "title": "Legs and Back",
+          "focus": "Hypertrophy (Muscle Growth)",
+          "exercises": [
+            {
+              "order": 1,
+              "name": "Squats",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 2,
+              "name": "One Arm Row",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 3,
+              "name": "Russian Twist with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-12 Reps x 5-10kg"
+                }
+              ]
+            },
+            {
+              "order": 4,
+              "name": "Lunges with Weights",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 5,
+              "name": "Pull ups Knuckles Towards",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 6,
+              "name": "Wipers",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "5-10 Reps each side"
+                },
+                {
+                  "set": 2,
+                  "instruction": "10-20 Reps each side"
+                }
+              ]
+            },
+            {
+              "order": 7,
+              "name": "Standing Calf Raises",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "10 x 12-18kg x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "80% Max weight x 10-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 8,
+              "name": "Pull ups Knuckles Away",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            },
+            {
+              "order": 9,
+              "name": "Roller",
+              "sets": [
+                {
+                  "set": 1,
+                  "instruction": "1-10 Reps x 3 sec"
+                },
+                {
+                  "set": 2,
+                  "instruction": "6-12 Reps"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

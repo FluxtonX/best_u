@@ -237,7 +237,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
     }
   }
 
-  /// Calculate goal: 1 more rep than last result, or +2kg if already at/above last reps
+  /// Calculate goal: 6 reps hit -> +5kg overload (goal 3-4 reps), otherwise next rep progression
   Map<String, dynamic> _goalForCurrentSet() {
     final last = _lastResultForCurrentSet();
     final exercise = widget.exercises[_currentExerciseIndex];
@@ -253,26 +253,52 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
         'reps': null,
         'weight': null,
         'displayText': currentSet['goal']?.toString() ?? '--',
+        'isOverload': false,
       };
     }
 
     final lastReps = last['reps'] as int? ?? 0;
     final lastWeight = last['weight'] as double? ?? 0.0;
 
-    // Parse target reps from the plan
+    // Nasir Sir formula: As soon as they can hit 6 reps on an exercise,
+    // the next time they do that week the weight goes up by 5kg. (Goal: 3-4 reps on new weight)
+    if (hasWeight && lastWeight > 0 && lastReps >= 6) {
+      final newWeight = lastWeight + 5.0;
+      final weightStr = newWeight == newWeight.roundToDouble()
+          ? newWeight.round().toString()
+          : newWeight.toStringAsFixed(1);
+      return {
+        'reps': 4,
+        'weight': newWeight,
+        'displayText': '3-4 reps x ${weightStr}kg (+5kg)',
+        'isOverload': true,
+      };
+    }
+
+    // Parse target reps from the plan if available
     final targetRepsStr = currentSet['targetReps']?.toString();
     int? planTargetReps;
     if (targetRepsStr != null) {
       planTargetReps = int.tryParse(targetRepsStr.split('-').last.trim());
     }
 
-    int goalReps = lastReps + 1;
+    int goalReps = (lastReps + 1).clamp(1, 6);
     double goalWeight = lastWeight;
 
-    if (hasWeight && planTargetReps != null && lastReps >= planTargetReps) {
-      // At target reps → increase weight instead
-      goalReps = lastReps;
-      goalWeight = lastWeight + 2.0;
+    if (hasWeight &&
+        planTargetReps != null &&
+        lastReps >= planTargetReps &&
+        lastWeight > 0) {
+      goalWeight = lastWeight + 5.0;
+      final weightStr = goalWeight == goalWeight.roundToDouble()
+          ? goalWeight.round().toString()
+          : goalWeight.toStringAsFixed(1);
+      return {
+        'reps': 4,
+        'weight': goalWeight,
+        'displayText': '3-4 reps x ${weightStr}kg (+5kg)',
+        'isOverload': true,
+      };
     }
 
     String display;
@@ -289,6 +315,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
       'reps': goalReps,
       'weight': goalWeight,
       'displayText': display,
+      'isOverload': false,
     };
   }
 
@@ -974,7 +1001,8 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                           // Exercise Demonstration Card
                           Container(
                             width: double.infinity,
-                            height: 150,
+                            height: (MediaQuery.of(context).size.height * 0.31)
+                                .clamp(210.0, 265.0),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
@@ -1148,59 +1176,61 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                             style: const TextStyle(
                               fontFamily: 'Outfit',
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: 19,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
 
-                          // Tappable Description link
-                          GestureDetector(
-                            onTap: () => _showDescriptionSheet(
-                                exercise['name']?.toString() ?? ''),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.info_outline_rounded,
-                                  size: 13,
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.8),
+                          // Set label & Description Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _currentSetLabel(exercise),
+                                style: const TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: AppColors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Description',
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.85),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: AppColors.primary
-                                        .withValues(alpha: 0.5),
-                                  ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _showDescriptionSheet(
+                                    exercise['name']?.toString() ?? ''),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline_rounded,
+                                      size: 13,
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.8),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Description',
+                                      style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.85),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: AppColors.primary
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-
-                          // Set label below exercise name
-                          Text(
-                            _currentSetLabel(exercise),
-                            style: const TextStyle(
-                              fontFamily: 'Outfit',
-                              color: AppColors.primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
 
                           // Last Result | Goal boxes
                           _buildLastResultAndGoal(exercise),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
 
                           // Log Section Header
                           Text(
@@ -1212,7 +1242,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
 
                           // Weight and Reps/Seconds Inputs
                           if (hasWeightInput)
@@ -1261,7 +1291,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                   onTap: _onTapActionButton,
                   child: Container(
                     width: double.infinity,
-                    height: 44,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
@@ -1279,7 +1309,7 @@ class _ExerciseSessionScreenState extends State<ExerciseSessionScreen>
                         style: const TextStyle(
                           fontFamily: 'Outfit',
                           color: Colors.black,
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
                         ),

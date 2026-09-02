@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 class LocalWorkoutPlanService {
-  static const String _assetPath =
+  static const String _beginnerAssetPath =
       'assets/data/best_u_8_week_workout_plan.json';
+  static const String _advancedAssetPath =
+      'assets/data/best_u_advanced_8_week_workout_plan.json';
   static const String _exerciseVideoPath = 'assets/video/exercises';
 
   static const Map<String, String> _exerciseVideos = {
@@ -57,8 +59,9 @@ class LocalWorkoutPlanService {
     'wipers': 'Wipers-(straight-leg)_Waist-FIX_.mp4',
   };
 
-  Future<Map<String, dynamic>> loadActiveProgram() async {
-    final plan = await _loadPlan();
+  Future<Map<String, dynamic>> loadActiveProgram(
+      {String level = 'beginner'}) async {
+    final plan = await _loadPlan(level: level);
     final weeks = (plan['weeks'] as List? ?? [])
         .whereType<Map<String, dynamic>>()
         .toList();
@@ -68,10 +71,14 @@ class LocalWorkoutPlanService {
     );
 
     return {
-      'programName': plan['planName'] ?? 'Best-U 8 Week Workout Plan',
+      'programName': plan['planName'] ??
+          (level == 'advanced'
+              ? 'Best-U 8 Week Advanced Workout Plan'
+              : 'Best-U 8 Week Workout Plan'),
       'completedCount': 0,
       'totalWorkouts': totalWorkouts,
       'progressPercentage': 0,
+      'strengthLevel': level,
       'weeks': weeks.map((week) {
         final weekNumber = week['week'] as int? ?? 0;
         final days = (week['days'] as List? ?? [])
@@ -80,6 +87,7 @@ class LocalWorkoutPlanService {
 
         return {
           'weekNum': weekNumber,
+          'focus': week['focus'] ?? '',
           'status': '0/${days.length} workouts',
           'isCompleted': false,
           'isCurrent': weekNumber == 1,
@@ -90,6 +98,7 @@ class LocalWorkoutPlanService {
               'workoutId': _localWorkoutId(weekNumber, dayNumber),
               'title': 'Day $dayNumber',
               'type': day['title'] ?? 'Workout',
+              'focus': day['focus'] ?? week['focus'] ?? '',
               'isCompleted': false,
               'isCurrent': weekNumber == 1 && dayNumber == 1,
             };
@@ -99,15 +108,19 @@ class LocalWorkoutPlanService {
     };
   }
 
-  Future<Map<String, dynamic>?> loadWorkout(String workoutId) async {
-    final match = RegExp(r'^local_w(\d+)_d(\d+)$').firstMatch(workoutId);
+  Future<Map<String, dynamic>?> loadWorkout(String workoutId,
+      {String level = 'beginner'}) async {
+    final match = RegExp(r'^local_(?:(beginner|advanced)_)?w(\d+)_d(\d+)$')
+        .firstMatch(workoutId);
     if (match == null) return null;
 
-    final weekNumber = int.tryParse(match.group(1) ?? '');
-    final dayNumber = int.tryParse(match.group(2) ?? '');
+    final idLevel = match.group(1);
+    final effectiveLevel = idLevel ?? level;
+    final weekNumber = int.tryParse(match.group(2) ?? '');
+    final dayNumber = int.tryParse(match.group(3) ?? '');
     if (weekNumber == null || dayNumber == null) return null;
 
-    final plan = await _loadPlan();
+    final plan = await _loadPlan(level: effectiveLevel);
     final week = (plan['weeks'] as List? ?? [])
         .whereType<Map<String, dynamic>>()
         .cast<Map<String, dynamic>?>()
@@ -138,6 +151,7 @@ class LocalWorkoutPlanService {
       'dayNumber': dayNumber,
       'day': dayNumber,
       'type': day['title'] ?? 'Workout',
+      'focus': day['focus'] ?? week?['focus'] ?? '',
       'description': _descriptionFor(day, weekNumber, exercises.length),
       'estimatedDurationMinutes': _estimateDuration(exercises.length),
       'durationMinutes': _estimateDuration(exercises.length),
@@ -145,8 +159,9 @@ class LocalWorkoutPlanService {
     };
   }
 
-  Future<Map<String, dynamic>> _loadPlan() async {
-    final jsonString = await rootBundle.loadString(_assetPath);
+  Future<Map<String, dynamic>> _loadPlan({String level = 'beginner'}) async {
+    final path = level == 'advanced' ? _advancedAssetPath : _beginnerAssetPath;
+    final jsonString = await rootBundle.loadString(path);
     return jsonDecode(jsonString) as Map<String, dynamic>;
   }
 
@@ -200,25 +215,23 @@ class LocalWorkoutPlanService {
       'hasWeightTarget': weightTargets.isNotEmpty,
       'type': 'Strength',
       'instructions': instructions,
-      'setDetails': setItems
-          .map((set) {
-            final instruction = set['instruction']?.toString() ?? '';
-            final target = _parseSetInstruction(set);
-            return {
-              'set': set['set'],
-              'instruction': instruction,
-              'goal': instruction,
-              'targetReps': target.reps == null ? null : _formatRange(target.reps!),
-              'targetWeight': target.weightKg == null
-                  ? null
-                  : '${_formatRange(target.weightKg!)} kg',
-              'targetDuration': target.durationSeconds == null
-                  ? null
-                  : '${_formatRange(target.durationSeconds!)} sec',
-              'hasWeightTarget': target.weightKg != null,
-            };
-          })
-          .toList(),
+      'setDetails': setItems.map((set) {
+        final instruction = set['instruction']?.toString() ?? '';
+        final target = _parseSetInstruction(set);
+        return {
+          'set': set['set'],
+          'instruction': instruction,
+          'goal': instruction,
+          'targetReps': target.reps == null ? null : _formatRange(target.reps!),
+          'targetWeight': target.weightKg == null
+              ? null
+              : '${_formatRange(target.weightKg!)} kg',
+          'targetDuration': target.durationSeconds == null
+              ? null
+              : '${_formatRange(target.durationSeconds!)} sec',
+          'hasWeightTarget': target.weightKg != null,
+        };
+      }).toList(),
       'setInstructions':
           setItems.map((set) => set['instruction']?.toString() ?? '').toList(),
       'videoUrl': _videoUrlFor(videoFile),

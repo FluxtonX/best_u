@@ -180,16 +180,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget _buildOverlay() {
     return Positioned.fill(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.36),
-                Colors.black.withValues(alpha: 0.66),
-                Colors.black.withValues(alpha: 0.9),
+                Colors.black.withValues(alpha: 0.30),
+                Colors.black.withValues(alpha: 0.55),
+                Colors.black.withValues(alpha: 0.88),
               ],
             ),
           ),

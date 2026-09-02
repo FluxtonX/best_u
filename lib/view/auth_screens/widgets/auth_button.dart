@@ -88,28 +88,11 @@ class _AuthButtonLoader extends StatelessWidget {
       key: const ValueKey('btn_loader'),
       width: 26,
       height: 26,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.6,
-              strokeCap: StrokeCap.round,
-              backgroundColor: color.withValues(alpha: 0.16),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          ),
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
+      child: CircularProgressIndicator(
+        strokeWidth: 2.6,
+        strokeCap: StrokeCap.round,
+        backgroundColor: color.withValues(alpha: 0.16),
+        valueColor: AlwaysStoppedAnimation<Color>(color),
       ),
     );
   }

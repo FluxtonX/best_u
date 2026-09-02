@@ -616,15 +616,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'TODAY',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                ),
+              Row(
+                children: [
+                  Text(
+                    isDayLocked ? 'UP NEXT' : 'TODAY',
+                    style: const TextStyle(
+                      fontFamily: 'Outfit',
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  if (isDayLocked) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: const Text(
+                        'COMPLETED TODAY 🎉',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: Colors.green,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Container(
                 padding: const EdgeInsets.all(8),
@@ -665,7 +690,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 18),
           AppBounceAnimation(
-            onTap: (_isLoading || isDayLocked)
+            onTap: _isLoading
                 ? null
                 : () async {
                     final hasAccess = await ProAccessModal.checkAccess(
@@ -685,46 +710,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: isDayLocked
                 ? Container(
                     width: double.infinity,
-                    height: 62,
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: const Color(0xFF1E1C14),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.07)),
+                        color: AppColors.primary.withValues(alpha: 0.35),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.lock_rounded,
-                          color: AppColors.primary.withValues(alpha: 0.5),
+                        const Icon(
+                          Icons.visibility_rounded,
+                          color: AppColors.primary,
                           size: 18,
                         ),
-                        const SizedBox(width: 10),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Day $nextDay available tomorrow',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                color: AppColors.white.withValues(alpha: 0.6),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Great job today! Rest up 💪',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                color: AppColors.primary.withValues(alpha: 0.5),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          'Preview Next Workout (Day $nextDay)',
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                          size: 18,
                         ),
                       ],
                     ),

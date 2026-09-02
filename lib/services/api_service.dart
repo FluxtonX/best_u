@@ -331,9 +331,17 @@ class ApiService {
     return _ok([activeProgram]);
   }
 
-  Future<ApiResponse> getActiveProgram() async {
-    final program = await _localPlan.loadActiveProgram();
-    final progress = await _programProgress();
+  Future<ApiResponse> getActiveProgram({String? level}) async {
+    String currentLevel = level ?? 'beginner';
+    if (level == null) {
+      try {
+        final snap = await _userRef.get();
+        currentLevel = snap.data()?['strengthLevel'] as String? ?? 'beginner';
+      } catch (_) {}
+    }
+
+    final program = await _localPlan.loadActiveProgram(level: currentLevel);
+    final progress = await _programProgress(level: currentLevel);
     final completedIds = (progress['completedWorkouts'] as List? ?? [])
         .map((id) => '$id')
         .toSet();
@@ -397,14 +405,22 @@ class ApiService {
       ...program,
       'completedCount': completedCount,
       'totalWorkouts': totalWorkouts,
+      'cycle': progress['cycle'] ?? 1,
       'progressPercentage':
           totalWorkouts == 0 ? 0 : (completedCount / totalWorkouts) * 100,
       'weeks': weeks,
     });
   }
 
-  Future<ApiResponse> getWorkoutDetails(String id) async {
-    final workout = await _localPlan.loadWorkout(id);
+  Future<ApiResponse> getWorkoutDetails(String id, {String? level}) async {
+    String currentLevel = level ?? 'beginner';
+    if (level == null) {
+      try {
+        final snap = await _userRef.get();
+        currentLevel = snap.data()?['strengthLevel'] as String? ?? 'beginner';
+      } catch (_) {}
+    }
+    final workout = await _localPlan.loadWorkout(id, level: currentLevel);
     if (workout == null) {
       return _message('Workout not found', statusCode: 404);
     }
@@ -480,19 +496,40 @@ class ApiService {
     }, SetOptions(merge: true));
 
     if (isCompleted) {
-      final progress = await _programProgress();
+      String level = 'beginner';
+      try {
+        final snap = await _userRef.get();
+        level = snap.data()?['strengthLevel'] as String? ?? 'beginner';
+      } catch (_) {}
+
+      final docIdProgress =
+          level == 'advanced' ? 'program_advanced' : 'program';
+      final progress = await _programProgress(level: level);
       final completedWorkouts = (progress['completedWorkouts'] as List? ?? [])
           .map((id) => '$id')
           .toSet()
         ..add(workoutId);
-      final next = _nextWorkoutPosition(workoutId);
+      final (nextWeek, nextDay, isCycleComplete) =
+          _nextWorkoutPosition(workoutId);
 
-      await _userRef.collection('progress').doc('program').set({
-        'completedWorkouts': completedWorkouts.toList(),
-        'currentWeek': next.$1,
-        'currentDay': next.$2,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      if (isCycleComplete) {
+        final currentCycle = (progress['cycle'] as num?)?.toInt() ?? 1;
+        // Loop back to Week 1 Day 1 for Strength Test, bump cycle
+        await _userRef.collection('progress').doc(docIdProgress).set({
+          'completedWorkouts': <String>[],
+          'currentWeek': 1,
+          'currentDay': 1,
+          'cycle': currentCycle + 1,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } else {
+        await _userRef.collection('progress').doc(docIdProgress).set({
+          'completedWorkouts': completedWorkouts.toList(),
+          'currentWeek': nextWeek,
+          'currentDay': nextDay,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
 
       // Recalculate and persist the weekly streak on the user profile
       final allCompletionsSnapshot =
@@ -847,7 +884,7 @@ class ApiService {
           .collection('notifications')
           .where('isRead', isEqualTo: false)
           .get();
-      
+
       final batch = _db.batch();
       for (final doc in snapshot.docs) {
         batch.update(doc.reference, {'isRead': true});
@@ -888,8 +925,10 @@ class ApiService {
     return _ok({'status': 'active'});
   }
 
-  Future<Map<String, dynamic>> _programProgress() async {
-    final snapshot = await _userRef.collection('progress').doc('program').get();
+  Future<Map<String, dynamic>> _programProgress(
+      {String level = 'beginner'}) async {
+    final docId = level == 'advanced' ? 'program_advanced' : 'program';
+    final snapshot = await _userRef.collection('progress').doc(docId).get();
     if (snapshot.exists) {
       return snapshot.data()!;
     }
@@ -897,13 +936,15 @@ class ApiService {
     final initial = {
       'currentWeek': 1,
       'currentDay': 1,
+      'cycle': 1,
       'completedWorkouts': <String>[],
       'updatedAt': FieldValue.serverTimestamp(),
     };
-    await _userRef.collection('progress').doc('program').set(initial);
+    await _userRef.collection('progress').doc(docId).set(initial);
     return {
       'currentWeek': 1,
       'currentDay': 1,
+      'cycle': 1,
       'completedWorkouts': <String>[],
     };
   }
@@ -1036,13 +1077,15 @@ class ApiService {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  (int, int) _nextWorkoutPosition(String workoutId) {
-    final match = RegExp(r'^local_w(\d+)_d(\d+)$').firstMatch(workoutId);
-    final week = int.tryParse(match?.group(1) ?? '') ?? 1;
-    final day = int.tryParse(match?.group(2) ?? '') ?? 1;
-    if (day < 3) return (week, day + 1);
-    if (week < 8) return (week + 1, 1);
-    return (8, 3);
+  (int, int, bool) _nextWorkoutPosition(String workoutId) {
+    final match = RegExp(r'^local_(?:(beginner|advanced)_)?w(\d+)_d(\d+)$')
+        .firstMatch(workoutId);
+    final week = int.tryParse(match?.group(2) ?? '') ?? 1;
+    final day = int.tryParse(match?.group(3) ?? '') ?? 1;
+    if (day < 3) return (week, day + 1, false);
+    if (week < 8) return (week + 1, 1, false);
+    // Finished Week 8 Day 3 -> Loop back to Week 1 Day 1 for Strength Test
+    return (1, 1, true);
   }
 
   String _localWorkoutId(int week, int day) => 'local_w${week}_d$day';
@@ -1060,7 +1103,8 @@ class ApiService {
 
   Future<ApiResponse> setStrengthLevel(String level) async {
     try {
-      await _userRef.set({'strengthLevel': level, 'updatedAt': FieldValue.serverTimestamp()},
+      await _userRef.set(
+          {'strengthLevel': level, 'updatedAt': FieldValue.serverTimestamp()},
           SetOptions(merge: true));
       return _message('Strength level updated');
     } catch (e) {
@@ -1264,8 +1308,8 @@ class ApiService {
       final status = snap.data()?['verificationStatus'] as String? ?? 'none';
       return _ok({'verificationStatus': status});
     } catch (e) {
-      return _message('Error fetching verification status: $e', statusCode: 500);
+      return _message('Error fetching verification status: $e',
+          statusCode: 500);
     }
   }
 }
-

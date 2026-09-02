@@ -188,8 +188,17 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
 
   Future<void> _fetchWorkoutDetails() async {
     if (widget.workoutId != null && widget.workoutId!.startsWith('local_')) {
-      final localWorkout =
-          await LocalWorkoutPlanService().loadWorkout(widget.workoutId!);
+      String level = 'beginner';
+      try {
+        final res = await ApiService().getStrengthLevel();
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          level = data['data']?['strengthLevel'] ?? 'beginner';
+        }
+      } catch (_) {}
+
+      final localWorkout = await LocalWorkoutPlanService()
+          .loadWorkout(widget.workoutId!, level: level);
       if (localWorkout != null && mounted) {
         _applyWorkout(localWorkout);
         return;

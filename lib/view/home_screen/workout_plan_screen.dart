@@ -24,8 +24,12 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
   @override
   void initState() {
     super.initState();
-    _loadStrengthLevel();
-    _fetchData();
+    _initPlan();
+  }
+
+  Future<void> _initPlan() async {
+    await _loadStrengthLevel();
+    await _fetchData();
   }
 
   Future<void> _loadStrengthLevel() async {
@@ -34,28 +38,34 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (mounted) {
-          setState(() => _strengthLevel = data['data']?['strengthLevel'] ?? 'beginner');
+          final level = data['data']?['strengthLevel'] ?? 'beginner';
+          setState(() => _strengthLevel = level);
         }
       }
     } catch (_) {}
   }
 
   Future<void> _setStrengthLevel(String level) async {
-    setState(() => _strengthLevel = level);
+    if (_strengthLevel == level) return;
+    setState(() {
+      _strengthLevel = level;
+      _isLoading = true;
+    });
     await ApiService().setStrengthLevel(level);
+    await _fetchData(level: level);
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchData({String? level}) async {
+    final effectiveLevel = level ?? _strengthLevel;
     try {
       final apiService = ApiService();
-      final response = await apiService.getActiveProgram();
+      final response = await apiService.getActiveProgram(level: effectiveLevel);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
           // Determine if any workout was completed TODAY across all weeks
-          final programData =
-              Map<String, dynamic>.from(data['data'] as Map);
+          final programData = Map<String, dynamic>.from(data['data'] as Map);
           final today = DateTime.now();
           final todayStr =
               '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -80,18 +90,20 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
             if (anyCompletedToday) break;
           }
 
-          // Step 2: Mark ONLY the next pending (not yet completed) day as locked.
-          // Already-completed days are NEVER locked — just show their checkmark.
+          // Step 2: Mark if the current session is on a rest-recommended day (already trained today)
           final weeks = (programData['weeks'] as List).map((week) {
             final mappedWeek = Map<String, dynamic>.from(week as Map);
             final days = (mappedWeek['days'] as List).map((day) {
               final mappedDay = Map<String, dynamic>.from(day as Map);
               final isCompleted = mappedDay['isCompleted'] == true;
               final isCurrent = mappedDay['isCurrent'] == true;
-              // Lock only the current (next pending) day, not completed ones
-              final isLockedToday =
+              final isRestRecommended =
                   anyCompletedToday && !isCompleted && isCurrent;
-              return {...mappedDay, 'isLockedToday': isLockedToday};
+              return {
+                ...mappedDay,
+                'isRestRecommended': isRestRecommended,
+                'isLockedToday': isRestRecommended,
+              };
             }).toList();
             return {...mappedWeek, 'days': days};
           }).toList();
@@ -107,15 +119,17 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
         }
       }
 
-      await _useLocalPlanData();
+      await _useLocalPlanData(level: effectiveLevel);
     } catch (e) {
       debugPrint("Error fetching program data: $e");
-      await _useLocalPlanData();
+      await _useLocalPlanData(level: effectiveLevel);
     }
   }
 
-  Future<void> _useLocalPlanData() async {
-    final localProgram = await LocalWorkoutPlanService().loadActiveProgram();
+  Future<void> _useLocalPlanData({String? level}) async {
+    final effectiveLevel = level ?? _strengthLevel;
+    final localProgram = await LocalWorkoutPlanService()
+        .loadActiveProgram(level: effectiveLevel);
     if (!mounted) return;
 
     setState(() {
@@ -130,247 +144,283 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
     final String programTitle = _isLoading
         ? 'Best-U 8-Week Transformation'
         : (_activeProgram?['programName'] ?? 'Your Program');
-        
+
     final double overallProgress = _isLoading ? 0.35 : _overallProgress;
-    final completedCount = _isLoading ? 8 : (_activeProgram?['completedCount'] ?? 0);
-    final totalWorkouts = _isLoading ? 24 : (_activeProgram?['totalWorkouts'] ?? 0);
-    
+    final completedCount =
+        _isLoading ? 8 : (_activeProgram?['completedCount'] ?? 0);
+    final totalWorkouts =
+        _isLoading ? 24 : (_activeProgram?['totalWorkouts'] ?? 0);
+
     final List<dynamic> weeks = _isLoading
-        ? List.generate(4, (index) => {
-            'weekNum': index + 1,
-            'status': '0/3 workouts',
-            'isCompleted': index == 0,
-            'isCurrent': index == 1,
-            'isLocked': index > 1,
-            'days': [
-              {'title': 'Day 1 - Chest & Triceps', 'type': 'Strength', 'isCompleted': index == 0, 'isCurrent': index == 1, 'workoutId': 'dummy'},
-              {'title': 'Day 2 - Back & Biceps', 'type': 'Strength', 'isCompleted': false, 'isCurrent': false, 'workoutId': 'dummy'},
-              {'title': 'Day 3 - Legs & Shoulders', 'type': 'Strength', 'isCompleted': false, 'isCurrent': false, 'workoutId': 'dummy'},
-            ]
-          })
+        ? List.generate(
+            4,
+            (index) => {
+                  'weekNum': index + 1,
+                  'status': '0/3 workouts',
+                  'isCompleted': index == 0,
+                  'isCurrent': index == 1,
+                  'isLocked': index > 1,
+                  'days': [
+                    {
+                      'title': 'Day 1 - Chest & Triceps',
+                      'type': 'Strength',
+                      'isCompleted': index == 0,
+                      'isCurrent': index == 1,
+                      'workoutId': 'dummy'
+                    },
+                    {
+                      'title': 'Day 2 - Back & Biceps',
+                      'type': 'Strength',
+                      'isCompleted': false,
+                      'isCurrent': false,
+                      'workoutId': 'dummy'
+                    },
+                    {
+                      'title': 'Day 3 - Legs & Shoulders',
+                      'type': 'Strength',
+                      'isCompleted': false,
+                      'isCurrent': false,
+                      'workoutId': 'dummy'
+                    },
+                  ]
+                })
         : (_activeProgram?['weeks'] ?? []);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Skeletonizer(
-          enabled: _isLoading,
-          effect: ShimmerEffect(
-            baseColor: Colors.white.withValues(alpha: 0.04),
-            highlightColor: Colors.white.withValues(alpha: 0.12),
-            duration: const Duration(milliseconds: 1000),
-          ),
-          child: RefreshIndicator(
-            onRefresh: _fetchData,
-            color: AppColors.primary,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                // Header
-                Text(
-                  programTitle,
-                  style: const TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Your transformation journey',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: AppColors.white.withValues(alpha: 0.5),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // ── Beginner / Advanced toggle ─────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151515),
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.06)),
-                  ),
-                  child: Row(
-                    children: [
-                      _levelTab('🏃 Beginner', 'beginner'),
-                      _levelTab('💪 Advanced', 'advanced'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Coming Soon banner for Advanced
-                if (_strengthLevel == 'advanced')
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1500),
-                      borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: const Color(0xFFFFAA00).withValues(alpha: 0.3)),
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Skeletonizer(
+            enabled: _isLoading,
+            effect: ShimmerEffect(
+              baseColor: Colors.white.withValues(alpha: 0.04),
+              highlightColor: Colors.white.withValues(alpha: 0.12),
+              duration: const Duration(milliseconds: 1000),
+            ),
+            child: RefreshIndicator(
+              onRefresh: _fetchData,
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Text(
+                      programTitle,
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        const Text('🔒', style: TextStyle(fontSize: 22)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Advanced Plan — Coming Soon!',
-                                style: TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: Color(0xFFFFAA00),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Weights-only program is being prepared. You\'ll be notified when it\'s ready.',
-                                style: TextStyle(
-                                  fontFamily: 'Outfit',
-                                  color: AppColors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Your transformation journey',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        color: AppColors.white.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Beginner / Advanced toggle ─────────────────────────
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF151515),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.06)),
+                      ),
+                      child: Row(
+                        children: [
+                          _levelTab('🏃 Beginner', 'beginner'),
+                          _levelTab('💪 Advanced', 'advanced'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Active Level Focus Badge
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF141414),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _strengthLevel == 'advanced'
+                              ? AppColors.primary.withValues(alpha: 0.25)
+                              : Colors.white.withValues(alpha: 0.06),
                         ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 12),
-
-                // Overall Progress Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151515),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                      child: Row(
                         children: [
                           Text(
-                            'OVERALL PROGRESS',
-                            style: TextStyle(
-                              fontFamily: 'Outfit',
-                              color: AppColors.white.withValues(alpha: 0.5),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
+                            _strengthLevel == 'advanced' ? '🏋️' : '🏃',
+                            style: const TextStyle(fontSize: 20),
                           ),
-                          Text(
-                            '${(overallProgress * 100).toInt()}%',
-                            style: const TextStyle(
-                              fontFamily: 'Outfit',
-                              color: AppColors.primary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _strengthLevel == 'advanced'
+                                      ? 'Advanced Weights Plan (8 Weeks)'
+                                      : 'Beginner Bodyweight Plan (8 Weeks)',
+                                  style: const TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _strengthLevel == 'advanced'
+                                      ? 'Chest/Bicep • Shoulder/Tris • Legs/Back • 6 reps = +5kg overload'
+                                      : 'Foundation bodyweight conditioning & strength test loop',
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.5),
+                                    fontSize: 11,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: overallProgress,
-                          backgroundColor: Colors.white.withValues(alpha: 0.05),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.primary),
-                          minHeight: 8,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '$completedCount of $totalWorkouts workouts completed',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: AppColors.white.withValues(alpha: 0.4),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 12),
 
-                // Book Download Banner
-                const BookDownloadButton(),
-                const SizedBox(height: 32),
-
-                // Weeks List
-                if (weeks.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 40),
-                      child: Text(
-                        'No weeks data available yet',
-                        style:
-                            TextStyle(color: AppColors.white.withValues(alpha: 0.5)),
+                    // Overall Progress Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF151515),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.05)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'OVERALL PROGRESS',
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: AppColors.white.withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                '${(overallProgress * 100).toInt()}%',
+                                style: const TextStyle(
+                                  fontFamily: 'Outfit',
+                                  color: AppColors.primary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: overallProgress,
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.05),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '$completedCount of $totalWorkouts workouts completed',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: AppColors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  )
-                else
-                  ...weeks.map((week) => _buildWeekItem(
-                        weekNumber: week['weekNum'] ?? 0,
-                        status: week['status'] ?? '',
-                        isCompleted: week['isCompleted'] ?? false,
-                        isCurrent: week['isCurrent'] ?? false,
-                        isLocked: week['isLocked'] ?? false,
-                        isExpanded: week['isCurrent'] ?? false,
-                        days: week['days'] != null
-                            ? (week['days'] as List)
-                                .map((day) => _buildDayItem(
-                                      context,
-                                      day['title'] ?? 'Day',
-                                      day['type'] ?? 'Base',
-                                      day['isCompleted'] ?? false,
-                                      workoutId: day['workoutId'],
-                                      isCurrent: day['isCurrent'] ?? false,
-                                      isLockedToday:
-                                          day['isLockedToday'] ?? false,
-                                    ))
-                                .toList()
-                            : null,
-                      )),
-                const SizedBox(height: 40),
-              ],
+                    const SizedBox(height: 24),
+
+                    // Book Download Banner
+                    const BookDownloadButton(),
+                    const SizedBox(height: 32),
+
+                    // Weeks List
+                    if (weeks.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: Text(
+                            'No weeks data available yet',
+                            style: TextStyle(
+                                color: AppColors.white.withValues(alpha: 0.5)),
+                          ),
+                        ),
+                      )
+                    else
+                      ...weeks.map((week) => _buildWeekItem(
+                            weekNumber: week['weekNum'] ?? 0,
+                            status: week['status'] ?? '',
+                            focus: week['focus'] ?? '',
+                            isCompleted: week['isCompleted'] ?? false,
+                            isCurrent: week['isCurrent'] ?? false,
+                            isExpanded: week['isCurrent'] ?? false,
+                            days: week['days'] != null
+                                ? (week['days'] as List)
+                                    .map((day) => _buildDayItem(
+                                          context,
+                                          day['title'] ?? 'Day',
+                                          day['type'] ?? 'Base',
+                                          day['isCompleted'] ?? false,
+                                          workoutId: day['workoutId'],
+                                          isCurrent: day['isCurrent'] ?? false,
+                                          isRestRecommended:
+                                              day['isRestRecommended'] ?? false,
+                                        ))
+                                    .toList()
+                                : null,
+                          )),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    ));
+        ));
   }
 
   Widget _buildWeekItem({
     required int weekNumber,
     required String status,
+    String focus = '',
     bool isCompleted = false,
     bool isCurrent = false,
-    bool isLocked = false,
     bool isExpanded = false,
     List<Widget>? days,
   }) {
@@ -381,94 +431,139 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isCurrent
-              ? AppColors.primary.withValues(alpha: 0.2)
+              ? AppColors.primary.withValues(alpha: 0.25)
               : Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
-      child: IgnorePointer(
-        ignoring: isLocked,
-        child: ExpansionTile(
-          initiallyExpanded: isExpanded,
-          shape: const RoundedRectangleBorder(side: BorderSide.none),
-          collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.white.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isCompleted
-                  ? Icons.check_rounded
-                  : (isLocked
-                      ? Icons.lock_outline_rounded
-                      : Icons.calendar_today_rounded),
-              color: isCompleted
-                  ? Colors.green
-                  : (isCurrent
-                      ? AppColors.primary
-                      : AppColors.white.withValues(alpha: 0.3)),
-              size: 18,
-            ),
+      child: ExpansionTile(
+        initiallyExpanded: isExpanded,
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
+        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? Colors.green.withValues(alpha: 0.12)
+                : isCurrent
+                    ? AppColors.primary.withValues(alpha: 0.12)
+                    : Colors.white.withValues(alpha: 0.04),
+            shape: BoxShape.circle,
           ),
-          title: Text(
-            'Week $weekNumber',
-            style: const TextStyle(
-              fontFamily: 'Outfit',
-              color: AppColors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+          child: Icon(
+            isCompleted
+                ? Icons.check_circle_rounded
+                : (isCurrent
+                    ? Icons.fitness_center_rounded
+                    : Icons.calendar_today_rounded),
+            color: isCompleted
+                ? Colors.green
+                : (isCurrent
+                    ? AppColors.primary
+                    : AppColors.white.withValues(alpha: 0.4)),
+            size: 18,
           ),
-          subtitle: Row(
-            children: [
-              Text(
-                status,
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: AppColors.white.withValues(alpha: 0.4),
-                  fontSize: 13,
-                ),
+        ),
+        title: Row(
+          children: [
+            Text(
+              'Week $weekNumber',
+              style: const TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
-              if (isCurrent) ...[
-                const SizedBox(width: 12),
-                Container(
+            ),
+            if (focus.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'CURRENT',
+                  child: Text(
+                    focus,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Outfit',
-                      color: AppColors.primary,
+                      color: AppColors.white.withValues(alpha: 0.6),
                       fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ],
+              ),
             ],
-          ),
-          trailing: Icon(
-            isLocked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
-            color: Colors.white.withValues(alpha: 0.2),
-            size: 20,
-          ),
-          children: days != null
-              ? [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Column(children: days),
-                  )
-                ]
-              : [],
+          ],
         ),
+        subtitle: Row(
+          children: [
+            Text(
+              status,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: AppColors.white.withValues(alpha: 0.45),
+                fontSize: 13,
+              ),
+            ),
+            if (isCurrent) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'CURRENT WEEK',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: AppColors.primary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ] else if (isCompleted) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'COMPLETED',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.green,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        trailing: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: Colors.white.withValues(alpha: 0.35),
+          size: 22,
+        ),
+        children: days != null
+            ? [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(children: days),
+                )
+              ]
+            : [],
       ),
     );
   }
@@ -477,124 +572,143 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
       BuildContext context, String day, String type, bool isCompleted,
       {required String? workoutId,
       bool isCurrent = false,
-      bool isLockedToday = false}) {
-    final bool isFutureLocked = !isCompleted && !isCurrent;
-    // Completed days are ALWAYS clickable for review.
-    // Locked-today (next pending day, already trained today) shows a soft message.
-    // Only truly future-locked days (beyond the current week) block navigation.
-    final bool isClickable = isCompleted || isCurrent || isLockedToday;
-
+      bool isRestRecommended = false}) {
     Color iconBgColor;
     Widget iconWidget;
+    String statusBadgeText = '';
 
     if (isCompleted) {
       iconBgColor = Colors.green.withValues(alpha: 0.15);
-      iconWidget = const Icon(Icons.check_rounded, color: Colors.green, size: 16);
-    } else if (isLockedToday) {
-      iconBgColor = Colors.white.withValues(alpha: 0.05);
-      iconWidget = Icon(Icons.lock_clock_rounded, color: AppColors.primary.withValues(alpha: 0.5), size: 16);
-    } else if (isFutureLocked) {
-      iconBgColor = Colors.white.withValues(alpha: 0.02);
-      iconWidget = Icon(Icons.lock_outline_rounded, color: AppColors.white.withValues(alpha: 0.15), size: 16);
+      iconWidget =
+          const Icon(Icons.check_rounded, color: Colors.green, size: 16);
+      statusBadgeText = 'COMPLETED';
+    } else if (isCurrent) {
+      iconBgColor = AppColors.primary.withValues(alpha: 0.15);
+      iconWidget = const Icon(Icons.play_arrow_rounded,
+          color: AppColors.primary, size: 16);
+      statusBadgeText = isRestRecommended ? 'REST DAY' : 'UP NEXT';
     } else {
-      // Active / Current
-      iconBgColor = Colors.white.withValues(alpha: 0.05);
-      iconWidget = const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 16);
+      // Upcoming session
+      iconBgColor = Colors.white.withValues(alpha: 0.04);
+      iconWidget = Icon(Icons.fitness_center_rounded,
+          color: AppColors.white.withValues(alpha: 0.35), size: 15);
+      statusBadgeText = 'PREVIEW';
     }
 
     String subtitleText = type;
     Color titleColor = AppColors.white;
-    Color subtitleColor = AppColors.white.withValues(alpha: 0.4);
+    Color subtitleColor = AppColors.white.withValues(alpha: 0.5);
 
-    if (isLockedToday) {
-      subtitleText = 'Come back tomorrow 💪';
-      titleColor = AppColors.white.withValues(alpha: 0.7);
-      subtitleColor = AppColors.primary.withValues(alpha: 0.6);
-    } else if (isFutureLocked) {
-      titleColor = AppColors.white.withValues(alpha: 0.3);
-      subtitleColor = AppColors.white.withValues(alpha: 0.2);
+    if (isRestRecommended) {
+      subtitleText = '$type • Rest recommended today 💪';
+      subtitleColor = AppColors.primary.withValues(alpha: 0.7);
+    } else if (!isCompleted && !isCurrent) {
+      subtitleText = '$type • Upcoming session';
     }
 
     return GestureDetector(
-      onTap: !isClickable
-          ? null
-          : () async {
-              final hasAccess = await ProAccessModal.checkAccess(
-                context,
-                featureName: '$day - $type',
-              );
-              if (!hasAccess || !context.mounted) return;
+      onTap: () async {
+        final hasAccess = await ProAccessModal.checkAccess(
+          context,
+          featureName: '$day - $type',
+        );
+        if (!hasAccess || !context.mounted) return;
 
-              // Soft informational message for locked-today days, but still
-              // allow navigation so the client can review/test the workout.
-              if (isLockedToday) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text(
-                      '💪 Great work today! Come back tomorrow for your next session.',
-                      style: TextStyle(fontFamily: 'Outfit'),
-                    ),
-                    backgroundColor: const Color(0xFF1A1A1A),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-              if (workoutId != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          WorkoutListScreen(workoutId: workoutId)),
-                ).then((_) => _fetchData());
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const WorkoutListScreen(workoutId: 'demo_id')),
-                ).then((_) => _fetchData());
-              }
-            },
+        if (workoutId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => WorkoutListScreen(workoutId: workoutId)),
+          ).then((_) => _fetchData());
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    const WorkoutListScreen(workoutId: 'demo_id')),
+          ).then((_) => _fetchData());
+        }
+      },
       child: Container(
-        margin: const EdgeInsets.only(top: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(16),
+          color: isCurrent
+              ? const Color(0xFF1E1C14)
+              : Colors.black.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isCurrent && !isLockedToday
-                ? AppColors.primary.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.03),
+            color: isCurrent
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.04),
           ),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: iconBgColor,
                 shape: BoxShape.circle,
               ),
               child: iconWidget,
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    day,
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      color: titleColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          day,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: titleColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (statusBadgeText.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? Colors.green.withValues(alpha: 0.12)
+                                : isCurrent
+                                    ? AppColors.primary.withValues(alpha: 0.12)
+                                    : Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            statusBadgeText,
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: isCompleted
+                                  ? Colors.green
+                                  : isCurrent
+                                      ? AppColors.primary
+                                      : AppColors.white.withValues(alpha: 0.4),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitleText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       color: subtitleColor,
@@ -604,9 +718,13 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
                 ],
               ),
             ),
-            if (isCurrent && !isLockedToday)
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.primary, size: 20),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isCurrent
+                  ? AppColors.primary
+                  : Colors.white.withValues(alpha: 0.2),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -630,7 +748,9 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
               label,
               style: TextStyle(
                 fontFamily: 'Outfit',
-                color: selected ? Colors.white : AppColors.white.withValues(alpha: 0.45),
+                color: selected
+                    ? Colors.white
+                    : AppColors.white.withValues(alpha: 0.45),
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -641,4 +761,3 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen> {
     );
   }
 }
-
